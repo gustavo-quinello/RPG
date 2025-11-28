@@ -1,21 +1,17 @@
+//Sistema de calculo de pontos disponiveis
 var displayPontos = document.getElementById("Pontos_disponiveis")
 var atributo = document.querySelectorAll(".atributo")
 var pontosTotais = document.getElementById("nivel")
 
 function calcularSoma() {
-    var somaTotal = 0; // Começa a soma do zero
+    var somaTotal = 0;
     var pontosTotais = parseInt(document.getElementById("nivel").value)
-    console.log(pontosTotais)
 
-    // 3. Faz um loop por CADA input que foi selecionado
     atributo.forEach(input => {
-        // 4. Pega o valor, converte para número e soma ao total
-        // Usamos 'parseFloat' para aceitar números decimais
         somaTotal += parseFloat(input.value);
     });
     var result =  pontosTotais + 4 - somaTotal
-// 5. Atualiza o HTML com o resultado final da soma
-        displayPontos.textContent = result;
+    displayPontos.textContent = result;
 }
 
 atributo.forEach(input => {
@@ -30,7 +26,7 @@ calcularSoma()
 
 
 
-
+//Sistema de habilidades por classe aura e trilha
 const campoNivel = document.getElementById('nivel');
 const campoClasse = document.getElementById('classe-personagem');
 const containerSelects = document.getElementById('container-selects');
@@ -119,7 +115,7 @@ const habilidadesPorClasse = {
         { valor: 'calculo-exato-ii', texto: 'Cálculo exato II(C)', tier: 1 },
         { valor: 'finta-improvisada', texto: 'Finta improvisada(C)', tier: 1 },
         { valor: 'disparo-rapido', texto: 'Disparo rápido(C)', tier: 2 },
-        { valor: 'conscentracao', texto: 'Conscentração(C)', tier: 2 },
+        { valor: 'concentracao', texto: 'Concentração(C)', tier: 2 },
         { valor: 'chuva-de-projeteis', texto: 'Chuva de projeteis(C)', tier: 3 },
     ],
     assassino: [
@@ -204,10 +200,24 @@ const habilidadesPorTrilha = {
     ]
 };
 
-/**
- * Pega a lista de opções de habilidades com base na classe selecionada.
- * @returns {Array} - Um array de objetos de opção.
- */
+// CONSTANTE PARA O BÔNUS
+const VALOR_BONUS_ATAQUE = 'bonus-ataque';
+const OPCAO_BONUS_ATAQUE = { valor: VALOR_BONUS_ATAQUE, texto: 'Bônus de Ataque', tier: 1, maxRanks: 5, isBonus: true };
+
+        // ATUALIZAÇÃO: Bônus agora ligados à AURA, não à CLASSE
+const BONUS_ESPECIFICO_POR_AURA = {
+    reforco:        { valor: 'bonus-vida', texto: 'Bônus de Vida', tier: 1, maxRanks: 3, isBonus: true },
+    emissao:        { valor: 'bonus-mana', texto: 'Bônus de Mana', tier: 1, maxRanks: 3, isBonus: true },
+    transformacao:  { valor: 'bonus-velocidade', texto: 'Bônus de Velocidade', tier: 1, maxRanks: 3, isBonus: true },
+    materializacao: { valor: 'atributo-bonus', texto: 'Bônus de Atributos', tier: 1, maxRanks: 3, isBonus: true },
+    manipulacao:    { valor: 'bonus-geral', texto: 'Bônus Geral', tier: 1, maxRanks: 3, isBonus: true },
+};
+
+function toRomano(num) {
+    const romanos = ["I", "II", "III", "IV", "V", "VI", "VII"];
+    return romanos[num - 1] || num;
+}
+
 function getOpcoesAtuais() {
     const classeSelecionada = campoClasse.value;
     const auraSelecionada = campoAura.value;
@@ -215,99 +225,118 @@ function getOpcoesAtuais() {
     const nivelPersonagem = parseInt(campoNivel.value) || 0;
 
     let maxTierAcessivel = 1;
-    if (nivelPersonagem >= 13) {
-        maxTierAcessivel = 3;
-    } else if (nivelPersonagem >= 5) {
-        maxTierAcessivel = 2;
-    }
+    if (nivelPersonagem >= 13) maxTierAcessivel = 3;
+    else if (nivelPersonagem >= 5) maxTierAcessivel = 2;
 
-    const opcoesBase = [
-        { valor: '', texto: '-- Escolha uma habilidade --' }
-    ];
-    
+    const opcoesBase = [{ valor: '', texto: '-- Escolha uma habilidade --' }];
     const opcoesDaClasse = habilidadesPorClasse[classeSelecionada] || [];
     const opcoesDaAura = habilidadesPorAura[auraSelecionada] || [];
     const opcoesDaTrilha = habilidadesPorTrilha[trilhaSelecionada] || [];
 
     const opcoesFiltradas = [
-    ...opcoesDaAura.filter(habilidade => habilidade.tier <= maxTierAcessivel),
-    ...opcoesDaTrilha.filter(habilidade => habilidade.tier <= maxTierAcessivel),
-    ...opcoesDaClasse.filter(habilidade => habilidade.tier <= maxTierAcessivel)
+        ...opcoesDaAura.filter(h => h.tier <= maxTierAcessivel),
+        ...opcoesDaTrilha.filter(h => h.tier <= maxTierAcessivel),
+        ...opcoesDaClasse.filter(h => h.tier <= maxTierAcessivel)
     ];
-    
 
-    return [...opcoesBase, ...opcoesFiltradas];
+    // ALTERAÇÃO: Busca o bônus usando a AURA
+    const bonusEspecifico = BONUS_ESPECIFICO_POR_AURA[auraSelecionada];
+
+    return [...opcoesBase, ...opcoesFiltradas, OPCAO_BONUS_ATAQUE, bonusEspecifico].filter(item => item);
 }
 
 function getValoresSelecionados() {
     const selects = containerSelects.querySelectorAll('select');
-    const valoresUsados = new Set(); // Usamos um Set para evitar duplicatas
-    
+    const contagem = {};
+    const valoresUsados = new Set();
     selects.forEach(s => {
-        if (s.value) { // Ignora o "-- Escolha..."
-            valoresUsados.add(s.value);
+        const val = s.value;
+        if (val) {
+            valoresUsados.add(val);
+            contagem[val] = (contagem[val] || 0) + 1;
         }
     });
-    return valoresUsados;
+    return { valoresUsados, contagem };
 }
 
-/* Atualiza as opções de UM ÚNICO select, aplicando a lógica
-* de desabilitar opções já usadas.
-* @param {HTMLSelectElement} selectElement - O <select> a ser populado
-*/
-function popularUmSelect(selectElement) {
-    const opcoesGlobais = getOpcoesAtuais(); // Opções (filtradas por classe/tier)
-    const valoresUsados = getValoresSelecionados(); // O que já foi pego
-    const valorAtualDesteSelect = selectElement.value; // O valor que este select JÁ TEM
+function calcularRankParaEsteSelect(selectAlvo, valorBonusProcurado) {
+    const todosSelects = Array.from(containerSelects.querySelectorAll('select'));
+    let contador = 0;
+    for (let select of todosSelects) {
+        if (select.value === valorBonusProcurado) contador++;
+        if (select === selectAlvo) return contador;
+    }
+    return 0;
+}
 
-    // Limpa o select
+function popularUmSelect(selectElement) {
+    const nivelPersonagem = parseInt(campoNivel.value) || 0;
+    const opcoesGlobais = getOpcoesAtuais();
+    const { valoresUsados, contagem } = getValoresSelecionados();
+    const valorAtual = selectElement.value;
+
+    let limiteBonusPermitido = 2;
+    if (nivelPersonagem >= 13) limiteBonusPermitido = 5;
+    else if (nivelPersonagem >= 5) limiteBonusPermitido = 4;
+
     selectElement.innerHTML = '';
 
     opcoesGlobais.forEach(opt => {
         const optionElement = document.createElement('option');
         optionElement.value = opt.valor;
-        optionElement.textContent = opt.texto;
 
-        // A LÓGICA DE DESABILITAR:
-        // 1. A opção tem valor? (ignora o "-- Escolha...")
-        // 2. Esse valor JÁ ESTÁ USADO em algum select?
-        // 3. Esse valor NÃO É o que já estava selecionado NESTE select?
-        //    (Isso permite que a opção atual permaneça selecionada)
-        const estaUsadoPorOutro = valoresUsados.has(opt.valor) && opt.valor !== valorAtualDesteSelect;
+        if (opt.isBonus) {
+            const totalDesteBonus = contagem[opt.valor] || 0;
+            if (valorAtual === opt.valor) {
+                const rank = calcularRankParaEsteSelect(selectElement, opt.valor);
+                optionElement.textContent = `${opt.texto} ${toRomano(rank)}`;
+            } else {
+                const proximoRank = totalDesteBonus + 1;
+                optionElement.textContent = `${opt.texto} (Rank ${toRomano(proximoRank)})`;
+            }
+            
+            let limiteMaximo = opt.maxRanks;
+            if (opt.valor === VALOR_BONUS_ATAQUE) {
+                limiteMaximo = Math.min(opt.maxRanks, limiteBonusPermitido);
+            }
 
-        if (estaUsadoPorOutro) {
-            optionElement.disabled = true;
-            optionElement.textContent += ' (Selecionada)';
+            if (totalDesteBonus >= limiteMaximo && valorAtual !== opt.valor) {
+                optionElement.disabled = true;
+                if (opt.valor === VALOR_BONUS_ATAQUE && limiteBonusPermitido < 5) {
+                    optionElement.textContent += ` (Máx ${limiteBonusPermitido} neste nível)`;
+                } else {
+                    optionElement.textContent += ` (Máx ${limiteMaximo} atingido)`;
+                }
+            }
+        } else {
+            optionElement.textContent = opt.texto;
+            const estaUsadoPorOutro = valoresUsados.has(opt.valor) && opt.valor !== valorAtual;
+            if (estaUsadoPorOutro && opt.valor !== '') {
+                optionElement.disabled = true;
+                optionElement.textContent += ' (Já obtido)';
+            }
         }
-        
         selectElement.appendChild(optionElement);
     });
-
-    // Restaura o valor que este select tinha
-    selectElement.value = valorAtualDesteSelect;
+    selectElement.value = valorAtual;
 }
-
+//Funções de infraestrutura
 function criarSelectParaNivel(numeroNivel) {
     const wrapperDiv = document.createElement('div');
     wrapperDiv.className = 'select-wrapper';
     const novoLabel = document.createElement('label');
-    novoLabel.textContent = `Habilidade do Nível ${numeroNivel}:`;
+    novoLabel.textContent = `Nível ${numeroNivel}:`;
     const novoSelect = document.createElement('select');
     novoSelect.id = `select-nivel-${numeroNivel}`;
-
     wrapperDiv.appendChild(novoLabel);
     wrapperDiv.appendChild(novoSelect);
-    
-    // Chama a função de popular para este select recém-criado
     popularUmSelect(novoSelect);
-    
     return wrapperDiv;
 }
 
 function atualizarSelectsPorNivel() {
     const nivelDesejado = parseInt(campoNivel.value) || 0;
     const selectsAtuais = containerSelects.querySelectorAll('.select-wrapper').length;
-
     if (nivelDesejado > selectsAtuais) {
         for (let i = selectsAtuais + 1; i <= nivelDesejado; i++) {
             const novoSelect = criarSelectParaNivel(i);
@@ -320,47 +349,60 @@ function atualizarSelectsPorNivel() {
     }
 }
 
-/**
- * Atualiza as opções de TODOS os selects de habilidade existentes na tela.
- * É chamado quando a classe do personagem muda.
- */
 function atualizarOpcoesDeTodosOsSelects() {
     const todosOsSelects = containerSelects.querySelectorAll('select');
-    // Manda cada select se re-popular individualmente
     todosOsSelects.forEach(popularUmSelect);
 }
 
-/**
- * Nova função para lidar com a mudança de nível.
- * Quando o nível muda, precisamos:
- * 1. Atualizar as opções de todos os selects que já existem.
- * 2. Adicionar ou remover selects para bater com o novo nível.
- */
 function onNivelChange() {
-    // Atualiza os selects existentes (nível 1, 2, 3...) com a nova lista de tiers
     atualizarOpcoesDeTodosOsSelects();
-    
-    // Adiciona/Remove os selects (nível 4, 5...)
     atualizarSelectsPorNivel();
 }
 
 containerSelects.addEventListener('change', function(event) {
-    // Garante que o evento foi disparado por um SELECT
     if (event.target.tagName === 'SELECT') {
-        // Se um select mudou, mandamos TODOS os selects se atualizarem
-        // para desabilitar a opção recém-escolhida.
         atualizarOpcoesDeTodosOsSelects();
     }
 });
-
-// O 'input' de nível agora chama a nova função 'onNivelChange'
+//Conclusao do sistema de escolha de habilidades
 campoNivel.addEventListener('input', onNivelChange);
+campoClasse.addEventListener('change', onNivelChange);
+campoAura.addEventListener('change', onNivelChange);
+campoTrilha.addEventListener('change', onNivelChange);
 
-// O 'change' da classe continua o mesmo
-campoClasse.addEventListener('change', atualizarOpcoesDeTodosOsSelects);
-campoAura.addEventListener('change', atualizarOpcoesDeTodosOsSelects);
-campoTrilha.addEventListener('change', atualizarOpcoesDeTodosOsSelects);
-
-// Chama a função 'onNivelChange' no início para carregar o estado (0)
 onNivelChange();
 
+//Trecho que pode ser otimizado!
+const Vigor = document.getElementById("vigor")
+const Intelecto = document.getElementById("intelecto")
+const Presenca = document.getElementById("presenca")
+
+function calculoVida() {
+    const stat_Vida = document.getElementById("vida")
+    const Vigor = parseInt(document.getElementById("vigor").value)
+    const Vida = 20 + Vigor * 15
+
+    stat_Vida.value = Vida
+}
+Vigor.addEventListener("input", calculoVida)
+calculoVida()
+
+function calculoMana() {
+const stat_Mana = document.getElementById("mana")
+const Intelecto = parseInt(document.getElementById("intelecto").value)
+const Mana = 15 + Intelecto * 15
+
+stat_Mana.value = Mana
+}
+Intelecto.addEventListener("input", calculoMana)
+calculoMana()
+
+function calculoFoco() {
+const stat_Foco = document.getElementById("foco")
+const Presenca = parseInt(document.getElementById("presenca").value)
+const Foco = 6 + Presenca * 5
+
+stat_Foco.value = Foco
+}
+Presenca.addEventListener("input", calculoFoco)
+calculoFoco()
