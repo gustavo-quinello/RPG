@@ -10,12 +10,14 @@ function calcularSoma() {
     atributo.forEach(input => {
         somaTotal += parseFloat(input.value);
     });
-    var result =  pontosTotais + 4 - somaTotal
+    var result =  Math.floor(pontosTotais / 2) + 6 - somaTotal
     displayPontos.textContent = result;
 }
 
 atributo.forEach(input => {
-    input.addEventListener("input",calcularSoma)
+    input.addEventListener("input",calcularSoma);
+    input.addEventListener("input",esquiva);
+    input.addEventListener("input",bloqueio)
 })
 
 pontosTotais.addEventListener("input", calcularSoma)
@@ -287,6 +289,9 @@ function popularUmSelect(selectElement) {
 
         if (opt.isBonus) {
             const totalDesteBonus = contagem[opt.valor] || 0;
+            //pegando uma variavel especifica dessa funcao e jogando na outra
+            bonusAtaque(totalDesteBonus)
+            //de volta a funcao normalmente
             if (valorAtual === opt.valor) {
                 const rank = calcularRankParaEsteSelect(selectElement, opt.valor);
                 optionElement.textContent = `${opt.texto} ${toRomano(rank)}`;
@@ -319,6 +324,8 @@ function popularUmSelect(selectElement) {
         selectElement.appendChild(optionElement);
     });
     selectElement.value = valorAtual;
+    
+    
 }
 //Funções de infraestrutura
 function criarSelectParaNivel(numeroNivel) {
@@ -359,11 +366,7 @@ function onNivelChange() {
     atualizarSelectsPorNivel();
 }
 
-containerSelects.addEventListener('change', function(event) {
-    if (event.target.tagName === 'SELECT') {
-        atualizarOpcoesDeTodosOsSelects();
-    }
-});
+
 //Conclusao do sistema de escolha de habilidades
 campoNivel.addEventListener('input', onNivelChange);
 campoClasse.addEventListener('change', onNivelChange);
@@ -372,37 +375,188 @@ campoTrilha.addEventListener('change', onNivelChange);
 
 onNivelChange();
 
-//Trecho que pode ser otimizado!
+
 const Vigor = document.getElementById("vigor")
 const Intelecto = document.getElementById("intelecto")
 const Presenca = document.getElementById("presenca")
+const Destreza = document.getElementById("destreza")
+const Forca = document.getElementById("forca")
+const Ataque = document.getElementById("ataque")
 
-function calculoVida() {
+function calculoStatus() {
     const stat_Vida = document.getElementById("vida")
     const Vigor = parseInt(document.getElementById("vigor").value)
     const Vida = 20 + Vigor * 15
-
     stat_Vida.value = Vida
+
+    const stat_Mana = document.getElementById("mana")
+    const Intelecto = parseInt(document.getElementById("intelecto").value)
+    const Mana = 15 + Intelecto * 15
+    stat_Mana.value = Mana
+
+    const stat_Foco = document.getElementById("foco")
+    const Presenca = parseInt(document.getElementById("presenca").value)
+    const Foco = 6 + Presenca * 5
+    stat_Foco.value = Foco
+
+    const stat_Carga = document.getElementById("carga")
+    const Forca = parseInt(document.getElementById("forca").value)
+    const Carga = 4 + Forca * 4
+    stat_Carga.value = Carga
+
+    const stat_Movimento = document.getElementById("movimento")
+    const Destreza = parseInt(document.getElementById("destreza").value)
+    const Movimento = 2 + Destreza * 2
+    stat_Movimento.value = Movimento
 }
-Vigor.addEventListener("input", calculoVida)
-calculoVida()
 
-function calculoMana() {
-const stat_Mana = document.getElementById("mana")
-const Intelecto = parseInt(document.getElementById("intelecto").value)
-const Mana = 15 + Intelecto * 15
+atributo.forEach(input => {
+    input.addEventListener("input",calculoStatus)
+})
+calculoStatus()
 
-stat_Mana.value = Mana
+
+function bonusAtaque() {
+    
+    // 1. PRIMEIRO PASSO: Contar quantos "Bônus de Ataque" estão selecionados na tela
+    let contadorBonus = 0;
+    // Pega todos os selects dentro do container
+    const todosSelects = document.getElementById('container-selects').querySelectorAll('select');
+    
+    todosSelects.forEach(select => {
+        // Verifica se o valor deste select é o bônus de ataque
+        if (select.value === 'bonus-ataque') {
+            contadorBonus++;
+        }
+    });
+
+    // Agora 'contadorBonus' é o número real (ex: 0, 1, 2, 3...)
+    // Não precisa de parseInt pois o contador já é numérico.
+    const stat_Ataque = contadorBonus; 
+
+    // 2. SEGUNDO PASSO: Pegar a Classe e os Grupos
+    // (Adicionei .value aqui para garantir que pegamos o texto da classe)
+    const elClasse = document.getElementById("classe-personagem");
+    if (!elClasse) return; // Segurança caso o elemento não exista
+    const Classe = elClasse.value;
+
+    // ATENÇÃO AOS NOMES: Eles devem ser IGUAIS aos values do seu HTML
+    // Notei que você usou "mago_elemental" aqui, mas no HTML anterior estava "mago_elemntental" (com erro de digitação).
+    // Certifique-se que estão idênticos.
+    const Arcanista = ["mistico", "mago_elemental", "mago_de_fronte", "fimbulwinter", "feengari", "ascendente"];
+    const Combatente = ["espadachim", "arma_de_corda", "nordico", "lanceiro"];
+    const Especialista = ["atirador_de_elite", "assassino", "gladiador", "charlatao", "alquimista", "artifice"];
+
+    // Elemento onde vamos escrever o resultado (assumindo que existe um input com id="Ataque")
+    const elDisplayAtaque = document.getElementById("ataque"); 
+
+
+    let Ataque_B = 0;
+
+    // 3. TERCEIRO PASSO: Calcular baseado no grupo
+    if (Arcanista.includes(Classe)) {
+        Ataque_B = stat_Ataque * 4;
+    } else if (Combatente.includes(Classe)) {
+        Ataque_B = stat_Ataque * 3;
+    } else if (Especialista.includes(Classe)) {
+        Ataque_B = stat_Ataque * 3;
+    }
+
+    // 4. QUARTO PASSO: Exibir o resultado
+    elDisplayAtaque.value = Ataque_B;
 }
-Intelecto.addEventListener("input", calculoMana)
-calculoMana()
 
-function calculoFoco() {
-const stat_Foco = document.getElementById("foco")
-const Presenca = parseInt(document.getElementById("presenca").value)
-const Foco = 6 + Presenca * 5
+function esquiva() {
+    
+    let contadorBonus = 0;
+    const todosSelects = document.getElementById('container-selects').querySelectorAll('select');
+    
+    todosSelects.forEach(select => {
+        if (select.value === 'bonus-ataque') {
+            contadorBonus++;
+        }
+    });
 
-stat_Foco.value = Foco
+
+    const bonusDefesa = contadorBonus; 
+    const Destreza = parseInt(document.getElementById("destreza").value)
+
+    const elClasse = document.getElementById("classe-personagem");
+    if (!elClasse) return; // Segurança caso o elemento não exista
+    const Classe = elClasse.value;
+
+    const Arcanista = ["mistico", "mago_elemental", "mago_de_fronte", "fimbulwinter", "feengari", "ascendente"];
+    const Combatente = ["espadachim", "arma_de_corda", "nordico", "lanceiro"];
+    const Especialista = ["atirador_de_elite", "assassino", "gladiador", "charlatao", "alquimista", "artifice"];
+
+    
+    const elDisplayAtaque = document.getElementById("esquiva"); 
+
+
+    let esquiva = 0;
+
+    
+    if (Arcanista.includes(Classe)) {
+        esquiva = bonusDefesa * 2 + Destreza * 3;
+    } else if (Combatente.includes(Classe)) {
+        esquiva = bonusDefesa * 3 + Destreza * 3;
+    } else if (Especialista.includes(Classe)) {
+        esquiva = bonusDefesa * 1 + Destreza * 3;
+    }
+
+    
+    elDisplayAtaque.value = esquiva;
 }
-Presenca.addEventListener("input", calculoFoco)
-calculoFoco()
+
+containerSelects.addEventListener('change', function(event) {
+    if (event.target.tagName === 'SELECT') {
+        atualizarOpcoesDeTodosOsSelects();
+        esquiva();
+        bloqueio();
+        bonusAtaque(); 
+    }
+});
+esquiva()
+bloqueio()
+
+function bloqueio() {
+    
+    let contadorBonus = 0;
+    const todosSelects = document.getElementById('container-selects').querySelectorAll('select');
+    
+    todosSelects.forEach(select => {
+        if (select.value === 'bonus-ataque') {
+            contadorBonus++;
+        }
+    });
+
+
+    const bonusDefesa = contadorBonus; 
+    const Forca = parseInt(document.getElementById("forca").value)
+
+    const elClasse = document.getElementById("classe-personagem");
+    if (!elClasse) return; // Segurança caso o elemento não exista
+    const Classe = elClasse.value;
+
+    const Arcanista = ["mistico", "mago_elemental", "mago_de_fronte", "fimbulwinter", "feengari", "ascendente"];
+    const Combatente = ["espadachim", "arma_de_corda", "nordico", "lanceiro"];
+    const Especialista = ["atirador_de_elite", "assassino", "gladiador", "charlatao", "alquimista", "artifice"];
+
+    
+    const elDisplayAtaque = document.getElementById("bloqueio"); 
+
+
+    let esquiva = 0;
+
+    
+    if (Arcanista.includes(Classe)) {
+        esquiva = Math.floor(bonusDefesa * 1) + Forca;
+    } else if (Combatente.includes(Classe)) {
+        esquiva = Math.floor(bonusDefesa * 1.5) + Forca;
+    } else if (Especialista.includes(Classe)) {
+        esquiva = Math.floor(bonusDefesa * 0.5) + Forca;
+    }
+
+    
+    elDisplayAtaque.value = esquiva;
+}
