@@ -10,12 +10,14 @@ function calcularSoma() {
     atributo.forEach(input => {
         somaTotal += parseFloat(input.value);
     });
-    var result =  pontosTotais + 4 - somaTotal
+    var result =  Math.floor(pontosTotais / 2) + 6 - somaTotal
     displayPontos.textContent = result;
 }
 
 atributo.forEach(input => {
-    input.addEventListener("input",calcularSoma)
+    input.addEventListener("input",calcularSoma);
+    input.addEventListener("input",esquiva);
+    input.addEventListener("input",bloqueio)
 })
 
 pontosTotais.addEventListener("input", calcularSoma)
@@ -404,7 +406,7 @@ function calculoStatus() {
 
     const stat_Movimento = document.getElementById("movimento")
     const Destreza = parseInt(document.getElementById("destreza").value)
-    const Movimento = 4 + Destreza * 4
+    const Movimento = 2 + Destreza * 2
     stat_Movimento.value = Movimento
 }
 
@@ -464,12 +466,97 @@ function bonusAtaque() {
     elDisplayAtaque.value = Ataque_B;
 }
 
-// O Event Listener fica super simples agora
+function esquiva() {
+    
+    let contadorBonus = 0;
+    const todosSelects = document.getElementById('container-selects').querySelectorAll('select');
+    
+    todosSelects.forEach(select => {
+        if (select.value === 'bonus-ataque') {
+            contadorBonus++;
+        }
+    });
+
+
+    const bonusDefesa = contadorBonus; 
+    const Destreza = parseInt(document.getElementById("destreza").value)
+
+    const elClasse = document.getElementById("classe-personagem");
+    if (!elClasse) return; // Segurança caso o elemento não exista
+    const Classe = elClasse.value;
+
+    const Arcanista = ["mistico", "mago_elemental", "mago_de_fronte", "fimbulwinter", "feengari", "ascendente"];
+    const Combatente = ["espadachim", "arma_de_corda", "nordico", "lanceiro"];
+    const Especialista = ["atirador_de_elite", "assassino", "gladiador", "charlatao", "alquimista", "artifice"];
+
+    
+    const elDisplayAtaque = document.getElementById("esquiva"); 
+
+
+    let esquiva = 0;
+
+    
+    if (Arcanista.includes(Classe)) {
+        esquiva = bonusDefesa * 2 + Destreza * 3;
+    } else if (Combatente.includes(Classe)) {
+        esquiva = bonusDefesa * 3 + Destreza * 3;
+    } else if (Especialista.includes(Classe)) {
+        esquiva = bonusDefesa * 1 + Destreza * 3;
+    }
+
+    
+    elDisplayAtaque.value = esquiva;
+}
+
 containerSelects.addEventListener('change', function(event) {
     if (event.target.tagName === 'SELECT') {
         atualizarOpcoesDeTodosOsSelects();
-        
-        // Chamamos a função sem passar nada, e ela funciona!
+        esquiva();
+        bloqueio();
         bonusAtaque(); 
     }
 });
+esquiva()
+bloqueio()
+
+function bloqueio() {
+    
+    let contadorBonus = 0;
+    const todosSelects = document.getElementById('container-selects').querySelectorAll('select');
+    
+    todosSelects.forEach(select => {
+        if (select.value === 'bonus-ataque') {
+            contadorBonus++;
+        }
+    });
+
+
+    const bonusDefesa = contadorBonus; 
+    const Forca = parseInt(document.getElementById("forca").value)
+
+    const elClasse = document.getElementById("classe-personagem");
+    if (!elClasse) return; // Segurança caso o elemento não exista
+    const Classe = elClasse.value;
+
+    const Arcanista = ["mistico", "mago_elemental", "mago_de_fronte", "fimbulwinter", "feengari", "ascendente"];
+    const Combatente = ["espadachim", "arma_de_corda", "nordico", "lanceiro"];
+    const Especialista = ["atirador_de_elite", "assassino", "gladiador", "charlatao", "alquimista", "artifice"];
+
+    
+    const elDisplayAtaque = document.getElementById("bloqueio"); 
+
+
+    let esquiva = 0;
+
+    
+    if (Arcanista.includes(Classe)) {
+        esquiva = Math.floor(bonusDefesa * 1) + Forca;
+    } else if (Combatente.includes(Classe)) {
+        esquiva = Math.floor(bonusDefesa * 1.5) + Forca;
+    } else if (Especialista.includes(Classe)) {
+        esquiva = Math.floor(bonusDefesa * 0.5) + Forca;
+    }
+
+    
+    elDisplayAtaque.value = esquiva;
+}
