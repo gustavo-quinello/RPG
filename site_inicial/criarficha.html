@@ -89,6 +89,13 @@
             text-align: left;
         }
 
+        #container-magias {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* cria 2 colunas */
+            gap: 12px 20px; /* espaço entre linhas e colunas */
+            margin-top: 15px;
+        }       
+
         .select-wrapper {
             margin-bottom: 15px;
             animation: fadeIn 0.5s ease-in-out;
@@ -167,6 +174,48 @@
             text-align: left;
 
         }
+        /* Cada bloco de magia */
+        .select-magia-wrapper {
+            display: flex;
+            flex-direction: column;
+        }
+
+/* Estilo opcional para deixar mais bonito */
+        .select-magia-wrapper label {
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+            }
+
+            /* Container das magias — sempre 2 colunas */
+        #container-magias {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* DUAS COLUNAS FIXAS */
+            gap: 16px 24px; /* espaçamento: vertical 16px, horizontal 24px */
+            width: 100%;
+            margin: 20px auto;
+            padding: 0 10px;
+            box-sizing: border-box;
+            }
+
+/* Cada bloco */
+        .select-magia-wrapper {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            }
+
+
+/* Selects */
+        .select-magia-wrapper select {
+            width: 100%;           /* Preenche só sua coluna */
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #bbb;
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #fff;
+            }
     </style>
 </head>
 <body>
@@ -291,7 +340,7 @@
 
         </div>
 
-
+        <div id="container-magias"></div>
     </div>
 
     <script src="/site_inicial/js/criarficha.js"></script>

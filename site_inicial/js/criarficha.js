@@ -2,6 +2,7 @@
 var displayPontos = document.getElementById("Pontos_disponiveis")
 var atributo = document.querySelectorAll(".atributo")
 var pontosTotais = document.getElementById("nivel")
+const containerMagias = document.getElementById('container-magias');
 
 function calcularSoma() {
     var somaTotal = 0;
@@ -37,7 +38,7 @@ const campoTrilha = document.getElementById('trilha');
 
 // --- ESTRUTURA DE DADOS PARA HABILIDADES DINÂMICAS ---
 const habilidadesPorClasse = {
-    mago_elemntental: [
+    mago_elemental: [
         { valor: 'atalho-do-mago', texto: 'Atalho do Mago(C)', tier: 1 },
         { valor: 'finta-improvisada', texto: 'Finta Improvisada(C)', tier: 1 },
         { valor: 'intensificar', texto: 'Intensificar(C)', tier: 2 },
@@ -181,6 +182,72 @@ const habilidadesPorAura = {
         { valor: 'as-na-manga', texto: 'Ás na manga(A)', tier: 1 },
         { valor: 'especializado', texto: 'Especializado(A)', tier: 2 },
         { valor: 'segunda-chance', texto: 'Segunda chance(A)', tier: 3 }
+    ]
+};
+
+const magiasPorClasse = {
+    fimbulwinter: [
+        "Armadura gelada",
+        "Globo de Neve / Terreno Gélido",
+        "Lamina de gelo",
+        "Abraço gelido",
+        "Resfriar (atinge o equipamento)"
+    ],
+
+    feengari: [
+        "Grito do Abismo (dano em cone)",
+        "Alma sombria (projétil)",
+        "Escuridão descente (avanço com dano em área no final)",
+        "Caminhas das sombras (TP)",
+        "Dança da penumbra (invisibilidade)"
+    ],
+
+    ascendente: [
+        "Presas vorazes",
+        "Acumular dano",
+        "Pele de aço (+armadura)",
+        "Físico monstruoso (+dano e speed)",
+        "Ignorar a Dor"
+    ],
+
+    // Magias Valan → Mago Elemental
+    mago_elemental: [
+        // Ar
+        "Corte de ar I",
+        "Vento Dual I",
+        "Manipulação Cinética I",
+        "Velocidade Máxima I",
+        "Barreira de ar",
+        "Turbilhão cortante (fogo)",
+        "Meteoro (terra)",
+
+        // Terra
+        "Bala de pedra",
+        "Imobilização",
+        "Estalagmite",
+        "Nuvem de fumaça",
+        "Terremoto",
+        "Armadura de terra (água)",
+        "Explosão (fogo)",
+
+        // Fogo
+        "Bola de fogo",
+        "Labareda",
+        "Parede de fogo",
+        "Imbuir",
+        "Chama incansável",
+        "Laser (ar)",
+        "Raio (água)",
+
+        // Água
+        "Criação d’água",
+        "Chicote d’água",
+        "Nuvem de Vapor",
+        "Corte de água",
+        "Prisão d’água (def/atk)",
+        "Forja Divina (terra)",
+        "Dilúvio eterno (ar)",
+        "Imobilização",
     ]
 };
 
@@ -364,6 +431,7 @@ function atualizarOpcoesDeTodosOsSelects() {
 function onNivelChange() {
     atualizarOpcoesDeTodosOsSelects();
     atualizarSelectsPorNivel();
+    gerarMagiasPorNivel();
 }
 
 
@@ -440,9 +508,6 @@ function bonusAtaque() {
     if (!elClasse) return; // Segurança caso o elemento não exista
     const Classe = elClasse.value;
 
-    // ATENÇÃO AOS NOMES: Eles devem ser IGUAIS aos values do seu HTML
-    // Notei que você usou "mago_elemental" aqui, mas no HTML anterior estava "mago_elemntental" (com erro de digitação).
-    // Certifique-se que estão idênticos.
     const Arcanista = ["mistico", "mago_elemental", "mago_de_fronte", "fimbulwinter", "feengari", "ascendente"];
     const Combatente = ["espadachim", "arma_de_corda", "nordico", "lanceiro"];
     const Especialista = ["atirador_de_elite", "assassino", "gladiador", "charlatao", "alquimista", "artifice"];
@@ -484,11 +549,6 @@ function esquiva() {
     const elClasse = document.getElementById("classe-personagem");
     if (!elClasse) return; // Segurança caso o elemento não exista
     const Classe = elClasse.value;
-
-    const Arcanista = ["mistico", "mago_elemental", "mago_de_fronte", "fimbulwinter", "feengari", "ascendente"];
-    const Combatente = ["espadachim", "arma_de_corda", "nordico", "lanceiro"];
-    const Especialista = ["atirador_de_elite", "assassino", "gladiador", "charlatao", "alquimista", "artifice"];
-
     
     const elDisplayAtaque = document.getElementById("esquiva"); 
 
@@ -559,4 +619,108 @@ function bloqueio() {
 
     
     elDisplayAtaque.value = esquiva;
+}
+
+function criarSelectDeMagia(indice) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'select-magia-wrapper';
+
+    const label = document.createElement('label');
+    label.textContent = `Magia ${indice}:`;
+
+    const select = document.createElement('select');
+    select.id = `magia-${indice}`;
+    select.classList.add('select-magia');
+
+    wrapper.appendChild(label);
+    wrapper.appendChild(select);
+
+    popularSelectMagia(select);;
+
+    select.addEventListener('change', () => {
+        atualizarTodosOsSelectsDeMagia();
+    });
+
+    return wrapper;
+}
+
+function popularSelectMagia(selectElement) {
+    const magias = getMagiasDaClasseAtual();
+    const magiasUsadas = getMagiasSelecionadas();
+    const valorAtual = selectElement.value;
+
+    selectElement.innerHTML = "";
+
+    // Opção vazia
+    const vazio = document.createElement("option");
+    vazio.value = "";
+    vazio.textContent = "-- Escolha uma magia --";
+    selectElement.appendChild(vazio);
+
+    magias.forEach(nome => {
+        const option = document.createElement("option");
+        option.value = nome;
+        option.textContent = nome;
+
+        // Se outra magia já tiver selecionado esse nome → bloquear
+        if (magiasUsadas.has(nome) && nome !== valorAtual) {
+            option.disabled = true;
+            option.textContent += " (Já escolhida)";
+        }
+
+        selectElement.appendChild(option);
+    });
+
+    // Mantém a magia escolhida no select
+    selectElement.value = valorAtual;
+}
+
+function gerarMagiasPorNivel() {
+    const nivel = parseInt(campoNivel.value) || 0;
+    const classe = campoClasse.value;
+
+    const Arcanista = ["mistico", "mago_elemental", "mago_de_fronte", "fimbulwinter", "feengari", "ascendente"];
+
+    // Se NÃO for arcanista → limpa e sai
+    if (!Arcanista.includes(classe)) {
+        containerMagias.innerHTML = "";
+        return;
+    }
+
+    // Quantidade de magias = nivel/2 (arredondado pra baixo)
+    const quantidade = Math.floor(nivel / 2);
+
+    // Limpa o container
+    containerMagias.innerHTML = "";
+
+    for (let i = 1; i <= quantidade; i++) {
+        const campo = criarSelectDeMagia(i);
+        containerMagias.appendChild(campo);
+    }
+}
+
+function getMagiasDaClasseAtual() {
+    const classe = campoClasse.value;
+    return magiasPorClasse[classe] || [];
+}
+
+function atualizarTodosOsSelectsDeMagia() {
+    const selects = document.querySelectorAll('.select-magia');
+
+    selects.forEach(select => {
+        const antigo = select.value;
+        popularSelectMagia(select);
+        select.value = antigo;
+    });
+}
+
+function getMagiasSelecionadas() {
+    const selects = document.querySelectorAll('.select-magia');
+    const usadas = new Set();
+
+    selects.forEach(sel => {
+        if (sel.value) usadas.add(sel.value);
+    });
+
+    return usadas;
 }
