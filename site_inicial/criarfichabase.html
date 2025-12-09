@@ -3,90 +3,297 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>criarficha</title>
-    <script src="checkUser.js"></script>
+    <title>Gerador de Habilidades Inteligente</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #1c1e21;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container-principal {
+            background-color: #ffffff;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .controle-nivel, .controle-classe {
+            margin-bottom: 24px;
+        }
+
+        .controle-nivel label, .controle-classe label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: left;
+        }
+
+        .controle-nivel input[type="number"] {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: left;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .controle-nivel input[type="number"]:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        .controle-classe select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            font-size: 14px;
+        }
+
+        #nome {
+            font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+            width: 80%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        #container-selects {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .select-wrapper {
+            margin-bottom: 15px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .select-wrapper label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .select-wrapper select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            font-size: 14px;
+        }
+
+        .atributos1 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            text-align: center;
+            padding: 5px;
+            gap: 5px;
+           
+        }
+        .statA {
+            display: grid;
+            text-align: center;
+            padding: 10px 80px;
+        }
+        .atributo {
+            margin-top: 10px;
+            box-sizing: border-box;
+            padding: 5px;
+            border-radius: 20px;
+            text-align: left;
+
+        }
+        .atrib3{
+            margin-top: 10px;
+        }
+        #at-vigor {
+            text-align: center;
+            display: grid;
+            padding: 0px 80px;
+        }
+        .statusPersonagem {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            text-align: center;
+            padding: 5px;
+            gap: 1px
+            
+        }
+        .statP {
+            display: grid;
+            padding: 10px 40px;
+            
+            
+        }
+        .atributo1 {
+            margin-bottom: 10px;
+            margin-top: 3px;
+            box-sizing: border-box;
+            padding: 5px;
+            border-radius: 20px;
+            text-align: left;
+
+        }
+    </style>
 </head>
 <body>
-    <h1>Nova Ficha de Personagem</h1>
-    <form id="formulario-ficha">
-        <label for="name">Jogador:</label>
-        <input type="text" id="name">
+    
 
-        <label for="name">Nome do Personagem:</label>
-        <input type="text" id="name" required>
+    <div class="container-principal">
 
-        <label for="aura">Aura do Personagem:</label>
-        <select id="aura">
-            <option value="">--Escolha uma aura--</option>
-            <option value="Reforço">Reforço</option>
-            <option value="Emissão">Emissão</option>
-            <option value="Transformação">Transformação</option>
-            <option value="Materialização">Materialização</option>
-            <option value="Manipulação">Manipulação</option>
-        </select>
+        <h1>Seleção de Habilidades</h1>
 
-        <label for="classe">Classe do Personagem:</label>
-        <select name="classe" id="classe">
-            <option value="">--Escolha uma Classe--</option>
-            <option value="Mago elemental">Mago elemental</option>
-            <option value="Místico">Místico</option>
-            <option value="Mago de fronte">Mago de fronte</option>
-            <option value="Fimbulwinter">Fimbulwinter</option>
-            <option value="Feengari">Feengari</option>
-            <option value="Ascendente">Ascendente</option>
-            <option value="Espadachim">Espadachim</option>
-            <option value="Arma de Corda">Arma de Corda</option>
-            <option value="Nórdico">Nórdico</option>
-            <option value="Lanceiro">Lanceiro</option>
-            <option value="Atirador de elite">Atirador de elite</option>
-            <option value="Assassino">Assassino</option>
-            <option value="Gladiador">Gladiador</option>
-            <option value="Charlatão">Charlatão</option>
-            <option value="Alquimista">Alquimista</option>
-            <option value="Artífice">Artífice</option>
+        <div class="controle-classe">
 
-        </select>
+            <input type="text" id="nome" placeholder="Nome do personagem" maxlength="20">
 
-        <label for="trilha">Trilha do Personagem:</label>
-        <select name="trilha" id="trilha">
-            <option value="">--Escolha uma trilha--</option>
-            <option value="Envoltura">Envoltura</option>
-            <option value="Expansão">Expansão</option>
-            <option value="Liberação">Liberação</option>
-        </select>
+            <label for="Trilha">Trilha do Personagem:</label>
+            <select id="trilha">
+                <option value="">-- Escolha uma trilha --</option>
+                <option value="envoltura">Envoltura</option>
+                <option value="expansao">Expansão</option>
+                <option value="liberacao">Liberação</option>
+            </select>
 
-        <p> Voce tem <span id="Pontos_disponiveis">0</span> Pontos sobrando!</p>
-        
-        <label for="nivel">Nível do Personagem:</label>
-        <input type="number" max="16" min="0" id="nivel" class="atributo">
-        
-        <div>
-            <label for="atributo-Força">Força</label>
-            <input type="number" id="atributo-Força" max="8" min="1" value="1" class="atributo">
+            <label for="Aura">Aura do personagem:</label>
+            <select id="aura">
+                <option value="">-- Escolha uma aura --</option>
+                <option value="reforco">Reforço</option>
+                <option value="emissao">Emissão</option>
+                <option value="transformacao">Transformação</option>
+                <option value="materializacao">Materialização</option>
+                <option value="manipulacao">Manipulação</option>
+            </select>
+       
+            <label for="classe-personagem">Classe do Personagem:</label>
+            <select id="classe-personagem">
+                <option value="">-- Escolha uma classe --</option>
+                <option value="mistico">Místico</option>
+                <option value="mago_elemental">Mago elemental</option>
+                <option value="mago_de_fronte">Mago de fronte</option>
+                <option value="fimbulwinter">Fimbulwinter</option>
+                <option value="feengari">Feengari</option>
+                <option value="ascendente">Ascendente</option>
+                <option value="espadachim">Espadachim</option>
+                <option value="arma_de_corda">Arma de Corda</option>
+                <option value="nordico">Nórdico</option>
+                <option value="lanceiro">Lanceiro</option>
+                <option value="atirador_de_elite">Atirador de elite</option>
+                <option value="assassino">Assassino</option>
+                <option value="gladiador">Gladiador</option>
+                <option value="charlatao">Charlatão</option>
+                <option value="alquimista">Alquimista</option>
+                <option value="artifice">Artífice</option>
+            </select>
+            </select>
+            </select>
+            </select>
+        </div>
 
-            <label for="atributo-Destreza">Destreza</label>
-            <input type="number" id="atributo-Destreza" max="8" min="1" class="atributo" value="1">
-            
-            <label for="atributo-Vigor">Vigor</label>
-            <input type="number" id="atributo-Vigor" max="8" min="1" value="1" class="atributo">
-
-1            <label for="atributo-Intelecto">Intelecto</label>
-            <input type="number" id="atributo-Intelecto" max="8" min="1" class="atributo" value="1" >
-
-            <label for="atributo-Presença">Presença</label>
-            <input type="number" id="atributo-Presença" max="8" min="1" class="atributo" value="1" >
+        <div class="controle-nivel">
+            <label for="nivel">Nível do Personagem:</label>
+            <input type="number" id="nivel" min="1" max="16" value="1">
         </div>
         
-        <h3>Selecione suas habilidades</h3>
-        <div id="containers"></div>
+        <hr>
 
-        <button type="submit" id="finalizar">Finalizar Ficha</button>
-    </form>
-    <p id="message"></p>
-    <a href="mestre.html">Voltar para o painel</a>
-    <script src="mestre.js"></script>
-    <script src="criarficha.js"></script>
+        <div id="container-selects"></div>
 
-    
+        <hr>
+
+       <header>Voce tem <span id="Pontos_disponiveis">0</span> Pontos sobrando!</header>
+
+        <div class="atributos1">
+
+            <section class="statA">
+                <label for="atributo-Força" class="atrib3">Força</label>
+                <input type="number" max="8" min="0" value="1" class="atributo" id="forca">
+
+                <label for="atributo-Destreza" class="atrib3">Destreza</label>
+                <input type="number" max="8" min="0" class="atributo" value="1" id="destreza">
+            </section>
+            <section class="statA">
+                <label for="atributo-Intelecto" class="atrib3">Intelecto</label>
+                <input type="number" max="8" min="0" class="atributo" value="1" id="intelecto">
+
+                <label for="atributo-Presença" class="atrib3">Presença</label>
+                <input type="number" max="8" min="0" class="atributo" value="1" id="presenca">
+            </section>
+            <div id="at-vigor">
+                <label for="atributo-Vigor">Vigor</label>
+                <input type="number" max="8" min="0" value="1" class="atributo" id="vigor">
+            </div>
+        </div>
+
+        <hr>
+        
+        <header>Seus Status</header>
+        <div class="statusPersonagem">
+            <section class="statP">
+                <label for="vida">Vida Máxima</label>
+                <input type="text" id="vida" class="atributo1" readonly value="">
+
+                <label for="foco">Foco Máximo</label>
+                <input type="text" id="foco" class="atributo1" readonly>
+
+                <label for="ataque">Bônus de Ataque</label>
+                <input type="text" id="ataque" class="atributo1" readonly>
+
+                <label for="esquiva">Esquiva</label>
+                <input type="text" id="esquiva" class="atributo1" readonly>
+            </section>
+            <section class="statP">
+                <label for="mana">Mana Máxima</label>
+                <input type="text" id="mana" class="atributo1" readonly>
+
+                <label for="carga">Carga Máxima</label>
+                <input type="text" id="carga" class="atributo1" readonly>
+                
+                <label for="movimento">Movimento</label>
+                <input type="text" id="movimento" class="atributo1" readonly>
+
+                <label for="bloqueio">Bloqueio</label>
+                <input type="text" id="bloqueio" class="atributo1" readonly> 
+            </section>
+
+        </div>
+
+
+    </div>
+
+    <script src="/site_inicial/js/criarficha.js"></script>
 </body>
 </html>
