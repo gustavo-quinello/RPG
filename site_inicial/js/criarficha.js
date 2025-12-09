@@ -1,11 +1,11 @@
 
-// --- DADOS (Adicionei descrições genéricas) ---
+// --- DADOS (Mesma estrutura anterior, você pode expandir) ---
 const dadosHabilidades = {
     classes: {
         mago_elemental: [
             { id: 'me_2', nome: 'Atalho do Mago', desc: 'Descrição genérica.', tier: 1 },
             { id: 'me_3', nome: 'Finta Improvisada', desc: 'Descrição genérica.', tier: 1 },
-            { id: 'me_4', nome: 'Intensificar', desc: 'Descrição genérica.', tier: 2 },
+            { id: 'me_4', nome: 'Afinidade Elemental', desc: 'Afinidade Elemental - [Passivo] - [sem custo] - Sempre que conjurar uma magia elemental, recebe +1d10 de dano adicional do mesmo elemento. Nível 8: aumenta para +2d10. Nível 12: aumenta para +3d10. Nível 16: aumenta para +4d10.', tier: 2 },
             { id: 'me_5', nome: 'Ciclo arcano', desc: 'Descrição genérica.', tier: 2 },
             { id: 'me_6', nome: 'Aniquilação', desc: 'Descrição genérica.', tier: 3 },
             
@@ -137,8 +137,8 @@ const dadosHabilidades = {
         ],
 
         },
-        auras: {
-            reforco: [
+    auras: {
+        reforco: [
             { id: 'ref_1', nome: 'Parrudo', desc: 'Descrição genérica.', tier: 1 },
             { id: 'ref_2', nome: 'Coagular', desc: 'Descrição genérica.', tier: 2 },
             { id: 'ref_3', nome: 'Força Máxima', desc: 'Descrição genérica.', tier: 3 },
@@ -167,12 +167,12 @@ const dadosHabilidades = {
             { id: 'man_2', nome: 'Especializado', desc: 'Descrição genérica.', tier: 2 },
             { id: 'man_3', nome: 'Segunda chance', desc: 'Descrição genérica.', tier: 3 },
         ],
-        },
-        trilhas: {
-            envoltura: [
-            { id: 'env_1', nome: 'Troca', desc: 'Descrição genérica.', tier: 1 },
-            { id: 'env_2', nome: 'Barganha Insana', desc: 'Descrição genérica.', tier: 2 },
-            { id: 'env_3', nome: 'Absorsão Vital', desc: 'Descrição genérica.', tier: 3 },
+            },
+    trilhas: {
+        envoltura: [
+        { id: 'env_1', nome: 'Troca', desc: 'Descrição genérica.', tier: 1 },
+        { id: 'env_2', nome: 'Barganha Insana', desc: 'Descrição genérica.', tier: 2 },
+        { id: 'env_3', nome: 'Absorsão Vital', desc: 'Descrição genérica.', tier: 3 },
         ],
 
         expansao: [
@@ -189,146 +189,260 @@ const dadosHabilidades = {
     }
 };
 
-// --- ESTADO GLOBAL ---
-let pontosGastos = 0;
-let habilidadesSelecionadas = new Set(); // Guarda os IDs das habilidades pegas
+const gruposDeClasse = {
+    arcanista: ["mago_elemental", "mistico", "mago_de_fronte", "fimbulwinter", "feengari", "ascendente"],
+    combatente: ["espadachim", "arma_de_corda", "nordico", "lanceiro"],
+    especialista: ["atirador_de_elite", "assassino", "gladiador", "charlatao", "alquimista", "artifice"]
+};
 
-// --- ELEMENTOS DOM ---
+const dadosAfinidade = {
+    auras: {
+        reforco: { nome: "Mestre da Fortitude", desc: "Aumenta o multiplicador de vida por nível." },
+        emissao: { nome: "Canalizador Puro", desc: "Aumenta o multiplicador de Mana por nível." },
+        transformacao: { nome: "Passo Fluído", desc: "Aumenta o multiplicador de Movimento por nível." },
+        materializacao: { nome: "Centro Mental", desc: "Aumenta o multiplicador de Foco por nível." },
+        manipulacao: { nome: "Harmonia Elementar", desc: "Aumenta levemente todos os multiplicadores principais." },
+    },
+   grupos_classes: {
+        arcanista: { nome: "Despertar Arcano", desc: "Ganha magias extras e reduz o tempo da primeira conjuração." },
+        combatente: { nome: "Veterano de Batalha", desc: "Sua defesa decai menos a cada ataque recebido." },
+        especialista: { nome: "Perito Especial", desc: "Concede dados de vantagem em testes não ofensivos." }
+    },
+    trilhas: {
+        envoltura: { nome: "Fluxo Eficiente", desc: "Reduz o gasto de Mana passiva." },
+        expansao: { nome: "Juggernaut", desc: "Aumenta a Classe de Armadura." },
+        liberacao: { nome: "Arsenal Expandido", desc: "Permite carregar mais utilitários na bolsa." }
+    }
+};
+
+function getDadosAfinidadeClasse(idClasse) {
+    // 1. Verifica se é Arcanista
+    if (gruposDeClasse.arcanista.includes(idClasse)) {
+        return dadosAfinidade.grupos_classes.arcanista;
+    }
+    // 2. Verifica se é Combatente
+    if (gruposDeClasse.combatente.includes(idClasse)) {
+        return dadosAfinidade.grupos_classes.combatente;
+    }
+    // 3. Verifica se é Especialista
+    if (gruposDeClasse.especialista.includes(idClasse)) {
+        return dadosAfinidade.grupos_classes.especialista;
+    }
+    
+    // Fallback de segurança (caso a classe não esteja em nenhum grupo)
+    return { nome: "Classe Desconhecida", desc: "Sem afinidade definida." };
+}
+
+// --- ESTADO ---
+let pontosGastosHabilidades = 0;
+let habilidadesSelecionadas = new Set();
+let afinidadeEscolhida = null
+
+// --- ELEMENTOS ---
 const elNivel = document.getElementById('nivel');
-const elPontosTxt = document.getElementById('pontos-txt');
-const elPontosMax = document.getElementById('pontos-max');
-const controles = document.querySelectorAll('select, input');
+const inputsAtributos = document.querySelectorAll('.input-atributo');
+const inputsGerais = document.querySelectorAll('select, #nivel');
 
-// --- FUNÇÃO PRINCIPAL: CALCULAR E RENDERIZAR ---
+function getAtributo(id) {
+    return parseInt(document.getElementById(id).value) || 0;
+}
+
+function calcularStatus(nivel) {
+    const forca = getAtributo('attr-forca');
+    const destreza = getAtributo('attr-destreza');
+    const vigor = getAtributo('attr-vigor');
+    const intelecto = getAtributo('attr-intelecto');
+    const presenca = getAtributo('attr-presenca');
+    const classe = document.getElementById('classe').value;
+    const combat_points = (nivel < 3 ? 0 
+    : nivel < 6 ? 1 
+    : nivel < 8 ? 2
+    : nivel < 11 ? 3 
+    : nivel < 15 ? 4
+    : 5);
+    const mod_generico = (nivel < 3 ? 0 : 1);
+
+
+    // FÓRMULAS
+    const vida = 20 + (vigor * 16) + nivel * 4;
+    const mana = 15 + (intelecto * 16) + nivel * 4;
+    const foco = 6 + (presenca * 4) + nivel;
+    const carga = 4 + forca * 2;
+    const movimento = 2 + destreza + Math.floor(nivel * 0.2);
+    let bloqueio = 0;
+    if (gruposDeClasse.combatente.includes(classe)) bloqueio = forca * 3 + combat_points * 3 + 2 * mod_generico;
+    else if (gruposDeClasse.arcanista.includes(classe)) bloqueio = forca * 3 + combat_points * 2 + 2 * mod_generico;
+    else bloqueio = forca * 3 + combat_points + 2 * mod_generico;
+    let esquiva = 0;
+    if (gruposDeClasse.combatente.includes(classe)) esquiva = destreza * 3 + combat_points * 3 + 2 * mod_generico;
+    else if (gruposDeClasse.arcanista.includes(classe)) esquiva = destreza * 3 + combat_points * 2 + 2 * mod_generico;
+    else esquiva = destreza * 3 + combat_points + 2 * mod_generico;
+
+    // Cálculo Bônus de Ataque (Simplificado por grupo)
+    let ataqueBonus = 0;
+    if (gruposDeClasse.combatente.includes(classe)) ataqueBonus = combat_points * 3;
+    else if (gruposDeClasse.arcanista.includes(classe)) ataqueBonus = combat_points * 3;
+    else ataqueBonus = combat_points * 3;
+
+    // Atualiza HTML
+    document.getElementById('stat-vida').textContent = vida;
+    document.getElementById('stat-mana').textContent = mana;
+    document.getElementById('stat-foco').textContent = foco;
+    document.getElementById('stat-carga').textContent = carga;
+    document.getElementById('stat-movimento').textContent = movimento + 'm';
+    document.getElementById('stat-bloqueio').textContent = bloqueio;
+    document.getElementById('stat-esquiva').textContent = esquiva;
+    document.getElementById('stat-ataque').textContent = '+' + ataqueBonus;
+}
+
+// --- ATUALIZAÇÃO GERAL ---
+// --- ATUALIZAÇÃO GERAL ---
 function atualizarTudo() {
-const nivel = parseInt(elNivel.value) || 1;
-
-// 1. Calcula Pontos Disponíveis (Exemplo: 1 ponto por nível)
-// Você pode mudar essa fórmula.
-const totalPontosPermitidos = Math.ceil(nivel * 3/4 - 1)-
+    const nivel = parseInt(elNivel.value) || 1;
+    
+    // 1. PONTOS
+    const pontosTotaisAttr = Math.floor(nivel/2) + 6;
+    const pontosTotaisSkill = Math.ceil(nivel * 3/4 - 1)-
     (nivel < 3 ? 0 
     : nivel < 6 ? 1 
     : nivel < 11 ? 2 
-    : 3); 
-
-elPontosMax.textContent = totalPontosPermitidos;
-elPontosTxt.textContent = totalPontosPermitidos - pontosGastos;
-
-// 2. Define Tier Máximo baseado no nível
-let maxTier = 1;
-if (nivel >= 13) maxTier = 3;
-else if (nivel >= 5) maxTier = 2;
-
-// 3. Renderiza as 3 Colunas
-renderizarColuna('lista-aura', dadosHabilidades.auras[document.getElementById('aura').value], maxTier, totalPontosPermitidos);
-renderizarColuna('lista-classe', dadosHabilidades.classes[document.getElementById('classe').value], maxTier, totalPontosPermitidos);
-renderizarColuna('lista-trilha', dadosHabilidades.trilhas[document.getElementById('trilha').value], maxTier, totalPontosPermitidos);
-}
-
-// --- RENDERIZADOR DE COLUNA ---
-function renderizarColuna(containerId, listaHabilidades, maxTier, totalPontos) {
-const container = document.getElementById(containerId);
-container.innerHTML = ''; // Limpa a coluna
-
-if (!listaHabilidades) return;
-
-listaHabilidades.forEach(habilidade => {
-    const btn = document.createElement('button');
-    btn.className = 'btn-habilidade';
+    : 3);
     
-    // Verifica se está selecionado
-    const isSelecionado = habilidadesSelecionadas.has(habilidade.id);
+    let gastosAttr = 0;
+    inputsAtributos.forEach(i => gastosAttr += (parseInt(i.value)||0));
     
-    // Verifica se está bloqueado por nível
-    if (habilidade.tier > maxTier) {
-        btn.classList.add('estado-bloqueado');
-        btn.textContent = `🔒 ${habilidade.nome} (Nível ${habilidade.tier * 8 - 12})`;
-        btn.disabled = true;
+    const saldoAttr = pontosTotaisAttr - gastosAttr;
+    const saldoSkill = pontosTotaisSkill - pontosHabilidadesGastos;
+
+    document.getElementById('pts-attr-atual').textContent = saldoAttr;
+    document.getElementById('pts-attr-total').textContent = pontosTotaisAttr;
+    document.getElementById('pts-skill-atual').textContent = saldoSkill;
+    document.getElementById('pts-skill-total').textContent = pontosTotaisSkill;
+
+    // Cor de erro se negativo
+    document.getElementById('pts-attr-atual').style.color = saldoAttr < 0 ? 'var(--color-danger)' : 'var(--color-attr)';
+    document.getElementById('pts-skill-atual').style.color = saldoSkill < 0 ? 'var(--color-danger)' : 'var(--color-primary)';
+
+    // 2. AFINIDADE
+    const containerAfinidade = document.getElementById('container-afinidade');
+    if (nivel >= 4) {
+        containerAfinidade.style.display = 'flex';
+        renderizarAfinidades();
     } else {
-        // Configura o Estado Inicial Visual
-        if (isSelecionado) {
-            btn.classList.add('estado-selecionado');
-            btn.textContent = habilidade.nome;
-            btn.dataset.state = 2; // Estado 2: Selecionado
-        } else {
-            btn.classList.add('estado-padrao');
-            btn.textContent = `${habilidade.nome}`;
-            btn.dataset.state = 0; // Estado 0: Neutro
-        }
+        containerAfinidade.style.display = 'none';
+        afinidadeEscolhida = null;
+    }
 
-        // --- LÓGICA DO CLIQUE (O LOOP DE 3 ESTADOS) ---
-        btn.onclick = () => {
-            const estadoAtual = parseInt(btn.dataset.state);
-            const pontosDisponiveis = totalPontos - pontosGastos;
+    // 3. HABILIDADES
+    const maxTier = nivel >= 12 ? 3 : (nivel >= 4 ? 2 : 1);
+    renderizarColuna('lista-aura', dadosHabilidades.auras[document.getElementById('aura').value], maxTier, saldoSkill);
+    renderizarColuna('lista-classe', dadosHabilidades.classes[document.getElementById('classe').value], maxTier, saldoSkill);
+    renderizarColuna('lista-trilha', dadosHabilidades.trilhas[document.getElementById('trilha').value], maxTier, saldoSkill);
 
-            // Reset visual
-            btn.classList.remove('estado-padrao', 'estado-info', 'estado-selecionado');
+    // 4. STATUS (Chama a nova função)
+    calcularStatus(nivel);
+}
 
-            // MÁQUINA DE ESTADOS
-            if (estadoAtual === 0) {
-                // 0 -> 1: Mostrar Info
-                btn.dataset.state = 1;
-                btn.textContent = habilidade.desc;
-                btn.classList.add('estado-info');
-            } 
-            else if (estadoAtual === 1) {
-                // 1 -> 2: Tentar Selecionar
-                if (pontosDisponiveis > 0) {
-                    btn.dataset.state = 2;
-                    btn.textContent = habilidade.nome;
-                    btn.classList.add('estado-selecionado');
-                    
-                    // Lógica de dados
-                    pontosGastos++;
-                    habilidadesSelecionadas.add(habilidade.id);
-                    atualizarDisplayPontos(totalPontos);
-                } else {
-                    alert("Você não tem pontos suficientes!");
-                    // Volta para estado 0
-                    btn.dataset.state = 0;
-                    btn.textContent = `${habilidade.nome} (T${habilidade.tier})`;
-                    btn.classList.add('estado-padrao');
-                }
-            } 
-            else if (estadoAtual === 2) {
-                // 2 -> 0: Deselecionar
-                btn.dataset.state = 0;
-                btn.textContent = `${habilidade.nome} (T${habilidade.tier})`;
-                btn.classList.add('estado-padrao');
+// --- NOVA FUNÇÃO DE RENDERIZAR AFINIDADES ---
+function renderizarAfinidades() {
+    const container = document.getElementById('lista-afinidades');
+    container.innerHTML = ''; // Limpa
 
-                // Lógica de dados
-                pontosGastos--;
-                habilidadesSelecionadas.delete(habilidade.id);
-                atualizarDisplayPontos(totalPontos);
-            }
+    // Pega as escolhas atuais dos Dropdowns
+    const aura = document.getElementById('aura').value;
+    const classe = document.getElementById('classe').value;
+    const trilha = document.getElementById('trilha').value;
+
+ 
+    const opcoes = [
+        { origem: 'AURA', ...dadosAfinidade.auras[aura] },
+        { origem: 'CLASSE', ...getDadosAfinidadeClasse(classe) },
+        { origem: 'TRILHA', ...dadosAfinidade.trilhas[trilha] }
+    ];
+
+
+    opcoes.forEach(opt => {
+        const card = document.createElement('div');
+        card.className = 'card-afinidade';
+        if (afinidadeEscolhida && afinidadeEscolhida.nome === opt.nome) card.classList.add('selecionado');
+        
+        card.innerHTML = `
+            <div style="font-size:0.7rem; opacity:0.7; margin-bottom:5px;">${opt.origem}</div>
+            <h3 style="margin:0 0 5px 0; font-size:1rem;">${opt.nome}</h3>
+            <div style="font-size:0.85rem; opacity:0.9;">${opt.desc}</div>
+        `;
+        card.onclick = () => {
+            afinidadeEscolhida = (afinidadeEscolhida && afinidadeEscolhida.nome === opt.nome) ? null : opt;
+            renderizarAfinidades();
         };
-    }
-
-    container.appendChild(btn);
-});
+        container.appendChild(card);
+    });
 }
 
-function atualizarDisplayPontos(total) {
-elPontosTxt.textContent = total - pontosGastos;
+// --- RENDERIZADOR ---
+function renderizarColuna(id, lista, maxTier, saldo) {
+    const el = document.getElementById(id);
+    el.innerHTML = '';
+    if(!lista) return;
+    lista.forEach(h => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-habilidade';
+        const sel = habilidadesSelecionadas.has(h.id);
+        
+        if(h.tier > maxTier) {
+            btn.classList.add('bloqueado');
+            btn.textContent = `🔒 ${h.nome} (Nível ${h.tier * 8 - 12})`;
+        } else {
+            if(sel) {
+                btn.classList.add('selecionado');
+                btn.textContent = h.nome;
+                btn.dataset.state = 2;
+            } else {
+                btn.textContent = `${h.nome}`;
+                btn.dataset.state = 0;
+            }
+            
+            btn.onclick = () => {
+                const st = parseInt(btn.dataset.state);
+                btn.classList.remove('selecionado', 'info');
+                
+                if(st === 0) {
+                    btn.dataset.state = 1;
+                    btn.textContent = h.desc;
+                    btn.classList.add('info');
+                } else if(st === 1) {
+                    if(saldo > 0) {
+                        btn.dataset.state = 2;
+                        btn.textContent = h.nome;
+                        btn.classList.add('selecionado');
+                        pontosHabilidadesGastos++;
+                        habilidadesSelecionadas.add(h.id);
+                        atualizarTudo();
+                    } else {
+                        alert("Sem pontos!");
+                        btn.dataset.state = 0; btn.textContent = `${h.nome}`;
+                    }
+                } else {
+                    btn.dataset.state = 0;
+                    btn.textContent = `${h.nome}`;
+                    pontosHabilidadesGastos--;
+                    habilidadesSelecionadas.delete(h.id);
+                    atualizarTudo();
+                }
+            }
+        }
+        el.appendChild(btn);
+    });
 }
 
-// --- EVENTOS ---
-// Se mudar Nível, Aura, Classe ou Trilha, re-renderiza tudo.
-// CUIDADO: Ao mudar classe/aura, se você tiver habilidades selecionadas da classe antiga,
-// elas continuarão contando nos pontos gastos mas sumirão da tela.
-// O ideal seria resetar os pontos ao mudar de classe. Vou adicionar isso.
-
-controles.forEach(ctrl => {
-ctrl.addEventListener('change', (e) => {
-    // Se mudou algo que altera as listas (Classe/Aura/Trilha), resetamos as escolhas para evitar bugs
-    if (e.target.id !== 'nivel') {
-        pontosGastos = 0;
-        habilidadesSelecionadas.clear();
-    }
-    atualizarTudo();
+// --- LISTENERS ---
+inputsGerais.forEach(el => {
+    el.addEventListener('change', (e) => {
+        if(e.target.id !== 'nivel') { pontosHabilidadesGastos=0; habilidadesSelecionadas.clear(); }
+        atualizarTudo();
+    });
+    if(el.id==='nivel') el.addEventListener('input', atualizarTudo);
 });
-ctrl.addEventListener('input', atualizarTudo); // Para o number input
-});
+inputsAtributos.forEach(el => el.addEventListener('input', atualizarTudo));
 
-// Início
 atualizarTudo();

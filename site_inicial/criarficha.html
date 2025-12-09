@@ -3,148 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Árvore de Habilidades</title>
+    <title>Ficha de Personagem</title>
     <style>
         :root {
-            --bg-body: #1a1a1d;
-            --bg-card: #2c2c2e;
-            --text-main: #e0e0e0;
-            --color-info: #3b82f6; /* Azul */
-            --color-selected: #10b981; /* Verde */
-            --color-locked: #525252;
-            --border-radius: 8px;
+            --bg-body: #09090b;
+            --bg-card: #18181b;
+            --bg-input: #27272a;
+            --text-main: #e4e4e7;
+            --text-muted: #a1a1aa;
+            
+            --color-primary: #8b5cf6; /* Roxo */
+            --color-secondary: #10b981; /* Verde */
+            --color-life: #ef4444; /* Vermelho */
+            --color-mana: #3b82f6; /* Azul */
+            --color-foco: #269c2c; /* Fúcsia */
+            --color-gold: #eab308; /* Dourado */
+            
+            --border-radius: 12px;
         }
 
+        * { box-sizing: border-box; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             background-color: var(--bg-body);
             color: var(--text-main);
             margin: 0;
-            padding: 20px;
+            padding: 40px 20px 180px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            gap: 40px;
         }
 
-        h1 { margin-bottom: 20px; }
+        /* --- CABEÇALHO --- */
+        .header-nome { width: 100%; max-width: 1100px; }
+        .label-topo {
+            color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;
+            letter-spacing: 1.5px; font-weight: 700; margin-bottom: 8px; display: block;
+        }
+        .input-nome {
+            background: transparent; border: none; border-bottom: 2px solid var(--bg-input);
+            color: white; font-size: 2.5rem; padding: 10px 0; width: 100%; font-weight: 300; transition: 0.3s;
+        }
+        .input-nome:focus { outline: none; border-bottom-color: var(--color-primary); }
 
-        /* --- CONTROLES SUPERIORES --- */
-        .painel-controle {
-            background-color: var(--bg-card);
-            padding: 20px;
+        /* --- PAINEL PRINCIPAL --- */
+        .painel-principal {
+            background-color: var(--bg-card); padding: 30px; border-radius: var(--border-radius);
+            width: 100%; max-width: 1100px; display: flex; flex-direction: column; gap: 30px;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
+
+        .secao-origem { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .grupo-input { display: flex; flex-direction: column; }
+        select {
+            padding: 12px; background-color: var(--bg-input); border: 1px solid #3f3f46;
+            color: white; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: 0.2s;
+        }
+        select:hover { border-color: #52525b; }
+        select:focus { outline: none; border-color: var(--color-primary); }
+
+        .separador { height: 1px; background-color: #3f3f46; width: 100%; opacity: 0.5; }
+
+        .box-nivel-container { display: flex; justify-content: center; padding: 10px 0; }
+        .box-nivel {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            background-color: var(--bg-input); padding: 15px 30px; border-radius: 12px; border: 1px solid #3f3f46;
+        }
+        .input-nivel {
+            background: transparent; border: none; color: white; font-size: 2rem; font-weight: bold; width: 60px; text-align: center;
+        }
+        .input-nivel:focus { outline: none; color: var(--color-primary); }
+
+        /* ATRIBUTOS */
+        .cabecalho-secao { display: flex; justify-content: space-between; align-items: flex-end; }
+        .titulo-secao { font-size: 1.1rem; font-weight: bold; color: white; display: flex; align-items: center; gap: 10px; }
+        .badge-pontos {
+            font-size: 0.9rem; padding: 6px 12px; border-radius: 6px; font-weight: 600;
+            background-color: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+        }
+        .pontos-attr { color: #fba94c; border-color: #fba94c; }
+        .pontos-skill { color: var(--color-primary); border-color: var(--color-primary); }
+
+        .secao-atributos { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 5px; }
+        .atributo-container { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .circulo-atributo {
+            width: 70px; height: 70px; border-radius: 50%; background-color: var(--bg-input); border: 2px solid #3f3f46;
+            display: flex; justify-content: center; align-items: center; transition: 0.3s; position: relative;
+        }
+        .circulo-atributo:focus-within { border-color: var(--color-gold); box-shadow: 0 0 15px rgba(234, 179, 8, 0.2); }
+        .input-atributo {
+            background: transparent; border: none; color: white; font-size: 1.6rem; font-weight: bold; width: 100%; height: 100%;
+            text-align: center; border-radius: 50%;
+        }
+        .input-atributo:focus { outline: none; }
+        .input-atributo::-webkit-outer-spin-button, .input-atributo::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .label-atributo { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
+
+        /* AFINIDADE */
+        .secao-afinidade {
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(234, 179, 8, 0.02));
+            border: 1px solid rgba(234, 179, 8, 0.4); 
             border-radius: var(--border-radius);
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            margin-bottom: 30px;
-            width: 100%;
-            max-width: 900px;
+            padding: 25px; 
+            text-align: center;
+            display: none; 
+            flex-direction: column; 
+            gap: 20px; 
+            animation: slideIn 0.5s ease; 
+            margin-top: 0px;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .titulo-afinidade { color: var(--color-gold); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .grid-afinidade { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .card-afinidade {
+            background-color: rgba(0,0,0,0.3); border: 1px solid rgba(234, 179, 8, 0.2); padding: 20px; border-radius: 8px; cursor: pointer; transition: 0.3s; text-align: center;
+        }
+        .card-afinidade:hover { background-color: rgba(234, 179, 8, 0.1); border-color: var(--color-gold); }
+        .card-afinidade.selecionado {
+            background-color: var(--color-gold); color: #000; border-color: var(--color-gold); box-shadow: 0 0 20px rgba(234, 179, 8, 0.3);
         }
 
-        .grupo-input {
-            display: flex;
-            flex-direction: column;
-            text-align: left;
-        }
-
-        label { font-size: 0.9rem; margin-bottom: 5px; color: #aaa; }
-        
-        select, input {
-            padding: 10px;
-            background-color: #3f3f46;
-            border: 1px solid #52525b;
-            color: white;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-
-        /* --- DISPLAY DE PONTOS --- */
-        .display-pontos {
-            background-color: #3f3f46;
-            padding: 10px 20px;
-            border-radius: 4px;
-            border: 1px solid #eab308; /* Amarelo */
-            color: #eab308;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 150px;
-        }
-
-        /* --- GRID DE 3 COLUNAS --- */
+        /* --- HABILIDADES (DESIGN "ANTIGO" RESTAURADO) --- */
         .grid-habilidades {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
+            grid-template-columns: 1fr 1fr 1fr; /* 3 Colunas Fixas */
+            gap: 25px; /* Mais espaço entre colunas */
             width: 100%;
             max-width: 1200px;
         }
-
         .coluna {
             background-color: var(--bg-card);
-            padding: 15px;
+            padding: 20px;
             border-radius: var(--border-radius);
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 15px; /* Mais espaço entre botões */
         }
-
         .coluna h2 {
-            text-align: center;
-            border-bottom: 1px solid #525252;
-            padding-bottom: 10px;
-            margin-top: 0;
-            font-size: 1.2rem;
-            color: #fff;
+            text-align: center; font-size: 1.1rem; color: var(--text-muted);
+            text-transform: uppercase; margin-top: 0; border-bottom: 2px solid #3f3f46; padding-bottom: 15px;
         }
-
-        /* --- ESTILO DOS BOTÕES DE HABILIDADE --- */
+        
+        /* Botão Grande e Robusto */
         .btn-habilidade {
-            padding: 15px;
+            background-color: #27272a; /* Cor base sólida */
+            border: 1px solid #3f3f46;
+            border-left: 5px solid #52525b; /* Borda lateral grossa */
+            padding: 20px; /* Bastante padding */
             margin: 6px 30px;
-            border: none;
-            border-radius: 6px;
+            border-radius: 8px;
+            color: var(--text-main);
             cursor: pointer;
-            font-size: 0.95rem;
             transition: all 0.2s;
-            position: relative;
-            min-height: 60px;
+            min-height: 80px; /* Altura mínima garantida */
             min-width: 300px;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            color: white;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2); /* Sombra para dar volume */
+            white-space: normal; /* Permite quebra de texto */
+            word-break: break-word;
+        }
+        
+        .btn-habilidade:hover {
+            transform: translateY(-2px); /* Efeito de elevação */
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            background-color: #323238;
         }
 
-        /* Estado 0: Padrão */
-        .estado-padrao {
-            background-color: #4b5563; /* Cinza */
-            border-left: 5px solid #9ca3af;
-        }
-        .estado-padrao:hover { background-color: #6b7280; }
-
-        /* Estado 1: Info (Descrição) */
-        .estado-info {
-            background-color: var(--color-info);
-            border-left: 5px solid #1d4ed8;
-            font-size: 0.85rem; /* Texto menor para descrição caber */
+        /* Estados do Botão */
+        .btn-habilidade.info {
+            background-color: rgba(59, 130, 246, 0.15);
+            border-color: var(--color-mana);
+            border-left-color: var(--color-mana);
+            color: #bfdbfe;
+            font-size: 0.9rem; /* Texto levemente menor para descrição */
             font-style: italic;
         }
-
-        /* Estado 2: Selecionado */
-        .estado-selecionado {
-            background-color: var(--color-selected);
-            border-left: 5px solid #065f46;
-            font-weight: bold;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        
+        .btn-habilidade.selecionado {
+            background-color: rgba(16, 185, 129, 0.15);
+            border-color: var(--color-secondary);
+            border-left-color: var(--color-secondary);
+            color: var(--color-secondary);
+            box-shadow: inset 0 0 10px rgba(16, 185, 129, 0.1);
         }
-        .estado-selecionado::after {
+        .btn-habilidade.selecionado::after {
             content: '✔';
             position: absolute;
             top: 5px;
@@ -152,102 +201,180 @@
             font-size: 0.8rem;
         }
 
-        /* Estado Bloqueado (Tier alto demais) */
-        .estado-bloqueado {
-            background-color: var(--bg-body);
-            color: var(--color-locked);
-            border: 1px dashed var(--color-locked);
+        .btn-habilidade.bloqueado {
+            opacity: 0.5;
             cursor: not-allowed;
-            opacity: 0.6;
+            border-style: dashed;
+            background-color: #18181b;
+            box-shadow: none;
+            transform: none;
         }
 
-        /* Responsividade para celular */
-        @media (max-width: 768px) {
-            .grid-habilidades { grid-template-columns: 1fr; }
+        /* --- STATUS FOOTER --- */
+        .painel-status {
+            background-color: #121214; width: 100%; max-width: 1100px;
+            border-radius: 16px; border: 1px solid #3f3f46; padding: 25px; margin-top: 20px;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.4);
+            display: grid; grid-template-columns: 2fr 3fr; gap: 30px;
         }
+        .status-barras { display: flex; flex-direction: column; gap: 15px; justify-content: center; }
+        .barra-container { display: flex; flex-direction: column; gap: 5px; }
+        .barra-label { display: flex; justify-content: space-between; font-weight: bold; font-size: 0.85rem; letter-spacing: 0.5px; }
+        .barra-total { height: 10px; background-color: #27272a; border-radius: 5px; overflow: hidden; position: relative; }
+        .barra-preenchimento { height: 100%; width: 100%; }
+        
+        .vida .barra-preenchimento { background-color: var(--color-life); box-shadow: 0 0 10px var(--color-life); }
+        .vida .valor-status { color: var(--color-life); }
+        .mana .barra-preenchimento { background-color: var(--color-mana); box-shadow: 0 0 10px var(--color-mana); }
+        .mana .valor-status { color: var(--color-mana); }
+        .foco .barra-preenchimento { background-color: var(--color-foco); box-shadow: 0 0 10px var(--color-foco); }
+        .foco .valor-status { color: var(--color-foco); }
+
+        .status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .card-status {
+            background-color: #1c1c1f; border: 1px solid #2e2e31; border-radius: 10px;
+            padding: 15px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 5px; transition: transform 0.2s;
+        }
+        .card-status:hover { transform: translateY(-3px); border-color: #52525b; background-color: #252529; }
+        .card-status .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .card-status .valor { font-size: 1.4rem; font-weight: bold; color: white; }
+        .card-status.ataque { border-color: rgba(234, 179, 8, 0.3); background: linear-gradient(180deg, rgba(234,179,8,0.05), transparent); }
+        .card-status.ataque .valor { color: var(--color-gold); }
+
+        @media (max-width: 900px) { .painel-status { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .grid-habilidades { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-    <h1>Árvore de Habilidades</h1>
-
-    <div class="painel-controle">
-        <div class="grupo-input">
-            <label>Aura</label>
-            <select id="aura">
-                <option value="">Escolha uma aura</option>
-                <option value="reforco">Reforço</option>
-                <option value="emissao">Emissão</option>
-                <option value="transformacao">Transformação</option>
-                <option value="materializacao">Materialização</option>
-                <option value="manipulacao">Manipulação</option>
-            </select>
-        </div>
-
-        <div class="grupo-input">
-            <label>Classe</label>
-            <select id="classe">
-                <option value="">Escolha uma classe</option>
-                <option value="mistico">Místico</option>
-                <option value="mago_elemental">Mago elemental</option>
-                <option value="mago_de_fronte">Mago de fronte</option>
-                <option value="fimbulwinter">Fimbulwinter</option>
-                <option value="feengari">Feengari</option>
-                <option value="ascendente">Ascendente</option>
-                <option value="espadachim">Espadachim</option>
-                <option value="arma_de_corda">Arma de Corda</option>
-                <option value="nordico">Nórdico</option>
-                <option value="lanceiro">Lanceiro</option>
-                <option value="atirador_de_elite">Atirador de elite</option>
-                <option value="assassino">Assassino</option>
-                <option value="gladiador">Gladiador</option>
-                <option value="charlatao">Charlatão</option>
-                <option value="alquimista">Alquimista</option>
-                <option value="artifice">Artífice</option>
-            </select>
-        </div>
-
-        <div class="grupo-input">
-            <label>Trilha</label>
-            <select id="trilha">
-                <option value="">Escolha uma Trilha</option>
-                <option value="envoltura">Envoltura</option>
-                <option value="expansao">Expansão</option>
-                <option value="liberacao">Liberação</option>
-            </select>
-        </div>
-
-        <div class="grupo-input">
-            <label>Nível</label>
-            <input type="number" id="nivel" min="1" max="20" value="1">
-        </div>
-
-        <div class="display-pontos">
-            Pontos: <span id="pontos-txt" style="margin-left:5px">0</span> / <span id="pontos-max" style="margin-left:5px">0</span>
-        </div>
+    <div class="header-nome">
+        <label class="label-topo">Nome do Personagem</label>
+        <input type="text" class="input-nome" placeholder="Digite o nome..." value="Heroi Exemplo">
     </div>
 
-    <!-- O GRID DE 3 COLUNAS -->
-    <div class="grid-habilidades">
+    <div class="painel-principal">
         
-        <!-- COLUNA 1: AURA -->
-        <div class="coluna" id="col-aura">
-            <h2>Aura</h2>
-            <div id="lista-aura"></div>
+        <!-- ORIGEM -->
+        <div class="secao-origem">
+            <div class="grupo-input">
+                <label class="label-topo">Aura</label>
+                <select id="aura">
+                    <option value="">Escolha uma aura</option>
+                    <option value="reforco">Reforço</option>
+                    <option value="emissao">Emissão</option>
+                    <option value="transformacao">Transformação</option>
+                    <option value="materializacao">Materialização</option>
+                    <option value="manipulacao">Manipulação</option>
+                </select>
+            </div>
+            <div class="grupo-input">
+                <label class="label-topo">Classe</label>
+                <select id="classe">
+                    <option value="">Escolha uma classe</option>
+                    <option value="mistico">Místico</option>
+                    <option value="mago_elemental">Mago elemental</option>
+                    <option value="mago_de_fronte">Mago de fronte</option>
+                    <option value="fimbulwinter">Fimbulwinter</option>
+                    <option value="feengari">Feengari</option>
+                    <option value="ascendente">Ascendente</option>
+                    <option value="espadachim">Espadachim</option>
+                    <option value="arma_de_corda">Arma de Corda</option>
+                    <option value="nordico">Nórdico</option>
+                    <option value="lanceiro">Lanceiro</option>
+                    <option value="atirador_de_elite">Atirador de elite</option>
+                    <option value="assassino">Assassino</option>
+                    <option value="gladiador">Gladiador</option>
+                    <option value="charlatao">Charlatão</option>
+                    <option value="alquimista">Alquimista</option>
+                    <option value="artifice">Artífice</option>
+                </select>
+            </div>
+            <div class="grupo-input">
+                <label class="label-topo">Trilha</label>
+                <select id="trilha">
+                    <option value="">Escolha uma Trilha</option>
+                    <option value="envoltura">Envoltura</option>
+                    <option value="expansao">Expansão</option>
+                    <option value="liberacao">Liberação</option>
+                </select>
+            </div>
         </div>
 
-        <!-- COLUNA 2: CLASSE -->
-        <div class="coluna" id="col-classe">
-            <h2>Classe</h2>
-            <div id="lista-classe"></div>
+        <div class="separador"></div>
+
+        <!-- NÍVEL CENTRALIZADO -->
+        <div class="box-nivel-container">
+            <div class="box-nivel">
+                <label class="label-topo" style="margin:0; color:white;">NÍVEL ATUAL</label>
+                <input type="number" id="nivel" class="input-nivel" min="1" max="16" value="1">
+            </div>
         </div>
 
-        <!-- COLUNA 3: TRILHA -->
-        <div class="coluna" id="col-trilha">
-            <h2>Trilha</h2>
-            <div id="lista-trilha"></div>
+        <div class="separador"></div>
+
+        <!-- ÁREA DE ATRIBUTOS -->
+           <div class="cabecalho-secao">
+                <div class="titulo-secao">ATRIBUTOS</div>
+                <div class="badge-pontos pontos-attr">
+                    PONTOS: <span id="pts-attr-atual">0</span> / <span id="pts-attr-total">0</span>
+                </div>
+            </div>
+
+            <div class="secao-atributos">
+                <div class="atributo-container"><div class="circulo-atributo"><input type="number" class="input-atributo" id="attr-forca" value="1" min="0"></div><span class="label-atributo">FORÇA</span></div>
+                <div class="atributo-container"><div class="circulo-atributo"><input type="number" class="input-atributo" id="attr-destreza" value="1" min="0"></div><span class="label-atributo">DESTREZA</span></div>
+                <div class="atributo-container"><div class="circulo-atributo"><input type="number" class="input-atributo" id="attr-vigor" value="1" min="0"></div><span class="label-atributo">VIGOR</span></div>
+                <div class="atributo-container"><div class="circulo-atributo"><input type="number" class="input-atributo" id="attr-intelecto" value="1" min="0"></div><span class="label-atributo">INTELECTO</span></div>
+                <div class="atributo-container"><div class="circulo-atributo"><input type="number" class="input-atributo" id="attr-presenca" value="1" min="0"></div><span class="label-atributo">PRESENÇA</span></div>
+            </div>
+
+            <!-- SEÇÃO DE ESCOLHA DE AFINIDADE (Oculta até nível 4) -->
+            <div id="container-afinidade" class="secao-afinidade">
+                <div class="titulo-afinidade">
+                    <span>★ Desbloqueio de Afinidade (Nível 4) ★</span>
+                </div>
+                <div style="color: #ccc; font-size: 0.9rem; margin-bottom: 10px;">
+                    Escolha 1 especialização. Esta escolha é única.
+                </div>
+                
+                <div class="grid-afinidade" id="lista-afinidades">
+                    <!-- Os cartões serão gerados aqui via JS -->
+                </div>
+            </div>
+
+    </div>
+
+    <!-- ÁREA DE HABILIDADES -->
+    <div style="width: 100%; max-width: 1200px;">
+        <div class="cabecalho-secao">
+            <span class="titulo-secao">HABILIDADES</span>
+            <!-- Caixa de Pontos Exclusiva para Habilidades -->
+            <div class="badge-pontos pontos-skill">
+                DISPONÍVEIS: <span id="pts-skill-atual">0</span> / <span id="pts-skill-total">0</span>
+            </div>
         </div>
 
+        <div class="grid-habilidades">
+            <div class="coluna" id="col-aura"><h2>Aura</h2><div id="lista-aura"></div></div>
+            <div class="coluna" id="col-classe"><h2>Classe</h2><div id="lista-classe"></div></div>
+            <div class="coluna" id="col-trilha"><h2>Trilha</h2><div id="lista-trilha"></div></div>
+        </div>
+    </div>
+    
+    <div class="painel-status">
+        <div class="status-barras">
+            <div class="barra-container vida"><div class="barra-label"><span>VIDA</span><span class="valor-status" id="stat-vida">0</span></div><div class="barra-total"><div class="barra-preenchimento"></div></div></div>
+            <div class="barra-container mana"><div class="barra-label"><span>MANA</span><span class="valor-status" id="stat-mana">0</span></div><div class="barra-total"><div class="barra-preenchimento"></div></div></div>
+            <div class="barra-container foco"><div class="barra-label"><span>FOCO</span><span class="valor-status" id="stat-foco">0</span></div><div class="barra-total"><div class="barra-preenchimento"></div></div></div>
+        </div>
+        <div class="status-grid">
+            <div class="card-status ataque"><span class="label">Ataque</span><span class="valor" id="stat-ataque">+0</span></div>
+            <div class="card-status"><span class="label">Bloqueio</span><span class="valor" id="stat-bloqueio">0</span></div>
+            <div class="card-status"><span class="label">Esquiva</span><span class="valor" id="stat-esquiva">0</span></div>
+            <div class="card-status"><span class="label">Carga</span><span class="valor" id="stat-carga">0</span></div>
+            <div class="card-status"><span class="label">Movimento</span><span class="valor" id="stat-movimento">9m</span></div>
+        </div>
     </div>
     
     <script src="/site_inicial/js/criarficha.js"></script>
