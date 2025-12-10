@@ -256,6 +256,7 @@ let pontosGastosHabilidades = 0;
 let habilidadesSelecionadas = new Set();
 let afinidadeEscolhida = null
 let magiasSelecionadas = new Set();
+let pontosGastosMagia = 0; // NOVO ESTADO
 
 // --- ELEMENTOS ---
 const elNivel = document.getElementById('nivel');
@@ -342,7 +343,7 @@ function calcularStatus(nivel) {
 }
 
 // --- RENDERIZA O GRIMÓRIO (NOVA FUNÇÃO) ---
-function renderizarGrimorio(classe) {
+function renderizarGrimorio(classe, saldoMagia) {
     const container = document.getElementById('lista-magias');
     container.innerHTML = '';
 
@@ -374,11 +375,20 @@ function renderizarGrimorio(classe) {
             if (st === 0) {
                 btn.dataset.state = 1; btn.textContent = magia.desc; btn.classList.add('info');
             } else if (st === 1) {
-                btn.dataset.state = 2; btn.textContent = magia.nome; btn.classList.add('selecionado');
-                magiasSelecionadas.add(magia.id);
+                if (saldoMagia > 0) {
+                    btn.dataset.state = 2; btn.textContent = magia.nome; btn.classList.add('selecionado');
+                    magiasSelecionadas.add(magia.id);
+                    pontosGastosMagia++;
+                    atualizarTudo();
+                } else {
+                    alert("Sem pontos de magia suficientes!");
+                    btn.dataset.state = 0; btn.textContent = magia.nome;
+                }
             } else {
                 btn.dataset.state = 0; btn.textContent = magia.nome;
                 magiasSelecionadas.delete(magia.id);
+                pontosGastosMagia--;
+                atualizarTudo();
             }
         };
         container.appendChild(btn);
@@ -423,14 +433,26 @@ function atualizarTudo() {
         afinidadeEscolhida = null;
     }
 
+    const pontosTotaisMagia = Math.floor(nivel / 2);
+    const saldoMagia = pontosTotaisMagia - pontosGastosMagia;
+
+    const elPtsMagiaAtual = document.getElementById('pts-magia-atual');
+    const elPtsMagiaTotal = document.getElementById('pts-magia-total');
+    if(elPtsMagiaAtual && elPtsMagiaTotal) {
+        elPtsMagiaAtual.textContent = saldoMagia;
+        elPtsMagiaTotal.textContent = pontosTotaisMagia;
+        elPtsMagiaAtual.style.color = saldoMagia < 0 ? 'var(--color-life)' : 'var(--color-magic)';
+    }
+
     // GRIMÓRIO - LÓGICA DE EXIBIÇÃO
     const containerGrimorio = document.getElementById('container-grimorio');
     if (gruposDeClasse.arcanista.includes(classeAtual)) {
         containerGrimorio.style.display = 'flex';
-        renderizarGrimorio(classeAtual);
+        renderizarGrimorio(classeAtual, saldoMagia);
     } else {
         containerGrimorio.style.display = 'none';
         magiasSelecionadas.clear();
+        pontosGastosMagia = 0;
     }
 
     // 3. HABILIDADES
