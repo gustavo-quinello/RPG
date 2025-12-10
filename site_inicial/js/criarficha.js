@@ -215,6 +215,24 @@ const dadosAfinidade = {
     }
 };
 
+// --- NOVOS DADOS: MAGIAS ---
+const dadosMagias = {
+    genericas: [
+        { id: 'mag_1', nome: 'Míssil Mágico', desc: 'Dano infalível.' },
+        { id: 'mag_2', nome: 'Luz', desc: 'Ilumina o ambiente.' }
+    ],
+    fimbulwinter: [
+        { id: 'fim_1', nome: 'Sopro Gelado', desc: 'Cone de frio.' },
+        { id: 'fim_2', nome: 'Estaca de Gelo', desc: 'Dano perfurante.' }
+    ],
+    feengari: [
+        { id: 'fee_1', nome: 'Raio Lunar', desc: 'Dano radiante.' }
+    ],
+    ascendente: [
+        { id: 'asc_1', nome: 'Cura Leve', desc: 'Recupera vida.' }
+    ]
+};
+
 function getDadosAfinidadeClasse(idClasse) {
     // 1. Verifica se é Arcanista
     if (gruposDeClasse.arcanista.includes(idClasse)) {
@@ -237,6 +255,7 @@ function getDadosAfinidadeClasse(idClasse) {
 let pontosGastosHabilidades = 0;
 let habilidadesSelecionadas = new Set();
 let afinidadeEscolhida = null
+let magiasSelecionadas = new Set();
 
 // --- ELEMENTOS ---
 const elNivel = document.getElementById('nivel');
@@ -322,10 +341,54 @@ function calcularStatus(nivel) {
     document.getElementById('stat-ataque').textContent = '+' + ataqueBonus;
 }
 
-// --- ATUALIZAÇÃO GERAL ---
+// --- RENDERIZA O GRIMÓRIO (NOVA FUNÇÃO) ---
+function renderizarGrimorio(classe) {
+    const container = document.getElementById('lista-magias');
+    container.innerHTML = '';
+
+    let lista = [];
+    // Lógica de seleção de lista
+    if (classe === 'fimbulwinter') lista = dadosMagias.fimbulwinter;
+    else if (classe === 'feengari') lista = dadosMagias.feengari;
+    else if (classe === 'ascendente') lista = dadosMagias.ascendente;
+    else lista = dadosMagias.genericas;
+
+    if (!lista) return;
+
+    lista.forEach(magia => {
+        const btn = document.createElement('div');
+        btn.className = 'btn-magia';
+        
+        if (magiasSelecionadas.has(magia.id)) {
+            btn.classList.add('selecionado');
+            btn.textContent = magia.nome;
+            btn.dataset.state = 2;
+        } else {
+            btn.textContent = magia.nome;
+            btn.dataset.state = 0;
+        }
+
+        btn.onclick = () => {
+            const st = parseInt(btn.dataset.state);
+            btn.classList.remove('selecionado', 'info');
+            if (st === 0) {
+                btn.dataset.state = 1; btn.textContent = magia.desc; btn.classList.add('info');
+            } else if (st === 1) {
+                btn.dataset.state = 2; btn.textContent = magia.nome; btn.classList.add('selecionado');
+                magiasSelecionadas.add(magia.id);
+            } else {
+                btn.dataset.state = 0; btn.textContent = magia.nome;
+                magiasSelecionadas.delete(magia.id);
+            }
+        };
+        container.appendChild(btn);
+    });
+}
+
 // --- ATUALIZAÇÃO GERAL ---
 function atualizarTudo() {
     const nivel = parseInt(elNivel.value) || 1;
+    const classeAtual = document.getElementById('classe').value;
     
     // 1. PONTOS
     const pontosTotaisAttr = Math.floor(nivel/2) + 6;
@@ -358,6 +421,16 @@ function atualizarTudo() {
     } else {
         containerAfinidade.style.display = 'none';
         afinidadeEscolhida = null;
+    }
+
+    // GRIMÓRIO - LÓGICA DE EXIBIÇÃO
+    const containerGrimorio = document.getElementById('container-grimorio');
+    if (gruposDeClasse.arcanista.includes(classeAtual)) {
+        containerGrimorio.style.display = 'flex';
+        renderizarGrimorio(classeAtual);
+    } else {
+        containerGrimorio.style.display = 'none';
+        magiasSelecionadas.clear();
     }
 
     // 3. HABILIDADES
