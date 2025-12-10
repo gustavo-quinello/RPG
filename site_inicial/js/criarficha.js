@@ -261,18 +261,26 @@ function calcularStatus(nivel) {
     : nivel < 15 ? 4
     : 5);
     const mod_generico = (nivel < 3 ? 0 : 1);
+    const mod_afinidade = (nivel < 4 ? 0
+        : nivel < 8 ? 1
+        : nivel < 12 ? 2
+        : nivel < 16 ? 3
+        : 4
+    )
 
 
     // FÓRMULAS
-    const vida = 20 + (vigor * 16) + nivel * 4;
-    const mana = 15 + (intelecto * 16) + nivel * 4;
-    const foco = 6 + (presenca * 4) + nivel;
-    const carga = 4 + forca * 2;
-    const movimento = 2 + destreza + Math.floor(nivel * 0.2);
+    let vida = 20 + (vigor * 16) + nivel * 4;
+    let mana = 15 + (intelecto * 16) + nivel * 4;
+    let foco = 6 + (presenca * 4) + nivel;
+    let carga = 4 + forca * 2;
+    let movimento = 2 + destreza + Math.floor(nivel * 0.2);
+
     let bloqueio = 0;
     if (gruposDeClasse.combatente.includes(classe)) bloqueio = forca * 3 + combat_points * 3 + 2 * mod_generico;
     else if (gruposDeClasse.arcanista.includes(classe)) bloqueio = forca * 3 + combat_points * 2 + 2 * mod_generico;
     else bloqueio = forca * 3 + combat_points + 2 * mod_generico;
+
     let esquiva = 0;
     if (gruposDeClasse.combatente.includes(classe)) esquiva = destreza * 3 + combat_points * 3 + 2 * mod_generico;
     else if (gruposDeClasse.arcanista.includes(classe)) esquiva = destreza * 3 + combat_points * 2 + 2 * mod_generico;
@@ -283,6 +291,25 @@ function calcularStatus(nivel) {
     if (gruposDeClasse.combatente.includes(classe)) ataqueBonus = combat_points * 3;
     else if (gruposDeClasse.arcanista.includes(classe)) ataqueBonus = combat_points * 3;
     else ataqueBonus = combat_points * 3;
+
+    if (afinidadeEscolhida) {
+        if (afinidadeEscolhida.id === 'reforco') {
+            vida = parseInt((20 + (vigor * 16) + nivel * 4) * (1 + (mod_afinidade * 2.5) /10))
+        } else if (afinidadeEscolhida.id === 'emissao') {
+            mana = parseInt((15 + (intelecto * 16) + nivel * 4) * (1 + (mod_afinidade * 2.5) /10))
+        } else if (afinidadeEscolhida.id === 'transformacao') {
+            movimento = parseInt((2 + destreza + (nivel * 0.2)) * (1 + (mod_afinidade * 2.5) /10))
+        } else if (afinidadeEscolhida.id === 'materializacao') {
+            foco = parseInt((6 + (presenca * 4) + nivel) * (1 + (mod_afinidade * 2.5) /10))
+        } else if (afinidadeEscolhida.id === 'manipulacao') {
+            vida = parseInt((20 + (vigor * 16) + nivel * 4) * (1 + mod_afinidade /10))
+            mana = parseInt((15 + (intelecto * 16) + nivel * 4) * (1 + mod_afinidade /10))
+            movimento = parseInt((2 + destreza + (nivel * 0.2)) * (1 + mod_afinidade /10))
+            foco = parseInt((6 + (presenca * 4) + nivel) * (1 + mod_afinidade /10))
+        } else if (afinidadeEscolhida.id === 'liberacao') {
+            carga = parseInt((4 + forca * 2) * (1+(mod_afinidade/4)))
+        }
+    }
 
     // Atualiza HTML
     document.getElementById('stat-vida').textContent = vida;
@@ -355,9 +382,9 @@ function renderizarAfinidades() {
 
  
     const opcoes = [
-        { origem: 'AURA', ...dadosAfinidade.auras[aura] },
-        { origem: 'CLASSE', ...getDadosAfinidadeClasse(classe) },
-        { origem: 'TRILHA', ...dadosAfinidade.trilhas[trilha] }
+        { origem: 'AURA', id: aura, ...dadosAfinidade.auras[aura] },
+        { origem: 'CLASSE', id: classe, ...getDadosAfinidadeClasse(classe) },  
+        { origem: 'TRILHA', id: trilha, ...dadosAfinidade.trilhas[trilha] }
     ];
 
 
@@ -374,6 +401,8 @@ function renderizarAfinidades() {
         card.onclick = () => {
             afinidadeEscolhida = (afinidadeEscolhida && afinidadeEscolhida.nome === opt.nome) ? null : opt;
             renderizarAfinidades();
+            const nivel = parseInt(elNivel.value) || 1;
+            calcularStatus(nivel);
         };
         container.appendChild(card);
     });
