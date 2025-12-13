@@ -17,7 +17,7 @@
             --color-life: #ef4444; /* Vermelho */
             --color-mana: #3b82f6; /* Azul */
             --color-foco: #269c2c; /* Fúcsia */
-            --color-gold: #eab308; /* Dourado */
+            --color-gold: #eab308; /* Dourado */            --color-skill: #22d3ee; /* Ciano (Perícias) */
             
             --border-radius: 12px;
         }
@@ -35,7 +35,12 @@
             align-items: center;
             gap: 40px;
         }
-
+        /* REMOVE AS SETINHAS (SPIN BUTTONS) DE TODOS OS CAMPOS NUMÉRICOS */
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
         /* --- CABEÇALHO --- */
         .header-nome { width: 100%; max-width: 1100px; }
         .label-topo {
@@ -86,6 +91,7 @@
         .pontos-attr { color: #fba94c; border-color: #fba94c; }
         .pontos-skill { color: var(--color-primary); border-color: var(--color-primary); }
         .pontos-magia { color: var(--color-magic); border-color: var(--color-magic); background-color: rgba(192, 132, 252, 0.1); }
+        .pontos-pericia { color: var(--color-skill); border-color: var(--color-skill); background-color: rgba(6, 182, 212, 0.1); }
 
         .secao-atributos { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 5px; }
         .atributo-container { display: flex; flex-direction: column; align-items: center; gap: 12px; }
@@ -99,7 +105,7 @@
             text-align: center; border-radius: 50%;
         }
         .input-atributo:focus { outline: none; }
-        .input-atributo::-webkit-outer-spin-button, .input-atributo::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .input-atributo::-webkit-outer-spin-button, .input-atributo::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }/*Essa linha esta obsoleta, não faz mais nada
         .label-atributo { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
 
         /* AFINIDADE */
@@ -245,34 +251,173 @@
         .grid-magias { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
         
         .btn-magia {
-            background-color: #2e1065; border: 1px solid #5b21b6; border-radius: 6px; padding: 15px;
-            color: #ddd6fe; cursor: pointer; min-height: 70px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.9rem;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative;
+            background-color: #2e1065; 
+            border: 1px solid #5b21b6; 
+            border-radius: 6px; 
+            padding: 20px;
+            color: #ddd6fe; cursor: pointer; min-height: 70px; 
+            /* FLEXIBILIDADE DE TEXTO - CRUCIAL PARA NÃO QUEBRAR O LAYOUT */
+            align-items: center; justify-content: center; text-align: center; 
+            font-size: 0.9rem; 
+            transition: all 0.3s; position: relative;
+            display: inline-block;      /* não flex, não 'empurra' linhas */
+            vertical-align: baseline;
+            line-height: 1.2;           /* ajuste conforme sua tipografia */
+            white-space: normal;        /* permite quebra natural */
+            overflow: visible;
         }
-        
+        .btn-magia:not(.info):not(.selecionado) {
+            display: flex;
+            align-items: center;
+        }
         .btn-magia:hover { 
             background-color: #4c1d95; 
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 10px 20px rgba(76, 29, 149, 0.4);
-            z-index: 10;
+            transform: translateY(-3px); 
+            box-shadow: 0 8px 15px rgba(76, 29, 149, 0.3); 
+            z-index: 10; }
+        .btn-magia.info { 
+            background-color: #1e1b4b; 
+            font-style: italic; 
+            font-size: 0.85rem; 
+            color: #a5b4fc;
+            vertical-align: middle   
+            }
+        .btn-magia.selecionado { 
+            background-color: #5b21b6; 
+            border-color: #8b5cf6; 
+            color: white; font-weight: bold; 
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+            display: flex;
+            align-items: center;}
+        .btn-magia.selecionado::after { content: '✔'; position: absolute; top: 5px; right: 5px; font-size: 1rem; color: #c4b5fd; opacity: 0; transform: scale(0); transition: all 0.3s; }
+        .btn-magia.selecionado:hover::after { opacity: 1; transform: scale(1); top: -8px; right: -5px; }
+        .btn-habilidade.bloqueado, 
+        .btn-magia.bloqueado { 
+            opacity: 0.3; /* Isso que deixa "apagado" (50% transparente) */
+            cursor: not-allowed; /* Mostra o cursor de "proibido" */
+            border-style: dashed; /* Borda tracejada */
+            
+            /* Remove efeitos de hover/clique */
+            transform: none !important; 
+            box-shadow: none !important; 
+        }
+
+        /* --- TOOLTIPS (ESTILO DARK RESTAURADO) --- */
+        .termo-destaque {
+            color: #f472b6; /* Rosa claro para destacar no texto */
+            border-bottom: 1px dotted #f472b6; /* Sublinhado pontilhado */
+            cursor: help;
+            position: relative;
+            
+            /* Sua correção para o texto fluir (pode ser inline-block com padding ou inline puro) */
+            display: inline-block; 
+            vertical-align: baseline;
+            font-weight: bold;
+        }
+
+        /* O Balão de Informação (Estilo Dark / Glassmorphism) */
+        .termo-destaque:hover::after {
+            content: attr(data-tooltip);
+            
+            position: absolute;
+            bottom: 130%; /* Acima do texto */
+            left: 50%;
+            transform: translateX(-50%);
+            
+            /* --- VISUAL RESTAURADO --- */
+            background-color: rgba(15, 23, 42, 0.98); /* Fundo quase preto */
+            color: #e2e8f0; /* Texto claro */
+            border: 1px solid #6366f1; /* Borda Índigo Neon */
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.8), 0 0 10px rgba(99, 102, 241, 0.3); /* Sombra com brilho */
+            
+            padding: 12px 16px;
+            border-radius: 8px;
+            
+            /* Dimensões */
+            width: max-content;
+            max-width: 280px; 
+            min-width: 160px;
+            
+            white-space: pre-wrap; /* Respeita quebras de linha */
+            text-align: left;
+            line-height: 1.5;
+            font-size: 0.85rem;
+            font-weight: normal;
+            font-style: normal;
+            
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        /* Setinha do Balão (Cor ajustada para o fundo escuro) */
+        .termo-destaque:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 110%; /* Ajuste fino para encostar na caixa */
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            /* A cor da seta (topo) deve ser a borda neon ou o fundo escuro */
+            border-color: #6366f1 transparent transparent transparent; 
+            z-index: 1000;
+        }
+
+        /* --- PERÍCIAS --- */
+
+        .secao-pericias-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
         }
         
-        .btn-magia.info { background-color: #1e1b4b; font-style: italic; font-size: 0.8rem; color: #a5b4fc; }
-        .btn-magia.selecionado { background-color: #5b21b6; border-color: #8b5cf6; color: white; font-weight: bold; box-shadow: 0 0 10px rgba(139, 92, 246, 0.4); }
+        .caixa-pericias {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            
+            /* Visual de "Caixa Circular/Oval" */
+            background-color: rgba(34, 211, 238, 0.05); /* Ciano bem transparente */
+            border: 1px solid rgba(34, 211, 238, 0.2);
+            padding: 30px;
+            border-radius: 100px; /* Borda bem redonda (Pílula) */
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.05);
+        }
 
-        /* Checkmark para magias também */
-        .btn-magia.selecionado::after {
-            content: '✔';
-            position: absolute;
-            top: 5px; right: 5px;
-            font-size: 1rem; color: #c4b5fd;
-            opacity: 0; transform: scale(0);
+        .pericia-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        
+        .circulo-pericia {
+            width: 60px; height: 60px; /* Levemente menor que atributos */
+            border-radius: 50%;
+            background-color: #161618;
+            border: 2px solid var(--color-skill);
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 0 10px rgba(34, 211, 238, 0.1);
             transition: all 0.3s;
         }
-        .btn-magia.selecionado:hover::after {
-            opacity: 1; transform: scale(1); top: -8px; right: -5px;
+        
+        .circulo-pericia:focus-within {
+            box-shadow: 0 0 15px var(--color-skill);
+            background-color: #1c1c1f;
+            transform: scale(1.1);
+        }
+        /* 2. O Input em si (A parte crítica para não ficar branco) */
+        .input-numero { 
+            background: transparent; /* Remove o fundo branco */
+            border: none;            /* Remove a borda quadrada */
+            color: white;            /* Cor do número */
+            font-size: 1.6rem; 
+            font-weight: bold; 
+            width: 100%; 
+            height: 100%; 
+            text-align: center; 
         }
 
+        .input-numero:focus { 
+            outline: none; /* Remove a linha azul padrão ao clicar */
+        }
 
         /* --- STATUS FOOTER --- */
         .painel-status {
@@ -308,6 +453,36 @@
 
         @media (max-width: 900px) { .painel-status { grid-template-columns: 1fr; } }
         @media (max-width: 768px) { .grid-habilidades { grid-template-columns: 1fr; } }
+
+        /* --- BOTÃO DE CRIAR FICHA --- */
+        .container-submit {
+            width: 100%; max-width: 1100px;
+            display: flex; justify-content: flex-end;
+            margin-top: 30px;
+        }
+        .btn-criar-ficha {
+            background: linear-gradient(135deg, var(--color-secondary), #059669);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-criar-ficha:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
+        }
+        .btn-criar-ficha:active { transform: translateY(1px); }
+
+        @media (max-width: 900px) { .painel-status { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .grid-habilidades { grid-template-columns: 1fr; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }        
     </style>
 </head>
 <body>
@@ -442,6 +617,23 @@
         <div class="grid-magias" id="lista-magias"></div>
     </div>
 
+    <!-- PERÍCIAS -->
+    <div class="painel-principal" style="margin-top: 30px;">
+        <div class="cabecalho-secao">
+            <div class="titulo-secao">PERÍCIAS</div>
+            <div class="badge-pontos pontos-pericia">PONTOS: <span id="pts-pericia-atual">0</span> / <span id="pts-pericia-total">0</span></div>
+        </div>
+        <div class="secao-pericias-container">
+            <div class="caixa-pericias">
+                <div class="pericia-item"><div class="circulo-pericia"><input type="number" class="input-numero input-pericia" id="per-medicina" value="0" min="0"></div><span class="label-circulo">Medicina</span></div>
+                <div class="pericia-item"><div class="circulo-pericia"><input type="number" class="input-numero input-pericia" id="per-arcano" value="0" min="0"></div><span class="label-circulo">Arcano</span></div>
+                <div class="pericia-item"><div class="circulo-pericia"><input type="number" class="input-numero input-pericia" id="per-diplomacia" value="0" min="0"></div><span class="label-circulo">Diplomacia</span></div>
+                <div class="pericia-item"><div class="circulo-pericia"><input type="number" class="input-numero input-pericia" id="per-adestrar" value="0" min="0"></div><span class="label-circulo">Adestrar</span></div>
+                <div class="pericia-item"><div class="circulo-pericia"><input type="number" class="input-numero input-pericia" id="per-tecnologia" value="0" min="0"></div><span class="label-circulo">Tecnologia</span></div>
+            </div>
+        </div>
+    </div>    
+
     <!-- STATUS FOOTER -->
     <div class="painel-status">
         <div class="status-barras">
@@ -456,6 +648,11 @@
             <div class="card-status"><span class="label">Carga</span><span class="valor" id="stat-carga">0</span></div>
             <div class="card-status"><span class="label">Movimento</span><span class="valor" id="stat-movimento">9m</span></div>
         </div>
+    </div>
+    
+    <!-- BOTÃO FINAL -->
+    <div class="container-submit">
+        <button class="btn-criar-ficha" onclick="salvarFicha()">CRIAR FICHA</button>
     </div>
     
     <script src="/site_inicial/js/criarficha.js"></script>
