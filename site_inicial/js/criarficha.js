@@ -1,3 +1,8 @@
+const { createClient } = supabase;
+const supabaseUrl = "https://uoeixaiwyqjtbcqduzid.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvZWl4YWl3eXFqdGJjcWR1emlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4ODI2OTgsImV4cCI6MjA3MTQ1ODY5OH0.o_FY6xyjNetUjzsLiqaKrES_-d7_nYUE8vL8vFG8MDA";
+const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
 
 // --- DADOS (Mesma estrutura anterior, você pode expandir) ---
 const dadosHabilidades = {
@@ -197,21 +202,21 @@ const gruposDeClasse = {
 
 const dadosAfinidade = {
     auras: {
-        reforco: { nome: "Mestre da Fortitude", desc: "Aumenta o multiplicador de vida por nível." },
-        emissao: { nome: "Canalizador Puro", desc: "Aumenta o multiplicador de Mana por nível." },
-        transformacao: { nome: "Passo Fluído", desc: "Aumenta o multiplicador de Movimento por nível." },
-        materializacao: { nome: "Centro Mental", desc: "Aumenta o multiplicador de Foco por nível." },
-        manipulacao: { nome: "Harmonia Elementar", desc: "Aumenta levemente todos os multiplicadores principais." },
+        reforco: {id:"afin-ref", nome: "Mestre da Fortitude", desc: "Aumenta o multiplicador de vida por nível." },
+        emissao: {id:"afin-emi", nome: "Canalizador Puro", desc: "Aumenta o multiplicador de Mana por nível." },
+        transformacao: {id:"afin-tra", nome: "Passo Fluído", desc: "Aumenta o multiplicador de Movimento por nível." },
+        materializacao: {id:"afin-mat", nome: "Centro Mental", desc: "Aumenta o multiplicador de Foco por nível." },
+        manipulacao: {id:"afin-man", nome: "Harmonia Elementar", desc: "Aumenta levemente todos os multiplicadores principais." },
     },
    grupos_classes: {
-        arcanista: {id:"arcanista", nome: "Despertar Arcano", desc: "Ganha magias extras e reduz o tempo da primeira conjuração." },
-        combatente: { nome: "Veterano de Batalha", desc: "Sua defesa decai menos a cada ataque recebido." },
-        especialista: { nome: "Perito Especial", desc: "Concede dados de vantagem em testes não ofensivos." }
+        arcanista: {id:"afin-arc", nome: "Despertar Arcano", desc: "Ganha magias extras e reduz o tempo da primeira conjuração." },
+        combatente: {id:"afin-com", nome: "Veterano de Batalha", desc: "Sua defesa decai menos a cada ataque recebido." },
+        especialista: {id:"afin-esp", nome: "Perito Especial", desc: "Concede dados de vantagem em testes não ofensivos." }
     },
     trilhas: {
-        envoltura: { nome: "Fluxo Eficiente", desc: "Reduz o gasto de Mana passiva." },
-        expansao: { nome: "Juggernaut", desc: "Aumenta a Classe de Armadura." },
-        liberacao: { nome: "Arsenal Expandido", desc: "Permite carregar mais utilitários na bolsa." }
+        envoltura: {id:"afin-env", nome: "Fluxo Eficiente", desc: "Reduz o gasto de Mana passiva." },
+        expansao: {id:"afin-exp", nome: "Juggernaut", desc: "Aumenta a Classe de Armadura." },
+        liberacao: {id:"afin-lib", nome: "Arsenal Expandido", desc: "Permite carregar mais utilitários na bolsa." }
     }
 };
 
@@ -223,9 +228,9 @@ const dadosMagias = {
 
         { id: 'mag_terra_1', tier: 1, nome: 'Bala de Pedra', desc: 'Comprime e dispara uma pedra em alta velocidade contra um único alvo, causando dano contundente e perfurante ao impacto. Gasta uma quantidade pequena de mana e funciona a longo alcance.<span class="termo-destaque" data-tooltip="Custo: 4 + (2 × MP) mana\nCanalização: ação padrão\nAlcance: longo (35 m)\nAlvos: único\nÁrea: nenhuma\nTipo de dano: físico\nDano: (MP / 2,5) d10\nObservações: requer linha de visão; conta como ataque mágico à distância\n">Informações Detalhadas</span>' },
 
-        { id: 'mag_fogo_1', tier: 1, nome: 'Bola de Fogo', desc: 'Dispara uma esfera ígnea que causa dano de fogo ao atingir o alvo e o deixa Incendiado. Requer uma quantidade moderada de mana e tem alcance médio.<span class="termo-destaque" data-tooltip="Ação: ação padrão\nCusto: 4 + (2 × MP) mana\nCanalização: instantânea\nAlcance: médio (15 m)\nAlvo: único\nDano: fogo\nEfeito: [MP/2,8 d10] de dano\nAplica Incendiado">Informações Detalhadas</span>' },
+        { id: 'mag_fogo_1', tier: 1, nome: 'Bola de Fogo', desc: 'Dispara uma esfera ígnea que causa dano de fogo ao atingir o alvo e o deixa Incendiado. Requer uma quantidade moderada de mana e tem alcance médio.<span class="termo-destaque" data-tooltip="Custo: 4 + (2 × MP) mana\nCanalização: ação padrão\nAlcance: médio (15 m)\nAlvo: único\nDano: fogo\nEfeito: [MP/2,8 d10] de dano\nAplica Incendiado">Informações Detalhadas</span>' },
 
-        { id: 'mag_agua_1', tier: 1, nome: `Criação d'água`, desc: 'Gera um bolsão de água que pode ser manipulado à distância. As magias subsequentes de água consomem o conteúdo do bolsão. Gasta uma quantidade pequena de mana e o alcance é médio.<span class="termo-destaque" data-tooltip="Ação: ação padrão\nCusto: 4 + (2 × MP) mana\nCanalização: instantânea\nAlcance: [12 + (MP × 2)] m\nEfeito: gera 6 Unidades de Água\nBolsão é origem de magias de água">Informações Detalhadas</span>' },
+        { id: 'mag_agua_1', tier: 1, nome: `Criação d'água`, desc: 'Gera um bolsão de água que pode ser manipulado à distância. As magias subsequentes de água consomem o conteúdo do bolsão. Gasta uma quantidade pequena de mana e o alcance é médio.<span class="termo-destaque" data-tooltip="Custo: 4 + (2 × MP) mana\nCanalização: ação padrão\nAlcance: [12 + (MP × 2)] m\nEfeito: gera 6 Unidades de Água\nBolsão é origem de magias de água">Informações Detalhadas</span>' },
         
 
 
@@ -243,9 +248,9 @@ const dadosMagias = {
 
         { id: 'mag_terra_3', tier: 3, nome: 'Imobilização', desc: 'Faz o solo agarrar um alvo, imobilizando-o por vários turnos. O alvo pode tentar se libertar, sofrendo dano se falhar. Gasta uma quantidade significativa de mana e tem alcance médio.<span class="termo-destaque" data-tooltip="Custo: 35 + (MP × 1,11) mana\nCanalização: 1 turno + ação padrão\nAlcance: médio (15 m)\nAlvos: único\nDuração máxima: até 3 turnos\nTipo de dano: físico (esmagamento)\nResistência: Teste de Força contra DT (10 + MP × 1,5)\nFalha no teste: alvo permanece imobilizado e sofre (MP / 3,5) d10 de dano\nTentativas subsequentes: DT reduzida em 10 a cada tentativa\nInteração: aliados podem ajudar na liberação\nObservações: requer contato com o solo; criaturas aéreas ou incorpóreas são imunes\n">Informações Detalhadas</span>' },
 
-        { id: 'mag_fogo_3', tier: 3, nome: 'Parede de Fogo', desc: 'Ergue uma parede de fogo que bloqueia projéteis e causa dano de fogo a quem atravessar ou permanecer próxima. Gasta uma quantidade significativa de mana e tem alcance médio.<span class="termo-destaque" data-tooltip="Ação: turno + ação padrão\nCusto: 35 + (MP × 1,11) mana\nCanalização: 1 turno\nAlcance: médio (15 m)\nÁrea: [5 + MP] m × 3 m\nDuração: até 4 turnos\nDano: fogo\nEfeito: atravessar causa [MP/2 d12]\nAdjacente causa [MP/1,4 d12]\nAplica Incendiado\nBloqueia visão">Informações Detalhadas</span>' },
+        { id: 'mag_fogo_3', tier: 3, nome: 'Parede de Fogo', desc: 'Ergue uma parede de fogo que bloqueia projéteis e causa dano de fogo a quem atravessar ou permanecer próxima. Gasta uma quantidade significativa de mana e tem alcance médio.<span class="termo-destaque" data-tooltip="Custo: 35 + (MP × 1,11) mana\nCanalização: 1 turno + ação padrão\nAlcance: médio (15 m)\nÁrea: [5 + MP] m × 3 m\nDuração: até 4 turnos\nDano: fogo\nEfeito: atravessar causa [MP/2 d12]\nAdjacente causa [MP/1,4 d12]\nAplica Incendiado\nBloqueia visão">Informações Detalhadas</span>' },
 
-        { id: 'mag_agua_3', tier: 3, nome: 'Nuvem de Vapor', desc: 'Cria uma área de vapor denso, permitindo lançar magias de água de qualquer ponto dentro da área. Gasta uma quantidade significativa de mana e consome unidades de água do bolsão.<span class="termo-destaque" data-tooltip="Ação: turno + ação padrão\nCusto: 35 + (MP × 1,11) mana\nCusto adicional: 6 Unidades de Água\nCanalização: 1 turno\nÁrea: raio de 6 m\nDuração: enquanto houver vapor\nEfeito: magias podem partir da área\nConsome vapor ao conjurar">Informações Detalhadas</span>' },
+        { id: 'mag_agua_3', tier: 3, nome: 'Nuvem de Vapor', desc: 'Cria uma área de vapor denso, permitindo lançar magias de água de qualquer ponto dentro da área. Gasta uma quantidade significativa de mana e consome unidades de água do bolsão.<span class="termo-destaque" data-tooltip="Custo: 35 + (MP × 1,11) mana\nCusto adicional: 6 Unidades de Água\nCanalização: 1 turno + ação padrão\nÁrea: raio de 6 m\nDuração: enquanto houver vapor\nEfeito: magias podem partir da área\nConsome vapor ao conjurar">Informações Detalhadas</span>' },
 
 
         
@@ -253,9 +258,9 @@ const dadosMagias = {
 
         { id: 'mag_terra_4', tier: 4, nome: 'Nuvem de Fumaça', desc: 'Cria uma nuvem de fumaça que reduz a visão e torna os ataques à distância mais difíceis. Gasta uma grande quantidade de mana e tem alcance médio.<span class="termo-destaque" data-tooltip="Custo: 60 + (MP / 2) mana\nCanalização: 2 turnos\nAlcance: (MP) m\nÁrea: raio de (MP / 3) m\nDuração: 3 turnos\nEfeito: visão severamente reduzida dentro da área\nPenalidades: desvantagem em Percepção visual\nAtaques à distância: falham automaticamente se atravessarem a fumaça\nBônus: testes de Furtividade dentro da área têm vantagem\nObservações: não impede movimento; pode ser dispersada por ventos fortes\n">Informações Detalhadas</span>' },
 
-        { id: 'mag_fogo_4', tier: 4, nome: 'Imbuir', desc: 'Encanta uma arma corpo a corpo, fazendo com que cause dano adicional de fogo em cada golpe. Gasta uma grande quantidade de mana e tem alcance curto.<span class="termo-destaque" data-tooltip="Ação: 2 turnos\nCusto: 60 + (MP / 2) mana\nCanalização: 2 turnos\nAlcance: toque\nDuração: [MP/3] turnos\nDano adicional: fogo\nEfeito: +[MP/4 d12] por ataque\nNão acumula">Informações Detalhadas</span>' },
+        { id: 'mag_fogo_4', tier: 4, nome: 'Imbuir', desc: 'Encanta uma arma corpo a corpo, fazendo com que cause dano adicional de fogo em cada golpe. Gasta uma grande quantidade de mana e tem alcance curto.<span class="termo-destaque" data-tooltip="Custo: 60 + (MP / 2) mana\nCanalização: 2 turnos\nAlcance: toque\nDuração: [MP/3] turnos\nDano adicional: fogo\nEfeito: +[MP/4 d12] por ataque\nNão acumula">Informações Detalhadas</span>' },
 
-        { id: 'mag_agua_4', tier: 4, nome: 'Corte de Água', desc: 'Projeta uma lâmina de água de alta pressão que causa dano em um único alvo ou em uma área em cone. Gasta uma quantidade grande de mana e consome unidades de água do bolsão.<span class="termo-destaque" data-tooltip="Ação: 2 turnos\nCusto: 60 + (MP / 2) mana\nCusto adicional: 4 Unidades de Água\nCanalização: 2 turnos\nAlcance: médio (15 m)\nForma: alvo único ou cone\nDano: físico\nEfeito: [MP/1,3 d12] de dano">Informações Detalhadas</span>' },
+        { id: 'mag_agua_4', tier: 4, nome: 'Corte de Água', desc: 'Projeta uma lâmina de água de alta pressão que causa dano em um único alvo ou em uma área em cone. Gasta uma quantidade grande de mana e consome unidades de água do bolsão.<span class="termo-destaque" data-tooltip="Custo: 60 + (MP / 2) mana\nCusto adicional: 4 Unidades de Água\nCanalização: 2 turnos\nAlcance: médio (15 m)\nForma: alvo único ou cone\nDano: físico\nEfeito: [MP/1,3 d12] de dano">Informações Detalhadas</span>' },
        
 
 
@@ -263,39 +268,39 @@ const dadosMagias = {
 
         { id: 'mag_terra_5', tier: 5, nome: 'Terremoto', desc: 'Faz o solo tremer, derrubando criaturas e afetando estruturas próximas. Gasta uma quantidade massiva de mana e tem alcance grande, afetando uma vasta área.<span class="termo-destaque" data-tooltip="Custo: 120 + (MP / 5) mana\nCanalização: 3 turnos\nÁrea: raio de até (MP × 5) m\nResistência: Teste de Força contra DT (4 × MP)\nFalha no teste: criatura fica derrubada e desarmada\nEfeito adicional: estruturas próximas sofrem dano de soterramento conforme o porte\nObservações: não afeta criaturas voadoras; pode causar colapso estrutural\n">Informações Detalhadas</span>' },
 
-        { id: 'mag_fogo_5', tier: 5, nome: 'Chama Incansável', desc: 'Reativa queimaduras causadas anteriormente, causando dano adicional e renovando o efeito de queimadura. Gasta uma quantidade massiva de mana e tem alcance médio.<span class="termo-destaque" data-tooltip="Ação: 3 turnos\nCusto: 120 + (MP / 5) mana\nCanalização: 3 turnos\nAlvo: inimigo incendiado por você\nDano: fogo\nEfeito: [MP/2 d20] imediato\nRenova Incendiado (2 turnos)">Informações Detalhadas</span>' },
+        { id: 'mag_fogo_5', tier: 5, nome: 'Chama Incansável', desc: 'Reativa queimaduras causadas anteriormente, causando dano adicional e renovando o efeito de queimadura. Gasta uma quantidade massiva de mana e tem alcance médio.<span class="termo-destaque" data-tooltip="Custo: 120 + (MP / 5) mana\nCanalização: 3 turnos\nAlvo: inimigo incendiado por você\nDano: fogo\nEfeito: [MP/2 d20] imediato\nRenova Incendiado (2 turnos)">Informações Detalhadas</span>' },
 
-        { id: 'mag_agua_5', tier: 5, nome: 'Prisão Aquática', desc: 'Cria um domo de água que bloqueia a visão e projéteis. Gasta uma quantidade massiva de mana e consome unidades de água do bolsão.<span class="termo-destaque" data-tooltip="Ação: 3 turnos\nCusto: 120 + (MP / 5) mana\nCusto adicional: 6 Unidades de Água\nCanalização: 3 turnos\nAlcance: médio (15 m)\nÁrea: domo (3 m raio)\nDuração: [MP/2] turnos\nEfeito: bloqueia projéteis e visão\nTeste Vigor [DT 15 + MP × 1,5] para escapar\nFalha aplica Afogando">Informações Detalhadas</span>' },
+        { id: 'mag_agua_5', tier: 5, nome: 'Prisão Aquática', desc: 'Cria um domo de água que bloqueia a visão e projéteis. Gasta uma quantidade massiva de mana e consome unidades de água do bolsão.<span class="termo-destaque" data-tooltip="Custo: 120 + (MP / 5) mana\nCusto adicional: 6 Unidades de Água\nCanalização: 3 turnos\nAlcance: médio (15 m)\nÁrea: domo (3 m raio)\nDuração: [MP/2] turnos\nEfeito: bloqueia projéteis e visão\nTeste Vigor [DT 15 + MP × 1,5] para escapar\nFalha aplica Afogando">Informações Detalhadas</span>' },
     ],
     fimbulwinter: [
-        { id: 'fim_1', tier: 1, nome: 'Globo de Neve', desc: 'Congela uma grande área do terreno, transformando o local em um campo permanentemente gelado enquanto o efeito durar. Dentro do Globo de Neve, todas as magias do Fimbulwinter exigem significativamente menos mana para serem conjuradas. Gasta uma quantidade moderada de mana.<span class="termo-destaque" data-tooltip="Ação: ação padrão\nCusto: 4 + (2 × MP) mana\nCanalização: instantânea\nÁrea: raio de [5 + MP] m\nDuração: enquanto o Fimbulwinter permanecer\nEfeito: terreno congelado\nMagias Fimbulwinter custam metade">Informações Detalhadas</span>' },
-        { id: 'fim_2', tier: 1, nome: 'Lâmina de Gelo', desc: 'Cria várias lâminas afiadas de gelo que podem ser atiradas rapidamente. As lâminas podem atingir um único alvo ou serem distribuídas entre vários inimigos, causando dano cortante a cada impacto. Gasta uma quantidade pequena de mana e funciona a curto ou médio alcance.<span class="termo-destaque" data-tooltip="Ação: ação padrão\nCusto: 4 + (2 × MP) mana\nCanalização: instantânea\nAlcance: médio (15 m)\nAlvos: até 5\nDano: gelo\nEfeito: [MP/3,5 d10] por lâmina">Informações Detalhadas</span>' },
-        { id: 'fim_3', tier: 2, nome: 'Resfriar', desc: 'Imbuí um item adjacente com frio extremo. Criaturas que não dominam o poder do Fimbulwinter sofrem dano contínuo ao utilizar o item e têm grande dificuldade em executar ações enquanto o efeito persistir. Gasta uma quantidade moderada de mana e exige contato próximo.<span class="termo-destaque" data-tooltip="Ação: turno\nCusto: 20 + (MP × 1,3) mana\nCanalização: 1 turno\nAlcance: curto (5 m)\nAlvo: item equipado\nDano: gelo\nEfeito: usuário não-Fimbulwinter sofre [MP/3 d10]/rodada (máx. 3)\n–2 dados em ações">Informações Detalhadas</span>' },
-        { id: 'fim_4', tier: 3, nome: 'Prender no Gelo', desc: 'Após um inimigo ser afetado por uma magia de Fimbulwinter, você tenta congelá-lo parcialmente. O frio reduz progressivamente sua capacidade de agir, podendo levá-lo à completa imobilização caso permaneça preso por tempo prolongado. O alvo pode tentar resistir ou receber ajuda de aliados para se libertar. Gasta uma quantidade significativa de mana e funciona a médio alcance.<span class="termo-destaque" data-tooltip="Ação: turno + ação padrão\nCusto: 35 + (MP × 1,11) mana\nCanalização: 1 turno\nAlcance: médio (15 m)\nPré-requisito: alvo atingido por magia Fimbulwinter\nResistência: Força [DT 10 + MP × 1,5]\nEfeito: falha 1 perde Movimento\nFalha 2 perde Turno\nDT –10 por tentativa">Informações Detalhadas</span>' },
+        { id: 'fim_1', tier: 1, nome: 'Globo de Neve', desc: 'Congela uma grande área do terreno, transformando o local em um campo permanentemente gelado enquanto o efeito durar. Dentro do Globo de Neve, todas as magias do Fimbulwinter exigem significativamente menos mana para serem conjuradas. Gasta uma quantidade moderada de mana.<span class="termo-destaque" data-tooltip="Custo: 4 + (2 × MP) mana\nCanalização: ação padrão\nÁrea: raio de [5 + MP] m\nDuração: enquanto o Fimbulwinter permanecer\nEfeito: terreno congelado\nMagias Fimbulwinter custam metade">Informações Detalhadas</span>' },
+        { id: 'fim_2', tier: 1, nome: 'Lâmina de Gelo', desc: 'Cria várias lâminas afiadas de gelo que podem ser atiradas rapidamente. As lâminas podem atingir um único alvo ou serem distribuídas entre vários inimigos, causando dano cortante a cada impacto. Gasta uma quantidade pequena de mana e funciona a curto ou médio alcance.<span class="termo-destaque" data-tooltip="Custo: 4 + (2 × MP) mana\nCanalização: ação padrão\nAlcance: médio (15 m)\nAlvos: até 5\nDano: gelo\nEfeito: [MP/3,5 d10] por lâmina">Informações Detalhadas</span>' },
+        { id: 'fim_3', tier: 2, nome: 'Resfriar', desc: 'Imbuí um item adjacente com frio extremo. Criaturas que não dominam o poder do Fimbulwinter sofrem dano contínuo ao utilizar o item e têm grande dificuldade em executar ações enquanto o efeito persistir. Gasta uma quantidade moderada de mana e exige contato próximo.<span class="termo-destaque" data-tooltip="Custo: 20 + (MP × 1,3) mana\nCanalização: 1 turno\nAlcance: curto (5 m)\nAlvo: item equipado\nDano: gelo\nEfeito: usuário não-Fimbulwinter sofre [MP/3 d10]/rodada (máx. 3)\n–2 dados em ações">Informações Detalhadas</span>' },
+        { id: 'fim_4', tier: 3, nome: 'Prender no Gelo', desc: 'Após um inimigo ser afetado por uma magia de Fimbulwinter, você tenta congelá-lo parcialmente. O frio reduz progressivamente sua capacidade de agir, podendo levá-lo à completa imobilização caso permaneça preso por tempo prolongado. O alvo pode tentar resistir ou receber ajuda de aliados para se libertar. Gasta uma quantidade significativa de mana e funciona a médio alcance.<span class="termo-destaque" data-tooltip="Custo: 35 + (MP × 1,11) mana\nCanalização: 1 turno + ação padrão\nAlcance: médio (15 m)\nPré-requisito: alvo atingido por magia Fimbulwinter\nResistência: Força [DT 10 + MP × 1,5]\nEfeito: falha 1 perde Movimento\nFalha 2 perde Turno\nDT –10 por tentativa">Informações Detalhadas</span>' },
         { id: 'fim_5', tier: 3, nome: 'Restauração Gélida', desc: 'Utiliza o frio para selar ferimentos, interromper sangramentos e reduzir inflamações, restaurando parte da vitalidade do usuário. Não pode ser utilizada se o conjurador estiver inconsciente ou à beira da morte. Gasta uma quantidade significativa de mana e afeta apenas o próprio usuário.<span class="termo-destaque" data-tooltip="Ação: turno + ação padrão\nCusto: 35 + (MP × 1,11) mana\nCanalização: 1 turno\nAlvo: si mesmo\nCura: [MP/3 d12]\nRestrição: não funciona a 0 de Vida">Informações Detalhadas</span>' },
-        { id: 'fim_6', tier: 4, nome: 'Raio de Gelo', desc: 'Dispara um feixe concentrado de energia gélida em alcance longo, causando dano elevado e congelamento interno. Se o alvo estiver dentro de um Globo de Neve, o efeito é intensificado, causando mais dano e prejudicando temporariamente suas ações. Gasta uma quantidade grande de mana.<span class="termo-destaque" data-tooltip="Ação: 2 turnos\nCusto: 60 + (MP / 2) mana\nCanalização: 2 turnos\nAlcance: longo (35 m)\nDano: gelo\nEfeito: [MP/1,4 d12]\nNo Globo: [MP/1,1 d12]\n–1 dado por 2 rodadas">Informações Detalhadas</span>' },
-        { id: 'fim_7', tier: 4, nome: 'Veneno Glacial', desc: 'Cria uma névoa quase invisível de frio extremo em uma grande área. Criaturas que inalarem o vapor sofrem congelamento interno e dano contínuo. Exposição repetida reduz drasticamente a capacidade de movimento dos alvos. Gasta uma quantidade grande de mana e permanece ativa por vários turnos.<span class="termo-destaque" data-tooltip="Ação: 2 turnos\nCusto: 60 + (MP / 2) mana\nCanalização: 2 turnos\nÁrea: até área do Globo de Neve\nResistência: Vigor [DT 15 + MP]\nDano: gelo\nEfeito: [MP/1,4 d10]\n2 rodadas reduzem Movimento pela metade">Informações Detalhadas</span>' },
-        { id: 'fim_8', tier: 5, nome: 'Clone de Gelo', desc: 'Dano perfurante.Cria um clone idêntico ao conjurador feito de gelo sólido. O clone possui suas próprias ações e pode usar as mesmas habilidades do original, mas se desfaz após sofrer alguns golpes. Ele só pode existir dentro de um Globo de Neve. Gasta uma quantidade massiva de mana e dura alguns turnos.<span class="termo-destaque" data-tooltip="Ação: 3 turnos\nCusto: 120 + (MP / 5) mana\nCanalização: 3 turnos\nDuração: [MP/3] rodadas\nPV do clone: 3 golpes\nRestrição: não sai do Globo\nEfeito: age em rodada própria">Informações Detalhadas</span>' },
+        { id: 'fim_6', tier: 4, nome: 'Raio de Gelo', desc: 'Dispara um feixe concentrado de energia gélida em alcance longo, causando dano elevado e congelamento interno. Se o alvo estiver dentro de um Globo de Neve, o efeito é intensificado, causando mais dano e prejudicando temporariamente suas ações. Gasta uma quantidade grande de mana.<span class="termo-destaque" data-tooltip="Custo: 60 + (MP / 2) mana\nCanalização: 2 turnos\nAlcance: longo (35 m)\nDano: gelo\nEfeito: [MP/1,4 d12]\nNo Globo: [MP/1,1 d12]\n–1 dado por 2 rodadas">Informações Detalhadas</span>' },
+        { id: 'fim_7', tier: 4, nome: 'Veneno Glacial', desc: 'Cria uma névoa quase invisível de frio extremo em uma grande área. Criaturas que inalarem o vapor sofrem congelamento interno e dano contínuo. Exposição repetida reduz drasticamente a capacidade de movimento dos alvos. Gasta uma quantidade grande de mana e permanece ativa por vários turnos.<span class="termo-destaque" data-tooltip="Custo: 60 + (MP / 2) mana\nCanalização: 2 turnos\nÁrea: até área do Globo de Neve\nResistência: Vigor [DT 15 + MP]\nDano: gelo\nEfeito: [MP/1,4 d10]\n2 rodadas reduzem Movimento pela metade">Informações Detalhadas</span>' },
+        { id: 'fim_8', tier: 5, nome: 'Clone de Gelo', desc: 'Dano perfurante.Cria um clone idêntico ao conjurador feito de gelo sólido. O clone possui suas próprias ações e pode usar as mesmas habilidades do original, mas se desfaz após sofrer alguns golpes. Ele só pode existir dentro de um Globo de Neve. Gasta uma quantidade massiva de mana e dura alguns turnos.<span class="termo-destaque" data-tooltip="Custo: 120 + (MP / 5) mana\nCanalização: 3 turnos\nDuração: [MP/3] rodadas\nPV do clone: 3 golpes\nRestrição: não sai do Globo\nEfeito: age em rodada própria">Informações Detalhadas</span>' },
     ],
     feengari: [
-        { id: 'fee_1', tier: 1, nome: 'Alma Sombria', desc: 'Dispara um projétil etéreo em linha reta que atravessa o ar como uma sombra condensada, atingindo um alvo em alcance médio e causando dano etéreo direto. Gasta uma quantidade pequena de mana e é uma magia ofensiva simples e confiável. Nos níveis altos possui uma versão especial.<span class="termo-destaque" data-tooltip="Ação: ação padrão\nCusto: 4 + (2 × MP) mana\nCanalização: instantânea\nAlcance: médio (15 m)\nForma: linha reta\nDano: etéreo\nEfeito: [MP/2,5 d10]">Informações Detalhadas</span>' },
-        { id: 'fee_2', tier: 2, nome: 'Escuridão Descendente', desc: 'O conjurador se projeta rapidamente através das sombras em um deslocamento curto, surgindo em outro ponto e liberando uma onda de energia sombria no local de chegada. O impacto causa dano sombrio em uma pequena área ao redor. Gasta uma quantidade moderada de mana e combina mobilidade com dano.<span class="termo-destaque" data-tooltip="Ação: turno\nCusto: 20 + (MP × 1,3) mana\nCanalização: 1 turno\nMovimento: dash curto (5 m)\nÁrea: pequena ao redor do impacto\nDano: sombrio\nEfeito: [MP/2 d10]">Informações Detalhadas</span>' },
-        { id: 'fee_3', tier: 2, nome: 'Caminhar das Sombras', desc: 'Permite ao conjurador se teleportar instantaneamente para qualquer região sem luz dentro de um grande alcance. O deslocamento é silencioso e não quebra furtividade. Gasta mana moderada e exige que o destino esteja envolto em sombras ou escuridão total.<span class="termo-destaque" data-tooltip="Ação: turno\nCusto: 20 + (MP × 1,3) mana\nCanalização: 1 turno\nAlcance: [10 + (MP × 2)] m\nRestrição: área sem luz\nEfeito: teleporte sem quebrar furtividade">Informações Detalhadas</span>' },
-        { id: 'fee_4', tier: 3, nome: 'Dança da Penumbra', desc: 'O corpo do conjurador se dissolve parcialmente nas sombras, tornando-se invisível por alguns turnos. A invisibilidade pode ser quebrada caso alguém perceba sua presença com atenção extrema. Qualquer ataque realizado encerra o efeito imediatamente. Gasta uma quantidade significativa de mana e é ideal para infiltração ou reposicionamento.<span class="termo-destaque" data-tooltip="Ação: turno + ação padrão\nCusto: 35 + (MP × 1,11) mana\nCanalização: 1 turno\nDuração: ~[MP/4] rodadas\nEfeito: invisibilidade\nRevelação: Presença [DT 12 + Mod. Aura]\nAtacar encerra">Informações Detalhadas</span>' },
-        { id: 'fee_5', tier: 3, nome: 'Sombra Viva', desc: 'Cria uma sombra autônoma ligada à vontade do conjurador. Ela se move livremente em curto alcance, mas não ataca nem interage fisicamente com o ambiente. A sombra se dissipa ao ser atingida. Pode servir como ponto de origem para Caminhar das Sombras, permitindo conjurar ambas as magias em uma única ação prolongada. Gasta uma quantidade significativa de mana. Nos níveis altos possui uma versão especial.<span class="termo-destaque" data-tooltip="Ação: turno + ação padrão\nCusto: 35 + (MP × 1,11) mana\nCanalização: 1 turno\nAlcance: curto (5 m)\nPV: 1\nEfeito: ponto válido para Caminhar das Sombras">Informações Detalhadas</span>' },
-        { id: 'fee_6', tier: 4, nome: 'Murmúrios do Vazio', desc: 'Sussurros etéreos invadem a mente de um alvo em alcance médio, distorcendo percepções, emoções ou implantando memórias falsas. O efeito pode durar vários turnos dependendo da resistência mental do alvo. Aliados podem ajudar a vítima a romper a influência sombria. Gasta muita mana e exige concentração.<span class="termo-destaque" data-tooltip="Ação: 2 turnos\nCusto: 60 + (MP / 2) mana\nCanalização: 2 turnos\nAlcance: médio (15 m)\nResistência: Presença [DT 15 + MP]\nDuração: 2 a 4 rodadas conforme falha">Informações Detalhadas</span>' },
-        { id: 'fee_7', tier: 4, nome: 'Silêncio Sombrio', desc: 'Cria uma zona de escuridão densa que abafa sons e reduz drasticamente a visão dentro da área. Criaturas no interior têm dificuldade em perceber ameaças e se comunicar. O efeito pode ser mantido por vários turnos ao custo contínuo de mana. Gasta uma quantidade grande de mana e controla fortemente o campo de batalha.<span class="termo-destaque" data-tooltip="Ação: 2 turnos\nCusto: 60 + (MP / 2) mana\n+6 por rodada mantida\nCanalização: 2 turnos\nÁrea: raio de [6 + MP] m\nDuração: até 4 rodadas\nEfeito: visão adjacente apenas\n–2 dados em Presença">Informações Detalhadas</span>' },
-        { id: 'fee_8', tier: 5, nome: 'Grito do Abismo', desc: 'O conjurador libera um grito distorcido e antinatural que se propaga em cone, causando dano massivo e desorientação mental. Alvos afetados têm seus movimentos prejudicados temporariamente caso não resistam à pressão psicológica do som. Gasta uma quantidade massiva de mana. Nos níveis altos possui uma versão especial.<span class="termo-destaque" data-tooltip="Ação: 3 turnos\nCusto: 120 + (MP / 5) mana\nCanalização: 3 turnos\nÁrea: cone médio (15 m)\nDano: etéreo\nEfeito: [MP/1,5 d20]\nResistência: Presença [DT 15 + MP]\n–1 movimento por 1 rodada">Informações Detalhadas</span>' },
+        { id: 'fee_1', tier: 1, nome: 'Alma Sombria', desc: 'Dispara um projétil etéreo em linha reta que atravessa o ar como uma sombra condensada, atingindo um alvo em alcance médio e causando dano etéreo direto. Gasta uma quantidade pequena de mana e é uma magia ofensiva simples e confiável. Nos níveis altos possui uma versão especial.<span class="termo-destaque" data-tooltip="Custo: 4 + (2 × MP) mana\nCanalização: ação padrão\nAlcance: médio (15 m)\nForma: linha reta\nDano: etéreo\nEfeito: [MP/2,5 d10]">Informações Detalhadas</span>' },
+        { id: 'fee_2', tier: 2, nome: 'Escuridão Descendente', desc: 'O conjurador se projeta rapidamente através das sombras em um deslocamento curto, surgindo em outro ponto e liberando uma onda de energia sombria no local de chegada. O impacto causa dano sombrio em uma pequena área ao redor. Gasta uma quantidade moderada de mana e combina mobilidade com dano.<span class="termo-destaque" data-tooltip="Custo: 20 + (MP × 1,3) mana\nCanalização: 1 turno\nMovimento: dash curto (5 m)\nÁrea: pequena ao redor do impacto\nDano: sombrio\nEfeito: [MP/2 d10]">Informações Detalhadas</span>' },
+        { id: 'fee_3', tier: 2, nome: 'Caminhar das Sombras', desc: 'Permite ao conjurador se teleportar instantaneamente para qualquer região sem luz dentro de um grande alcance. O deslocamento é silencioso e não quebra furtividade. Gasta mana moderada e exige que o destino esteja envolto em sombras ou escuridão total.<span class="termo-destaque" data-tooltip="Custo: 20 + (MP × 1,3) mana\nCanalização: 1 turno\nAlcance: [10 + (MP × 2)] m\nRestrição: área sem luz\nEfeito: teleporte sem quebrar furtividade">Informações Detalhadas</span>' },
+        { id: 'fee_4', tier: 3, nome: 'Dança da Penumbra', desc: 'O corpo do conjurador se dissolve parcialmente nas sombras, tornando-se invisível por alguns turnos. A invisibilidade pode ser quebrada caso alguém perceba sua presença com atenção extrema. Qualquer ataque realizado encerra o efeito imediatamente. Gasta uma quantidade significativa de mana e é ideal para infiltração ou reposicionamento.<span class="termo-destaque" data-tooltip="Custo: 35 + (MP × 1,11) mana\nCanalização: 1 turno + ação padrão\nDuração: ~[MP/4] rodadas\nEfeito: invisibilidade\nRevelação: Presença [DT 12 + Mod. Aura]\nAtacar encerra">Informações Detalhadas</span>' },
+        { id: 'fee_5', tier: 3, nome: 'Sombra Viva', desc: 'Cria uma sombra autônoma ligada à vontade do conjurador. Ela se move livremente em curto alcance, mas não ataca nem interage fisicamente com o ambiente. A sombra se dissipa ao ser atingida. Pode servir como ponto de origem para Caminhar das Sombras, permitindo conjurar ambas as magias em uma única ação prolongada. Gasta uma quantidade significativa de mana. Nos níveis altos possui uma versão especial.<span class="termo-destaque" data-tooltip="Custo: 35 + (MP × 1,11) mana\nCanalização: 1 turno + ação padrão\nAlcance: curto (5 m)\nPV: 1\nEfeito: ponto válido para Caminhar das Sombras">Informações Detalhadas</span>' },
+        { id: 'fee_6', tier: 4, nome: 'Murmúrios do Vazio', desc: 'Sussurros etéreos invadem a mente de um alvo em alcance médio, distorcendo percepções, emoções ou implantando memórias falsas. O efeito pode durar vários turnos dependendo da resistência mental do alvo. Aliados podem ajudar a vítima a romper a influência sombria. Gasta muita mana e exige concentração.<span class="termo-destaque" data-tooltip="Custo: 60 + (MP / 2) mana\nCanalização: 2 turnos + ação padrão\nAlcance: médio (15 m)\nResistência: Presença [DT 15 + MP]\nDuração: 2 a 4 rodadas conforme falha">Informações Detalhadas</span>' },
+        { id: 'fee_7', tier: 4, nome: 'Silêncio Sombrio', desc: 'Cria uma zona de escuridão densa que abafa sons e reduz drasticamente a visão dentro da área. Criaturas no interior têm dificuldade em perceber ameaças e se comunicar. O efeito pode ser mantido por vários turnos ao custo contínuo de mana. Gasta uma quantidade grande de mana e controla fortemente o campo de batalha.<span class="termo-destaque" data-tooltip="Custo: 60 + (MP / 2) mana\n+6 por rodada mantida\nCanalização: 2 turnos + ação padrão\nÁrea: raio de [6 + MP] m\nDuração: até 4 rodadas\nEfeito: visão adjacente apenas\n–2 dados em Presença">Informações Detalhadas</span>' },
+        { id: 'fee_8', tier: 5, nome: 'Grito do Abismo', desc: 'O conjurador libera um grito distorcido e antinatural que se propaga em cone, causando dano massivo e desorientação mental. Alvos afetados têm seus movimentos prejudicados temporariamente caso não resistam à pressão psicológica do som. Gasta uma quantidade massiva de mana. Nos níveis altos possui uma versão especial.<span class="termo-destaque" data-tooltip="Custo: 120 + (MP / 5) mana\nCanalização: 3 turnos\nÁrea: cone médio (15 m)\nDano: etéreo\nEfeito: [MP/1,5 d20]\nResistência: Presença [DT 15 + MP]\n–1 movimento por 1 rodada">Informações Detalhadas</span>' },
     ],
     ascendente: [
-        { id: 'asc_1', tier: 1,nome: 'Eco da Raiva', desc: 'O conjurador canaliza sua fúria acumulada e a libera em uma explosão violenta ao seu redor. A onda de impacto causa dano físico amplificado por energia primal em alcance curto e empurra os inimigos atingidos para longe. Gasta uma quantidade pequena de mana e é eficaz para abrir espaço em combate próximo.<span class="termo-destaque" data-tooltip="Ação: ação padrão\nCusto: 4 + (2 × MP) mana\nCanalização: instantânea\nAlcance: curto (5 m)\nÁrea: explosão ao redor do conjurador\nDano: físico\nEfeito: [MP/2,5 d10]\nEmpurra inimigos">Informações Detalhadas</span>' },
-        { id: 'asc_2', tier: 2,nome: 'Rugido Bestial', desc: 'A fera interior do conjurador se manifesta através de um rugido primal que ecoa em uma ampla área ao redor. Inimigos afetados devem resistir mentalmente ou sofrem penalidades graduais, que variam desde dificuldade em atacar até a perda total de ações no próximo turno, dependendo da intensidade da falha. Gasta uma quantidade moderada de mana e é focada em controle psicológico agressivo.<span class="termo-destaque" data-tooltip="Ação: turno\nCusto: 20 + (MP × 1,3) mana\nCanalização: 1 turno\nÁrea: raio de [MP + 5] m\nResistência: Presença [DT 10 + (MP × 2)]\nEfeito: penalidades graduais conforme falha">Informações Detalhadas</span>' },
-        { id: 'asc_3', tier: 2,nome: 'Chama Ancestral', desc: 'O conjurador desperta um poder antigo adormecido em seu sangue. Durante alguns turnos, todos os seus ataques corpo a corpo passam a causar dano mágico adicional, manifestado como energia ancestral incandescente que envolve seus golpes. Gasta uma quantidade moderada de mana e fortalece o combate direto.<span class="termo-destaque" data-tooltip="Ação: turno\nCusto: 20 + (MP × 1,3) mana\nCanalização: 1 turno\nDuração: 4 turnos\nTipo de dano: etéreo\nEfeito: +[MP/4 d10] em ataques corpo a corpo">Informações Detalhadas</span>' },
-        { id: 'asc_4', tier: 3,nome: 'Abraçar a Dor', desc: 'O conjurador aceita a própria dor como combustível para o poder. Enquanto o efeito durar, quanto mais ferido estiver, maior será o dano que causa. Em estados críticos de vida, o poder alcança níveis extremos. Gasta uma quantidade significativa de mana e recompensa estilos de combate arriscados.<span class="termo-destaque" data-tooltip="Ação: turno + ação padrão\nCusto: 35 + (MP × 1,11) mana\nCanalização: 1 turno\nDuração: [MP/3] rodadas\nEfeito: bônus de dano escalando com Vida">Informações Detalhadas</span>' },
-        { id: 'asc_5', tier: 3,nome: 'Físico Monstruoso', desc: 'O corpo do conjurador se distorce de forma brutal, músculos se expandem e a carne se torna mais resistente. Durante a duração do efeito, ele ganha aumento significativo de mobilidade e uma grande quantidade de proteção física. Gasta uma quantidade significativa de mana e transforma o conjurador em uma ameaça frontal dominante.<span class="termo-destaque" data-tooltip="Ação: turno + ação padrão\nCusto: 35 + (MP × 1,11) mana\nCanalização: 1 turno\nDuração: [MP/3] turnos\nEfeito: +[MP/5] m movimento\n+[MP] armadura">Informações Detalhadas</span>' },
-        { id: 'asc_6', tier: 4,nome: 'Fúria Incontrolável', desc: 'O conjurador marca um inimigo visível como foco absoluto de sua raiva. Enquanto o alvo estiver marcado, o conjurador ignora efeitos de controle e impedimentos, avançando implacavelmente em sua direção com maior mobilidade. Se o alvo cair, o efeito se encerra imediatamente. Gasta uma quantidade grande de mana e força confrontos diretos.<span class="termo-destaque" data-tooltip="Ação: 2 turnos\nCusto: 60 + (MP / 2) mana\nCanalização: 2 turnos\nAlvo: 1 inimigo visível\nDuração: [1 + MP/4] turnos\nEfeito: ignora controle\n+3 m ao avançar">Informações Detalhadas</span>' },
-        { id: 'asc_7', tier: 4,nome: 'Roubo Primordial', desc: 'Os ataques físicos do conjurador passam a drenar vitalidade dos inimigos, convertendo parte do dano causado em cura. Quanto mais ferido o conjurador estiver, mais potente se torna o efeito de drenagem. Derrotar um inimigo sob esse efeito resulta em uma recuperação massiva de vida. Gasta uma quantidade grande de mana e sustenta combates prolongados.<span class="termo-destaque" data-tooltip="Ação: 2 turnos\nCusto: 60 + (MP / 2) mana\nCanalização: 2 turnos\nDuração: [1 + MP/4] turnos\nEfeito: roubo de vida\ncura escalonada por Vida">Informações Detalhadas</span>' },
-        { id: 'asc_8', tier: 5,nome: 'Ignorar Dor', desc: 'O conjurador suprime completamente os sinais de colapso físico. Enquanto o efeito durar, ele continua lutando mesmo após sofrer ferimentos fatais, ignorando a queda por exaustão ou morte iminente. Quando a magia termina, caso ainda esteja gravemente ferido, o corpo finalmente cede. Gasta uma quantidade massiva de mana.<span class="termo-destaque" data-tooltip="Ação: 3 turnos\nCusto: 120 + (MP / 5) mana\nCanalização: 3 turnos\nDuração: [MP/4] turnos\nEfeito: não cai a 0 de Vida\nqueda ao fim do efeito">Informações Detalhadas</span>' },
+        { id: 'asc_1', tier: 1,nome: 'Eco da Raiva', desc: 'O conjurador canaliza sua fúria acumulada e a libera em uma explosão violenta ao seu redor. A onda de impacto causa dano físico amplificado por energia primal em alcance curto e empurra os inimigos atingidos para longe. Gasta uma quantidade pequena de mana e é eficaz para abrir espaço em combate próximo.<span class="termo-destaque" data-tooltip="Custo: 4 + (2 × MP) mana\nCanalização: ação padrão\nAlcance: curto (5 m)\nÁrea: explosão ao redor do conjurador\nDano: físico\nEfeito: [MP/2,5 d10]\nEmpurra inimigos">Informações Detalhadas</span>' },
+        { id: 'asc_2', tier: 2,nome: 'Rugido Bestial', desc: 'A fera interior do conjurador se manifesta através de um rugido primal que ecoa em uma ampla área ao redor. Inimigos afetados devem resistir mentalmente ou sofrem penalidades graduais, que variam desde dificuldade em atacar até a perda total de ações no próximo turno, dependendo da intensidade da falha. Gasta uma quantidade moderada de mana e é focada em controle psicológico agressivo.<span class="termo-destaque" data-tooltip="Custo: 20 + (MP × 1,3) mana\nCanalização: 1 turno\nÁrea: raio de [MP + 5] m\nResistência: Presença [DT 10 + (MP × 2)]\nEfeito: penalidades graduais conforme falha">Informações Detalhadas</span>' },
+        { id: 'asc_3', tier: 2,nome: 'Chama Ancestral', desc: 'O conjurador desperta um poder antigo adormecido em seu sangue. Durante alguns turnos, todos os seus ataques corpo a corpo passam a causar dano mágico adicional, manifestado como energia ancestral incandescente que envolve seus golpes. Gasta uma quantidade moderada de mana e fortalece o combate direto.<span class="termo-destaque" data-tooltip="Custo: 20 + (MP × 1,3) mana\nCanalização: 1 turno\nDuração: 4 turnos\nTipo de dano: etéreo\nEfeito: +[MP/4 d10] em ataques corpo a corpo">Informações Detalhadas</span>' },
+        { id: 'asc_4', tier: 3,nome: 'Abraçar a Dor', desc: 'O conjurador aceita a própria dor como combustível para o poder. Enquanto o efeito durar, quanto mais ferido estiver, maior será o dano que causa. Em estados críticos de vida, o poder alcança níveis extremos. Gasta uma quantidade significativa de mana e recompensa estilos de combate arriscados.<span class="termo-destaque" data-tooltip="Custo: 35 + (MP × 1,11) mana\nCanalização: 1 turno + ação padrão\nDuração: [MP/3] rodadas\nEfeito: bônus de dano escalando com Vida">Informações Detalhadas</span>' },
+        { id: 'asc_5', tier: 3,nome: 'Físico Monstruoso', desc: 'O corpo do conjurador se distorce de forma brutal, músculos se expandem e a carne se torna mais resistente. Durante a duração do efeito, ele ganha aumento significativo de mobilidade e uma grande quantidade de proteção física. Gasta uma quantidade significativa de mana e transforma o conjurador em uma ameaça frontal dominante.<span class="termo-destaque" data-tooltip="Custo: 35 + (MP × 1,11) mana\nCanalização: 1 turno + ação padrão\nDuração: [MP/3] turnos\nEfeito: +[MP/5] m movimento\n+[MP] armadura">Informações Detalhadas</span>' },
+        { id: 'asc_6', tier: 4,nome: 'Fúria Incontrolável', desc: 'O conjurador marca um inimigo visível como foco absoluto de sua raiva. Enquanto o alvo estiver marcado, o conjurador ignora efeitos de controle e impedimentos, avançando implacavelmente em sua direção com maior mobilidade. Se o alvo cair, o efeito se encerra imediatamente. Gasta uma quantidade grande de mana e força confrontos diretos.<span class="termo-destaque" data-tooltip="Custo: 60 + (MP / 2) mana\nCanalização: 2 turnos\nAlvo: 1 inimigo visível\nDuração: [1 + MP/4] turnos\nEfeito: ignora controle\n+3 m ao avançar">Informações Detalhadas</span>' },
+        { id: 'asc_7', tier: 4,nome: 'Roubo Primordial', desc: 'Os ataques físicos do conjurador passam a drenar vitalidade dos inimigos, convertendo parte do dano causado em cura. Quanto mais ferido o conjurador estiver, mais potente se torna o efeito de drenagem. Derrotar um inimigo sob esse efeito resulta em uma recuperação massiva de vida. Gasta uma quantidade grande de mana e sustenta combates prolongados.<span class="termo-destaque" data-tooltip="Custo: 60 + (MP / 2) mana\nCanalização: 2 turnos\nDuração: [1 + MP/4] turnos\nEfeito: roubo de vida\ncura escalonada por Vida">Informações Detalhadas</span>' },
+        { id: 'asc_8', tier: 5,nome: 'Ignorar Dor', desc: 'O conjurador suprime completamente os sinais de colapso físico. Enquanto o efeito durar, ele continua lutando mesmo após sofrer ferimentos fatais, ignorando a queda por exaustão ou morte iminente. Quando a magia termina, caso ainda esteja gravemente ferido, o corpo finalmente cede. Gasta uma quantidade massiva de mana.<span class="termo-destaque" data-tooltip="Custo: 120 + (MP / 5) mana\nCanalização: 3 turnos\nDuração: [MP/4] turnos\nEfeito: não cai a 0 de Vida\nqueda ao fim do efeito">Informações Detalhadas</span>' },
     ]
 };
 
@@ -323,6 +328,88 @@ let habilidadesSelecionadas = new Set();
 let afinidadeEscolhida = null
 let magiasSelecionadas = new Set();
 let pontosGastosMagia = 0; // NOVO ESTADO
+let idFichaAtual = null;
+let inventario = []; // [{nome: "Espada", peso: 2}]
+
+// --- FUNÇÕES DE MODO DE JOGO ---
+function toggleModo() {
+    const isJogo = document.getElementById('switch-modo').checked;
+    if (isJogo) {
+        document.body.classList.add('modo-jogo');
+        document.body.classList.remove('modo-edicao');
+    } else {
+        document.body.classList.add('modo-edicao');
+        document.body.classList.remove('modo-jogo');
+    }
+}
+
+// --- INVENTÁRIO ---
+function adicionarItem() {
+    const nome = prompt("Nome do Item:");
+    if(!nome) return;
+    const peso = parseFloat(prompt("Peso do Item (kg):")) || 0;
+    inventario.push({nome, peso});
+    renderizarInventario();
+    atualizarBarras(); // Para recalcular peso total
+}
+
+function removerItem(index) {
+    inventario.splice(index, 1);
+    renderizarInventario();
+    atualizarBarras();
+}
+
+// --- ATUALIZA AS BARRAS VISUAIS ---
+function atualizarBarras() {
+    // Vida
+    const maxVida = parseInt(document.getElementById('stat-vida').textContent) || 100;
+    let curVida = parseInt(document.getElementById('vida-atual').value);
+    if (isNaN(curVida)) curVida = maxVida; // Se vazio, assume cheio
+    const pctVida = Math.max(0, Math.min(100, (curVida / maxVida) * 100));
+    document.getElementById('bar-vida-fill').style.width = `${pctVida}%`;
+
+    // Mana
+    const maxMana = parseInt(document.getElementById('stat-mana').textContent) || 50;
+    let curMana = parseInt(document.getElementById('mana-atual').value);
+    if (isNaN(curMana)) curMana = maxMana;
+    const pctMana = Math.max(0, Math.min(100, (curMana / maxMana) * 100));
+    document.getElementById('bar-mana-fill').style.width = `${pctMana}%`;
+
+    // Foco
+    const maxFoco = parseInt(document.getElementById('stat-foco').textContent) || 100;
+    let curFoco = parseInt(document.getElementById('foco-atual').value);
+    if (isNaN(curFoco)) curFoco = maxFoco; // Se vazio, assume cheio
+    const pctFoco = Math.max(0, Math.min(100, (curFoco / maxFoco) * 100));
+    document.getElementById('bar-foco-fill').style.width = `${pctFoco}%`;
+
+    // Carga (Inventário)
+    let pesoTotal = 0;
+    inventario.forEach(i => pesoTotal += i.peso);
+    const maxCarga = parseInt(document.getElementById('stat-carga').textContent) || 0;
+    document.getElementById('peso-atual').textContent = pesoTotal.toFixed(1);
+    
+    // Alerta de Sobrecarga
+    if (pesoTotal > maxCarga) {
+        document.getElementById('peso-atual').style.color = 'red';
+    } else {
+        document.getElementById('peso-atual').style.color = 'var(--text-muted)';
+    }
+}
+
+function renderizarInventario() {
+    const lista = document.getElementById('lista-inventario');
+    lista.innerHTML = '';
+    inventario.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'inv-item';
+        div.innerHTML = `
+            <span style="color:#ddd">${item.nome}</span>
+            <span style="color:#aaa; text-align:right">${item.peso}kg</span>
+            <button class="inv-btn-remove" onclick="removerItem(${index})">X</button>
+        `;
+        lista.appendChild(div);
+    });
+}
 
 // --- ELEMENTOS ---
 const elNivel = document.getElementById('nivel');
@@ -380,20 +467,20 @@ function calcularStatus(nivel) {
     else ataqueBonus = combat_points * 3;
 
     if (afinidadeEscolhida) {
-        if (afinidadeEscolhida.id === 'reforco') {
+        if (afinidadeEscolhida.id === 'afin-ref') {
             vida = parseInt((20 + (vigor * 16) + nivel * 4) * (1 + (mod_afinidade * 2.5) /10))
-        } else if (afinidadeEscolhida.id === 'emissao') {
+        } else if (afinidadeEscolhida.id === 'afin-emi') {
             mana = parseInt((15 + (intelecto * 16) + nivel * 4) * (1 + (mod_afinidade * 2.5) /10))
-        } else if (afinidadeEscolhida.id === 'transformacao') {
+        } else if (afinidadeEscolhida.id === 'afin-tra') {
             movimento = parseInt((2 + destreza + (nivel * 0.2)) * (1 + (mod_afinidade * 2.5) /10))
-        } else if (afinidadeEscolhida.id === 'materializacao') {
+        } else if (afinidadeEscolhida.id === 'afin-mat') {
             foco = parseInt((6 + (presenca * 4) + nivel) * (1 + (mod_afinidade * 2.5) /10))
-        } else if (afinidadeEscolhida.id === 'manipulacao') {
+        } else if (afinidadeEscolhida.id === 'afin-man') {
             vida = parseInt((20 + (vigor * 16) + nivel * 4) * (1 + mod_afinidade /10))
             mana = parseInt((15 + (intelecto * 16) + nivel * 4) * (1 + mod_afinidade /10))
             movimento = parseInt((2 + destreza + (nivel * 0.2)) * (1 + mod_afinidade /10))
             foco = parseInt((6 + (presenca * 4) + nivel) * (1 + mod_afinidade /10))
-        } else if (afinidadeEscolhida.id === 'liberacao') {
+        } else if (afinidadeEscolhida.id === 'afin_lib') {
             carga = parseInt((4 + forca * 2) * (1+(mod_afinidade/4)))
         }
     }
@@ -523,7 +610,7 @@ function atualizarTudo() {
 
     let pontosTotaisMagia = Math.floor(nivel / 2);
 
-    if (afinidadeEscolhida && afinidadeEscolhida.id === 'arcanista') {
+    if (afinidadeEscolhida && afinidadeEscolhida.id === 'afin-arc') {
         pontosTotaisMagia = Math.floor(nivel / 2) + intelecto;
     }
     const saldoMagia = pontosTotaisMagia - pontosGastosMagia;
@@ -574,38 +661,44 @@ function atualizarTudo() {
 // --- NOVA FUNÇÃO DE RENDERIZAR AFINIDADES ---
 function renderizarAfinidades() {
     const container = document.getElementById('lista-afinidades');
-    container.innerHTML = ''; // Limpa
-
-    // Pega as escolhas atuais dos Dropdowns
+    container.innerHTML = '';
+    
+    // Pega os valores atuais da tela
     const aura = document.getElementById('aura').value;
     const classe = document.getElementById('classe').value;
     const trilha = document.getElementById('trilha').value;
 
- 
+    // Gera as 3 opções possíveis para a configuração atual
     const opcoes = [
-        { origem: 'AURA', id: aura, ...dadosAfinidade.auras[aura] },
-        { origem: 'CLASSE', id: classe, ...getDadosAfinidadeClasse(classe) },  
-        { origem: 'TRILHA', id: trilha, ...dadosAfinidade.trilhas[trilha] }
+        { origem: 'AURA', ...dadosAfinidade.auras[aura] },
+        { origem: 'CLASSE', ...getDadosAfinidadeClasse(classe) },
+        { origem: 'TRILHA', ...dadosAfinidade.trilhas[trilha] }
     ];
-
 
     opcoes.forEach(opt => {
         const card = document.createElement('div');
         card.className = 'card-afinidade';
-        if (afinidadeEscolhida && afinidadeEscolhida.nome === opt.nome) card.classList.add('selecionado');
         
-        card.innerHTML = `
-            <div style="font-size:0.7rem; opacity:0.7; margin-bottom:5px;">${opt.origem}</div>
-            <h3 style="margin:0 0 5px 0; font-size:1rem;">${opt.nome}</h3>
-            <div style="font-size:0.85rem; opacity:0.9;">${opt.desc}</div>
-        `;
+        // COMPARAÇÃO POR ID (MAIS SEGURO)
+        if (afinidadeEscolhida && afinidadeEscolhida.id === opt.id) {
+            card.classList.add('selecionado');
+            // Garante que o objeto em memória é o mais recente
+            afinidadeEscolhida = opt; 
+        }
+        
+        card.innerHTML = `<div style="font-size:0.7rem; opacity:0.7; margin-bottom:5px;">${opt.origem}</div><h3 style="margin:0 0 5px 0; font-size:1rem;">${opt.nome}</h3><div style="font-size:0.85rem; opacity:0.9;">${opt.desc}</div>`;
         card.onclick = () => {
-            afinidadeEscolhida = (afinidadeEscolhida && afinidadeEscolhida.nome === opt.nome) ? null : opt;
+            // Toggle ID
+            if (afinidadeEscolhida && afinidadeEscolhida.id === opt.id) {
+                afinidadeEscolhida = null;
+            } else {
+                afinidadeEscolhida = opt;
+            }
             renderizarAfinidades();
-            const nivel = parseInt(elNivel.value) || 1;
-            calcularStatus(nivel);
+            calcularStatus(parseInt(elNivel.value)||1);
             atualizarTudo();
         };
+
         container.appendChild(card);
     });
 }
@@ -667,17 +760,20 @@ function renderizarColuna(id, lista, maxTier, saldo) {
 }
 
 // --- NOVA FUNÇÃO DE SALVAR ---
-function salvarFicha() {
+async function salvarFicha() {
+    const btn = document.querySelector('.btn-criar-ficha');
+    const textoOriginal = btn.textContent;
+    btn.textContent = "SALVANDO...";
+    btn.disabled = true;
+
+    const nomePersonagem = document.querySelector('.input-nome').value || "Sem Nome";
+    const nivel = parseInt(document.getElementById('nivel').value);
+    const aura =  document.getElementById('aura').value;
+    const trilha =  document.getElementById('trilha').value;
+    const classe =  document.getElementById('classe').value;
+    
     // 1. Coleta Inputs Básicos
     const ficha = {
-        nome: document.querySelector('.input-nome').value,
-        origem: {
-            aura: document.getElementById('aura').value,
-            classe: document.getElementById('classe').value,
-            trilha: document.getElementById('trilha').value
-        },
-        nivel: parseInt(document.getElementById('nivel').value),
-        
         // 2. Coleta Atributos
         atributos: {
             forca: getAtributo('attr-forca'),
@@ -699,29 +795,193 @@ function salvarFicha() {
         magias: Array.from(magiasSelecionadas),
 
         // 5. Coleta Afinidade
-        afinidade: afinidadeEscolhida ? afinidadeEscolhida.nome : null,
+        afinidade: afinidadeEscolhida ? afinidadeEscolhida.id : null,
 
         // 6. Snapshot dos Status Calculados (Opcional, mas útil)
         statusCalculados: {
             vida: document.getElementById('stat-vida').textContent,
             mana: document.getElementById('stat-mana').textContent,
             foco: document.getElementById('stat-foco').textContent
-        }
-    };
+        },
 
-    console.log("--- FICHA CRIADA COM SUCESSO ---");
-    console.log(JSON.stringify(ficha, null, 2));
-    alert("Ficha criada! Veja o console (F12) para o JSON.");
+        // Novos dados de Gameplay
+        statusAtuais: {
+            vida: document.getElementById('vida-atual').value,
+            mana: document.getElementById('mana-atual').value,
+            foco: document.getElementById('foco-atual').value,
+        },
+        inventario: inventario
+    };
     
-    // AQUI VOCÊ COLOCARIA O CÓDIGO DE ENVIO PARA O BACKEND
-    // Exemplo: fetch('/api/salvar', { method: 'POST', body: JSON.stringify(ficha) ... })
+    try {
+        if (!supabaseClient) throw new Error("Supabase não configurado");
+
+        let resposta;
+
+        // SE JÁ TEM ID, ATUALIZA (UPDATE). SE NÃO, CRIA (INSERT).
+        if (idFichaAtual) {
+            resposta = await supabaseClient
+                .from('Personagens')
+                .update({
+                    nome: nomePersonagem,
+                    classe: classe,
+                    aura: aura,
+                    trilha: trilha,
+                    dados: ficha,
+                })
+                .eq('id', idFichaAtual);
+        } else {
+            resposta = await supabaseClient
+                .from('Personagens')
+                .insert([
+                    {
+                        nome: nomePersonagem,
+                        nivel: nivel,
+                        aura: aura,
+                        trilha: trilha,
+                        classe: classe,
+                        dados: ficha
+                    }
+                ]);
+        }
+
+        
+        if (resposta.error) throw resposta.error;
+        alert(`Ficha de "${nomePersonagem}" salva com sucesso`)
+    } catch (erro) {
+        console.error("Erro ao salvar:", erro);
+        alert("Erro ao salvar. Verifique o console.");
+    } finally {
+        btn.textContente = textoOriginal;
+        btn.disabled = false;
+    }
+    btn.textContent = "CRIAR FICHA";
+}
+
+// --- CARREGAR DADOS DO SUPABASE (READ) ---
+async function carregarFicha() {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+
+    if (!id) {
+        setTimeout(() => {
+             document.getElementById('vida-atual').value = document.getElementById('stat-vida').textContent;
+             document.getElementById('mana-atual').value = document.getElementById('stat-mana').textContent;
+             atualizarBarras();
+        }, 500);
+        return; // Se não tem ID, é criação nova
+    }
+    idFichaAtual = id; // Salva o ID globalmente para usar no Update
+    
+    document.querySelector('.header-nome h1')?.remove(); // Opcional: remove titulo generico se tiver
+
+    // Feedback de Carregamento
+    document.querySelector('.input-nome').value = "Carregando..."
+
+    try {
+        const { data, error} = await supabaseClient
+            .from('Personagens')
+            .select('*')
+            .eq('id', id)
+            .single();
+        if (error) throw error;
+        if (!data) throw new Error("Personagem não Encontrado");
+
+        //POPULAR CAMPOS
+        document.querySelector('.input-nome').value = data.nome;
+        document.getElementById('nivel').value = data.nivel;
+        document.getElementById('aura').value = data.aura;
+        document.getElementById('trilha').value = data.trilha;
+        document.getElementById('classe').value = data.classe;
+
+        const d = data.dados;
+
+        //ATRIBUTOS
+        if (d.atributos) {
+            document.getElementById('attr-forca').value = d.atributos.forca;
+            document.getElementById('attr-destreza').value = d.atributos.destreza;
+            document.getElementById('attr-vigor').value = d.atributos.vigor;
+            document.getElementById('attr-intelecto').value = d.atributos.intelecto;
+            document.getElementById('attr-presenca').value = d.atributos.presenca;
+        }
+
+        //PERICIAS
+        if (d.pericias) {
+            document.getElementById('per-medicina').value = d.pericias.medicina;
+            document.getElementById('per-arcano').value = d.pericias.arcano;
+            document.getElementById('per-diplomacia').value = d.pericias.diplomacia;
+            document.getElementById('per-adestrar').value = d.pericias.adestrar;
+            document.getElementById('per-tecnologia').value = d.pericias.tecnologia;
+        }
+
+        if (d.habilidades) {
+            habilidadesSelecionadas = new Set(d.habilidades);
+            pontosHabilidadesGastos = d.habilidades.length;
+        }
+        if (d.magias) {
+            magiasSelecionadas = new Set(d.magias);
+            pontosGastosMagia = d.magias.length;
+        }  
+        if (d.afinidade) {
+            // d.afinidade é uma string ID (ex: 'af_reforco')
+            // Precisamos descobrir qual objeto atual corresponde a esse ID.
+            // Como as afinidades dependem do que está selecionado nos Dropdowns (Aura/Classe/Trilha),
+            // precisamos primeiro garantir que os dropdowns estão setados (o que já fazemos em 'd.origem' e 'data.classe')
+            
+            // Agora, simulamos a busca das opções disponíveis para ver se o ID salvo está entre elas.
+            const auraVal = document.getElementById('aura').value;
+            const classeVal = document.getElementById('classe').value;
+            const trilhaVal = document.getElementById('trilha').value;
+            
+            // Recria as opções possíveis
+            const possiveis = [
+                dadosAfinidade.auras[auraVal],
+                getDadosAfinidadeClasse(classeVal),
+                dadosAfinidade.trilhas[trilhaVal]
+            ];
+            
+            // Tenta encontrar o objeto completo pelo ID salvo
+            const encontrada = possiveis.find(p => p && p.id === d.afinidade);
+            
+            if (encontrada) {
+                afinidadeEscolhida = encontrada;
+            } else {
+                console.warn("Afinidade salva não compatível com a configuração atual.");
+            }
+        }
+        if (d.inventario) {
+            inventario = d.inventario;
+            renderizarInventario()
+        }
+        atualizarTudo();
+
+        if (d.statusAtuais) {
+            document.getElementById('vida-atual').value = d.statusAtuais.vida;
+            document.getElementById('mana-atual').value = d.statusAtuais.mana;
+            document.getElementById('foco-atual').value = d.statusAtuais.foco;
+        }
+
+
+        atualizarBarras();
+
+        console.log("Ficha carregada:", data.nome);  
+    } catch (erro) {
+        console.error("Erro ao carregar:", erro);
+        alert("Erro ao carregar ficha");
+    }
 }
 
 
 // --- LISTENERS ---
 inputsGerais.forEach(el => {
     el.addEventListener('change', (e) => {
-        if(e.target.id !== 'nivel') { pontosHabilidadesGastos=0; habilidadesSelecionadas.clear(); }
+        if(e.target.id !== 'nivel') { 
+            pontosHabilidadesGastos=0; 
+            habilidadesSelecionadas.clear();
+            magiasSelecionadas.clear();
+            pontosGastosMagia = 0 
+        }
+        atualizarBarras();
         atualizarTudo();
     });
     if(el.id==='nivel') el.addEventListener('input', atualizarTudo);
@@ -729,4 +989,5 @@ inputsGerais.forEach(el => {
 inputsAtributos.forEach(el => el.addEventListener('input', atualizarTudo));
 inputsPericias.forEach(el => el.addEventListener('input', atualizarTudo));
 
+carregarFicha();
 atualizarTudo();
