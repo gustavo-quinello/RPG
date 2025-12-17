@@ -28,7 +28,25 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 40px;
+
+    /* TRANSIÇÃO SUAVE DE FUNDO */
+    transition: background 0.8s ease-in-out;
+    min-height: 100vh;
 }
+
+/* --- RESSONÂNCIA DINÂMICA --- */
+body.ressonancia-ativa {
+    /* O segredo está aqui: var(--ressonancia-color) é calculado pelo JS baseado no nível */
+    background: radial-gradient(circle at center bottom, var(--ressonancia-color, #1e1b4b), #050505 80%);
+    background-size: 100% 120%;
+    animation: backgroundPulse 3s infinite alternate ease-in-out;
+}
+
+@keyframes backgroundPulse {
+    0% { background-size: 100% 120%; filter: brightness(1); }
+    100% { background-size: 105% 125%; filter: brightness(1.2); }
+}
+
 /* REMOVE AS SETINHAS (SPIN BUTTONS) DE TODOS OS CAMPOS NUMÉRICOS */
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button {
@@ -63,6 +81,12 @@ input:checked + .slider:before { transform: translateX(26px); }
 body.modo-jogo .editavel-apenas { display: none !important; }
 body.modo-jogo .jogo-apenas { display: flex !important; }
 body.modo-edicao .jogo-apenas { display: none !important; }
+
+/* Regra Mágica: Esconde botões não selecionados no modo jogo */
+body.modo-jogo .btn-habilidade:not(.selecionado):not(.info),
+body.modo-jogo .btn-magia:not(.selecionado):not(.info) {
+    display: none !important;
+}
 
 /* No modo jogo, selects viram texto estático visualmente */
 body.modo-jogo select { pointer-events: none; background-color: transparent; border: none; appearance: none; padding: 0; font-size: 1.2rem; font-weight: bold; color: var(--color-gold); }
@@ -203,6 +227,7 @@ select:focus { outline: none; border-color: var(--color-primary); }
     color: #bfdbfe;
     font-size: 0.9rem; /* Texto levemente menor para descrição */
     font-style: italic;
+    display: inline-block;
 }
 
 .btn-habilidade.selecionado { 
@@ -311,6 +336,29 @@ select:focus { outline: none; border-color: var(--color-primary); }
     transform: none !important; 
     box-shadow: none !important; 
 }
+/* --- BOTAO DE USO DAS MAGIAS --- */
+.btn-gasto {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 8px 12px;
+    background-color: #8b5cf6; /* Cor Padrão */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid rgba(255,255,255,0.2);
+    z-index: 20; /* Garante que fique acima */
+    position: relative;
+}
+.btn-gasto:hover { transform: scale(1.05); filter: brightness(1.1); }
+.btn-gasto:active { transform: scale(0.95); }
+
+.btn-gasto.custo-mana { background-color: #3b82f6; }
+.btn-gasto.custo-vida { background-color: #ef4444; }
+.btn-gasto.custo-foco { background-color: #269c2c; }
 
 /* --- TOOLTIPS (ESTILO DARK RESTAURADO) --- */
 .termo-destaque {
@@ -430,7 +478,14 @@ select:focus { outline: none; border-color: var(--color-primary); }
 }
 
 /* --- STATUS FOOTER --- */
-.painel-status { background-color: #121214; width: 100%; max-width: 1100px; border-radius: 16px; border: 1px solid #3f3f46; padding: 25px; margin-top: 20px; box-shadow: 0 -10px 40px rgba(0,0,0,0.4); display: grid; grid-template-columns: 2fr 3fr; gap: 30px; }
+.painel-status {
+    background-color: #121214; width: 100%; max-width: 1100px;
+    border-radius: 16px; border: 1px solid #3f3f46; padding: 25px;
+    margin-top: 20px; box-shadow: 0 -10px 40px rgba(0,0,0,0.4);
+    display: grid;
+    grid-template-columns: 1fr 2fr; /* Coluna Barras (Menor) | Coluna Direita (Maior) */
+    gap: 30px;
+}
 
 /* --- BARRAS INTERATIVAS (Vida/Mana Atuais) --- */
 .status-barras { display: flex; flex-direction: column; gap: 20px; justify-content: center; }
@@ -453,30 +508,56 @@ select:focus { outline: none; border-color: var(--color-primary); }
 .foco .barra-preenchimento { background-color: var(--color-foco); box-shadow: 0 0 10px var(--color-foco); }
 .foco .inputs-barra { color: var(--color-foco); }
 
+/* CONTAINER DA DIREITA */
+.status-direita { display: flex; flex-direction: column; gap: 20px; }
 .status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-.card-status {
-    background-color: #1c1c1f; border: 1px solid #2e2e31; border-radius: 10px;
-    padding: 15px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 5px; transition: transform 0.2s;
-}
-.card-status:hover { transform: translateY(-3px); border-color: #52525b; background-color: #252529; }
-.card-status .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.card-status { background-color: #1c1c1f; border: 1px solid #2e2e31; border-radius: 10px; padding: 15px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
+.card-status .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
 .card-status .valor { font-size: 1.4rem; font-weight: bold; color: white; }
-.card-status.ataque { border-color: rgba(234, 179, 8, 0.3); background: linear-gradient(180deg, rgba(234,179,8,0.05), transparent); }
 .card-status.ataque .valor { color: var(--color-gold); }
+
 /* --- INVENTÁRIO (NOVO) --- */
-.painel-inventario {
-    margin-top: 20px; background-color: #1c1c1f; border-radius: 12px; padding: 15px;
-    border: 1px solid #3f3f46; display: flex; flex-direction: column; gap: 10px;
+.painel-inventario { 
+    background-color: #1c1c1f; border-radius: 12px; padding: 15px; 
+    border: 1px solid #3f3f46; display: flex; flex-direction: column; gap: 10px; 
+    max-height: 250px; flex-grow: 1; /* Ocupa espaço */
 }
 .inv-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3f3f46; padding-bottom: 10px; }
-.inv-lista { display: flex; flex-direction: column; gap: 5px; max-height: 200px; overflow-y: auto; }
+.inv-lista { display: flex; flex-direction: column; gap: 5px; overflow-y: auto; flex-grow: 1; }
 .inv-item { display: grid; grid-template-columns: 1fr 60px 30px; gap: 10px; align-items: center; background: #27272a; padding: 8px; border-radius: 4px; }
-.inv-nome { background: transparent; border: none; color: #ddd; width: 100%; }
-.inv-peso { background: transparent; border: none; color: #aaa; text-align: right; }
-.inv-btn-remove { background: none; border: none; color: #ef4444; cursor: pointer; font-weight: bold; }
-.inv-add-btn { background-color: #3f3f46; border: none; color: white; padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; }
+.inv-add-btn { background-color: #3f3f46; border: none; color: white; padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: auto; }
+
 .inv-add-btn:hover { background-color: #52525b; }
+
+/* BOTÃO RESSONÂNCIA GRANDE (AJUSTADO) */
+.btn-ressonancia-big {
+    background: linear-gradient(145deg, #7f1d1d, #450a0a);
+    border: 2px solid #ef4444;
+    color: #fecaca;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
+    /* Tamanho ajustado para alinhar com o inventário se estivesse lado a lado, mas aqui ele ficará na esquerda */
+    padding: 15px;
+    margin-top: 10px; 
+    width: 100%;
+}
+.btn-ressonancia-big span.custo { font-size: 0.8rem; font-weight: normal; opacity: 0.8; letter-spacing: normal; }
+.btn-ressonancia-big:hover { filter: brightness(1.2); transform: translateY(-2px); }
+.btn-ressonancia-big.ativo {
+    background: linear-gradient(145deg, #ef4444, #991b1b); color: white; border-color: #fee2e2;
+    box-shadow: 0 0 20px #ef4444; animation: pulse-big 1.5s infinite;
+}
 
 @media (max-width: 900px) { .painel-status { grid-template-columns: 1fr; } }
 @media (max-width: 768px) { .grid-habilidades { grid-template-columns: 1fr; } }
@@ -511,5 +592,9 @@ select:focus { outline: none; border-color: var(--color-primary); }
     opacity: 0.5; 
     cursor: not-allowed; 
     transform: none; }
+
+/* Feedback de Auto-Save */
+.saving-indicator { position: fixed; bottom: 20px; right: 20px; background-color: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 0.8rem; pointer-events: none; opacity: 0; transition: opacity 0.3s; border: 1px solid #3f3f46; }
+.saving-indicator.visible { opacity: 1; }
 
 @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }   

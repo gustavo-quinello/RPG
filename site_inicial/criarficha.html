@@ -88,7 +88,7 @@
         <!-- ÁREA DE ATRIBUTOS -->
            <div class="cabecalho-secao">
                 <div class="titulo-secao">ATRIBUTOS</div>
-                <div class="badge-pontos pontos-attr">
+                <div class="badge-pontos pontos-attr editavel-apenas">
                     PONTOS: <span id="pts-attr-atual">0</span> / <span id="pts-attr-total">0</span>
                 </div>
             </div>
@@ -102,7 +102,7 @@
             </div>
 
             <!-- SEÇÃO DE ESCOLHA DE AFINIDADE (Oculta até nível 4) -->
-            <div id="container-afinidade" class="secao-afinidade">
+            <div id="container-afinidade" class="secao-afinidade editavel-apenas">
                 <div class="titulo-afinidade">
                     <span>★ Desbloqueio de Afinidade (Nível 4) ★</span>
                 </div>
@@ -122,7 +122,7 @@
         <div class="cabecalho-secao">
             <span class="titulo-secao">HABILIDADES</span>
             <!-- Caixa de Pontos Exclusiva para Habilidades -->
-            <div class="badge-pontos pontos-skill">
+            <div class="badge-pontos pontos-skill editavel-apenas">
                 DISPONÍVEIS: <span id="pts-skill-atual">0</span> / <span id="pts-skill-total">0</span>
             </div>
         </div>
@@ -142,7 +142,7 @@
         <!-- Linha de Controle Centralizada -->
         <div class="grimorio-controles">
             <div style="color:#a5b4fc; font-size:0.9rem;">Magias Disponíveis</div>
-            <div class="badge-pontos pontos-magia">
+            <div class="badge-pontos pontos-magia editavel-apenas">
                 PONTOS: <span id="pts-magia-atual">0</span> / <span id="pts-magia-total">0</span>
             </div>
         </div>
@@ -154,7 +154,7 @@
     <div class="painel-principal" style="margin-top: 30px;">
         <div class="cabecalho-secao">
             <div class="titulo-secao">PERÍCIAS</div>
-            <div class="badge-pontos pontos-pericia">PONTOS: <span id="pts-pericia-atual">0</span> / <span id="pts-pericia-total">0</span></div>
+            <div class="badge-pontos pontos-pericia editavel-apenas">PONTOS: <span id="pts-pericia-atual">0</span> / <span id="pts-pericia-total">0</span></div>
         </div>
         <div class="secao-pericias-container">
             <div class="caixa-pericias">
@@ -175,7 +175,7 @@
                 <div class="barra-label">
                     <span>VIDA</span>
                     <div class="inputs-barra">
-                        <input type="number" id="vida-atual" class="input-atual" oninput="atualizarBarras()">
+                        <input type="number" id="vida-atual" class="input-atual" oninput="atualizarBarras(); autoSalvarStatus()">
                         <span>/ <span id="stat-vida">100</span></span>
                     </div>
                 </div>
@@ -187,7 +187,7 @@
                 <div class="barra-label">
                     <span>MANA</span>
                     <div class="inputs-barra">
-                        <input type="number" id="mana-atual" class="input-atual" oninput="atualizarBarras()">
+                        <input type="number" id="mana-atual" class="input-atual" oninput="atualizarBarras(); autoSalvarStatus()">
                         <span>/ <span id="stat-mana">50</span></span>
                     </div>
                 </div>
@@ -199,38 +199,47 @@
                 <div class="barra-label">
                     <span>FOCO</span>
                     <div class="inputs-barra">
-                        <input type="number" id="foco-atual" class="input-atual" oninput="atualizarBarras()">
+                        <input type="number" id="foco-atual" class="input-atual" oninput="atualizarBarras(); autoSalvarStatus()">
                         <span>/ <span id="stat-foco">0</span></span>
                     </div>
                 </div>
                 <div class="barra-total"><div class="barra-preenchimento" id="bar-foco-fill"></div></div>
             </div>
-        </div>
 
-        <div class="status-grid">
-            <div class="card-status ataque"><span class="label">Ataque</span><span class="valor" id="stat-ataque">+0</span></div>
-            <div class="card-status"><span class="label">Bloqueio</span><span class="valor" id="stat-bloqueio">0</span></div>
-            <div class="card-status"><span class="label">Esquiva</span><span class="valor" id="stat-esquiva">0</span></div>
-            <div class="card-status"><span class="label">Carga</span><span class="valor"><span id="peso-atual" style="color:var(--text-muted)">0</span> / <span id="stat-carga">0</span></span></div>
-            <div class="card-status"><span class="label">Movimento</span><span class="valor" id="stat-movimento">9m</span></div>
+            <!-- Botão Ressonância movido para cá -->
+            <button id="btn-ressonancia-big" class="btn-ressonancia-big jogo-apenas" onclick="toggleRessonancia()">
+                ⚡ RESSONÂNCIA
+                <span class="custo" id="custo-ressonancia">-1 Mana/turno</span>
+            </button>            
         </div>
+        <div class="status-direita">
+            <div class="status-grid">
+                <div class="card-status ataque"><span class="label">Ataque</span><span class="valor" id="stat-ataque">+0</span></div>
+                <div class="card-status"><span class="label">Bloqueio</span><span class="valor" id="stat-bloqueio">0</span></div>
+                <div class="card-status"><span class="label">Esquiva</span><span class="valor" id="stat-esquiva">0</span></div>
+                <div class="card-status"><span class="label">Carga</span><span class="valor"><span id="peso-atual" style="color:var(--text-muted)">0</span> / <span id="stat-carga">0</span></span></div>
+                <div class="card-status"><span class="label">Movimento</span><span class="valor" id="stat-movimento">9m</span></div>
+            </div>
 
-        <!-- NOVO: INVENTÁRIO -->
-        <div class="painel-inventario jogo-apenas">
-            <div class="inv-header">
-                <span style="font-weight:bold; color:white;">INVENTÁRIO</span>
+            <!-- NOVO: INVENTÁRIO -->
+            <div class="painel-inventario jogo-apenas" style="flex-grow:1;">
+                <div class="inv-header">
+                    <span style="font-weight:bold; color:white;">INVENTÁRIO</span>
+                </div>
+                <div class="inv-lista" id="lista-inventario">
+                    <!-- Itens via JS -->
+                </div>
+                <button class="inv-add-btn" onclick="adicionarItem()">+ Adicionar Item</button>
             </div>
-            <div class="inv-lista" id="lista-inventario">
-                <!-- Itens via JS -->
-            </div>
-            <button class="inv-add-btn" onclick="adicionarItem()">+ Adicionar Item</button>
         </div>
     </div>
     
     <!-- BOTÃO FINAL -->
-    <div class="container-submit">
+    <div class="container-submit editavel-apenas">
         <button class="btn-criar-ficha" onclick="salvarFicha()">CRIAR / ATUALIZAR FICHA</button>
     </div>
+
+    <div id="saving-indicator" class="saving-indicator">Salvando alterações...</div>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/site_inicial/js/criarficha.js"></script>
