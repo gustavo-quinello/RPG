@@ -1,0 +1,600 @@
+:root {
+    --bg-body: #09090b;
+    --bg-card: #18181b;
+    --bg-input: #27272a;
+    --text-main: #e4e4e7;
+    --text-muted: #a1a1aa;
+    
+    --color-primary: #8b5cf6; /* Roxo */
+    --color-secondary: #10b981; /* Verde */
+    --color-life: #ef4444; /* Vermelho */
+    --color-mana: #3b82f6; /* Azul */
+    --color-foco: #269c2c; /* Fúcsia */
+    --color-gold: #eab308; /* Dourado */
+    --color-skill: #22d3ee; /* Ciano (Perícias) */
+    
+    --border-radius: 12px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    margin: 0;
+    padding: 40px 20px 180px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+
+    /* TRANSIÇÃO SUAVE DE FUNDO */
+    transition: background 0.8s ease-in-out;
+    min-height: 100vh;
+}
+
+/* --- RESSONÂNCIA DINÂMICA --- */
+body.ressonancia-ativa {
+    /* O segredo está aqui: var(--ressonancia-color) é calculado pelo JS baseado no nível */
+    background: radial-gradient(circle at center bottom, var(--ressonancia-color, #1e1b4b), #050505 80%);
+    background-size: 100% 120%;
+    animation: backgroundPulse 3s infinite alternate ease-in-out;
+}
+
+@keyframes backgroundPulse {
+    0% { background-size: 100% 120%; filter: brightness(1); }
+    100% { background-size: 105% 125%; filter: brightness(1.2); }
+}
+
+/* REMOVE AS SETINHAS (SPIN BUTTONS) DE TODOS OS CAMPOS NUMÉRICOS */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* --- CABEÇALHO --- */
+.header-container { width: 100%; max-width: 1100px; display: flex; justify-content: space-between; align-items: flex-start; }
+.header-nome { flex-grow: 1; }
+.label-topo { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; font-weight: 700; margin-bottom: 8px; display: block; }
+.input-nome { background: transparent; border: none; border-bottom: 2px solid var(--bg-input); color: white; font-size: 2.5rem; padding: 10px 0; width: 100%; transition: 0.3s; }
+.input-nome:focus { outline: none; border-bottom-color: var(--color-primary); }
+
+/* SWITCH MODO JOGO */
+.switch-container { display: flex; align-items: center; gap: 10px; background: var(--bg-card); padding: 10px 15px; border-radius: 20px; border: 1px solid #3f3f46; }
+.switch-label { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); text-transform: uppercase; }
+.switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #3f3f46; transition: .4s; border-radius: 24px; }
+.slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--color-secondary); }
+input:checked + .slider:before { transform: translateX(26px); }
+
+/* --- PAINEL PRINCIPAL --- */
+.painel-principal {
+    background-color: var(--bg-card); padding: 30px; border-radius: var(--border-radius);
+    width: 100%; max-width: 1100px; display: flex; flex-direction: column; gap: 30px;
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+}
+/* Classes de Controle de Visibilidade */
+body.modo-jogo .editavel-apenas { display: none !important; }
+body.modo-jogo .jogo-apenas { display: flex !important; }
+body.modo-edicao .jogo-apenas { display: none !important; }
+
+/* Regra Mágica: Esconde botões não selecionados no modo jogo */
+body.modo-jogo .btn-habilidade:not(.selecionado):not(.info),
+body.modo-jogo .btn-magia:not(.selecionado):not(.info) {
+    display: none !important;
+}
+
+/* No modo jogo, selects viram texto estático visualmente */
+body.modo-jogo select { pointer-events: none; background-color: transparent; border: none; appearance: none; padding: 0; font-size: 1.2rem; font-weight: bold; color: var(--color-gold); }
+body.modo-jogo .input-nome { pointer-events: none; background-color: transparent; border: none; appearance: none; padding: 0;  font-weight: bold; color: var(--color-gold); }
+body.modo-jogo .circulo-atributo { border-color: #3f3f46; background-color: #121214; }
+body.modo-jogo .input-numero { pointer-events: none; color: #a1a1aa; } /* Trava atributos */
+
+.secao-origem { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+.grupo-input { display: flex; flex-direction: column; }
+select {
+    padding: 12px; background-color: var(--bg-input); border: 1px solid #3f3f46;
+    color: white; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: 0.2s;
+}
+select:hover { border-color: #52525b; }
+select:focus { outline: none; border-color: var(--color-primary); }
+
+.separador { height: 1px; background-color: #3f3f46; width: 100%; opacity: 0.5; }
+
+.box-nivel-container { display: flex; justify-content: center; padding: 10px 0; }
+.box-nivel {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    background-color: var(--bg-input); padding: 15px 30px; border-radius: 12px; border: 1px solid #3f3f46;
+}
+.input-nivel {
+    background: transparent; border: none; color: white; font-size: 2rem; font-weight: bold; width: 60px; text-align: center;
+}
+.input-nivel:focus { outline: none; color: var(--color-primary); }
+
+/* ATRIBUTOS */
+.cabecalho-secao { display: flex; justify-content: space-between; align-items: flex-end; }
+.titulo-secao { font-size: 1.1rem; font-weight: bold; color: white; display: flex; align-items: center; gap: 10px; }
+.badge-pontos {
+    font-size: 0.9rem; padding: 6px 12px; border-radius: 6px; font-weight: 600;
+    background-color: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+}
+.pontos-attr { color: #fba94c; border-color: #fba94c; }
+.pontos-skill { color: var(--color-primary); border-color: var(--color-primary); }
+.pontos-magia { color: var(--color-magic); border-color: var(--color-magic); background-color: rgba(192, 132, 252, 0.1); }
+.pontos-pericia { color: var(--color-skill); border-color: var(--color-skill); background-color: rgba(6, 182, 212, 0.1); }
+
+.secao-atributos { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 5px; }
+.atributo-container { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.circulo-atributo {
+    width: 70px; height: 70px; border-radius: 50%; background-color: var(--bg-input); border: 2px solid #3f3f46;
+    display: flex; justify-content: center; align-items: center; transition: 0.3s; position: relative;
+}
+.circulo-atributo:focus-within { border-color: var(--color-gold); box-shadow: 0 0 15px rgba(234, 179, 8, 0.2); }
+.input-atributo {
+    background: transparent; border: none; color: white; font-size: 1.6rem; font-weight: bold; width: 100%; height: 100%;
+    text-align: center; border-radius: 50%;
+}
+.input-atributo:focus { outline: none; }
+.input-atributo::-webkit-outer-spin-button, .input-atributo::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }/*Essa linha esta obsoleta, não faz mais nada
+.label-atributo { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
+
+/* AFINIDADE */
+.secao-afinidade {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(234, 179, 8, 0.02));
+    border: 1px solid rgba(234, 179, 8, 0.4); 
+    border-radius: var(--border-radius);
+    padding: 25px; 
+    text-align: center;
+    display: none; 
+    flex-direction: column; 
+    gap: 20px; 
+    animation: slideIn 0.5s ease; 
+    margin-top: 0px;
+}
+@keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+.titulo-afinidade { color: var(--color-gold); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+.grid-afinidade { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+.card-afinidade {
+    background-color: rgba(0,0,0,0.3); border: 1px solid rgba(234, 179, 8, 0.2); padding: 20px; border-radius: 8px; cursor: pointer; transition: 0.3s; text-align: center;
+}
+.card-afinidade:hover { background-color: rgba(234, 179, 8, 0.1); border-color: var(--color-gold); }
+.card-afinidade.selecionado {
+    background-color: var(--color-gold); color: #000; border-color: var(--color-gold); box-shadow: 0 0 20px rgba(234, 179, 8, 0.3);
+}
+
+/* --- HABILIDADES (DESIGN "ANTIGO" RESTAURADO) --- */
+.grid-habilidades {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr; /* 3 Colunas Fixas */
+    gap: 25px; /* Mais espaço entre colunas */
+    width: 100%;
+    max-width: 1200px;
+}
+.coluna {
+    background-color: var(--bg-card);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Mais espaço entre botões */
+}
+.coluna h2 {
+    text-align: center; font-size: 1.1rem; color: var(--text-muted);
+    text-transform: uppercase; margin-top: 0; border-bottom: 2px solid #3f3f46; padding-bottom: 15px;
+}
+
+/* Botão Grande e Robusto */
+.btn-habilidade {
+    background-color: #27272a; /* Cor base sólida */
+    border: 1px solid #3f3f46;
+    border-left: 5px solid #52525b; /* Borda lateral grossa */
+    padding: 20px; /* Bastante padding */
+    margin: 6px 30px;
+    border-radius: 8px;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 80px; /* Altura mínima garantida */
+    min-width: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 600;
+    font-size: 1rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2); /* Sombra para dar volume */
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative; /* Necessário para o ícone absoluto */
+}
+
+.btn-habilidade:hover {
+    transform: translateY(-5px) scale(1.02); 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.4); 
+    background-color: #323238;
+    border-color: #52525b;
+    z-index: 10;
+}
+
+/* Estados do Botão */
+.btn-habilidade.info {
+    background-color: rgba(59, 130, 246, 0.15);
+    border-color: var(--color-mana);
+    border-left-color: var(--color-mana);
+    color: #bfdbfe;
+    font-size: 0.9rem; /* Texto levemente menor para descrição */
+    font-style: italic;
+    display: inline-block;
+}
+
+.btn-habilidade.selecionado { 
+    background-color: rgba(16, 185, 129, 0.15); 
+    border-color: var(--color-secondary); 
+    border-left-color: var(--color-secondary); 
+    color: var(--color-secondary); 
+}
+.btn-habilidade.selecionado::after {
+    content: '✔';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 1.2rem;
+    color: var(--color-secondary);
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.btn-habilidade.selecionado:hover::after {
+    opacity: 1; transform: scale(1); top: -8px; right: -5px;
+}
+
+.btn-habilidade.bloqueado {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-style: dashed;
+    background-color: #18181b;
+    box-shadow: none;
+    transform: none;
+}
+
+/* --- NOVO: ESTILOS DO GRIMÓRIO --- */
+.painel-grimorio {
+    width: 100%; max-width: 1100px;
+    background-color: #1a1025; /* Roxo escuro */
+    border: 1px solid #4c1d95;
+    border-radius: var(--border-radius);
+    padding: 25px; margin-top: 30px;
+    display: none; /* JS controla */
+    flex-direction: column; gap: 20px;
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.15);
+    animation: slideIn 0.6s ease;
+}
+.titulo-grimorio { 
+    color: #c4b5fd; font-family: serif; font-size: 1.5rem; 
+    text-align: center; text-transform: uppercase; letter-spacing: 2px; margin: 0;
+    padding-bottom: 10px; border-bottom: 1px solid #5b21b6;
+}
+
+/* Nova linha de controle do Grimório */
+.grimorio-controles {
+    display: flex; justify-content: center; align-items: center; gap: 20px; margin-bottom: 10px;
+}
+
+.grid-magias { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+
+.btn-magia {
+    background-color: #2e1065; 
+    border: 1px solid #5b21b6; 
+    border-radius: 6px; 
+    padding: 20px;
+    color: #ddd6fe; cursor: pointer; min-height: 70px; 
+    /* FLEXIBILIDADE DE TEXTO - CRUCIAL PARA NÃO QUEBRAR O LAYOUT */
+    align-items: center; justify-content: center; text-align: center; 
+    font-size: 0.9rem; 
+    transition: all 0.3s; position: relative;
+    display: inline-block;      /* não flex, não 'empurra' linhas */
+    vertical-align: baseline;
+    line-height: 1.2;           /* ajuste conforme sua tipografia */
+    white-space: normal;        /* permite quebra natural */
+    overflow: visible;
+}
+.btn-magia:not(.info):not(.selecionado) {
+    display: flex;
+    align-items: center;
+}
+.btn-magia:hover { 
+    background-color: #4c1d95; 
+    transform: translateY(-3px); 
+    box-shadow: 0 8px 15px rgba(76, 29, 149, 0.3); 
+    z-index: 10; }
+.btn-magia.info { 
+    background-color: #1e1b4b; 
+    font-style: italic; 
+    font-size: 0.85rem; 
+    color: #a5b4fc;
+    vertical-align: middle   
+    }
+.btn-magia.selecionado { 
+    background-color: #5b21b6; 
+    border-color: #8b5cf6; 
+    color: white; font-weight: bold; 
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+    display: flex;
+    align-items: center;}
+.btn-magia.selecionado::after { content: '✔'; position: absolute; top: 5px; right: 5px; font-size: 1rem; color: #c4b5fd; opacity: 0; transform: scale(0); transition: all 0.3s; }
+.btn-magia.selecionado:hover::after { opacity: 1; transform: scale(1); top: -8px; right: -5px; }
+.btn-habilidade.bloqueado, 
+.btn-magia.bloqueado { 
+    opacity: 0.3; /* Isso que deixa "apagado" (50% transparente) */
+    cursor: not-allowed; /* Mostra o cursor de "proibido" */
+    border-style: dashed; /* Borda tracejada */
+    
+    /* Remove efeitos de hover/clique */
+    transform: none !important; 
+    box-shadow: none !important; 
+}
+/* --- BOTAO DE USO DAS MAGIAS --- */
+.btn-gasto {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 8px 12px;
+    background-color: #8b5cf6; /* Cor Padrão */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid rgba(255,255,255,0.2);
+    z-index: 20; /* Garante que fique acima */
+    position: relative;
+}
+.btn-gasto:hover { transform: scale(1.05); filter: brightness(1.1); }
+.btn-gasto:active { transform: scale(0.95); }
+
+.btn-gasto.custo-mana { background-color: #3b82f6; }
+.btn-gasto.custo-vida { background-color: #ef4444; }
+.btn-gasto.custo-foco { background-color: #269c2c; }
+
+/* --- TOOLTIPS (ESTILO DARK RESTAURADO) --- */
+.termo-destaque {
+    color: #f472b6; /* Rosa claro para destacar no texto */
+    border-bottom: 1px dotted #f472b6; /* Sublinhado pontilhado */
+    cursor: help;
+    position: relative;
+    
+    /* Sua correção para o texto fluir (pode ser inline-block com padding ou inline puro) */
+    display: inline-block; 
+    vertical-align: baseline;
+    font-weight: bold;
+}
+
+/* O Balão de Informação (Estilo Dark / Glassmorphism) */
+.termo-destaque:hover::after {
+    content: attr(data-tooltip);
+    
+    position: absolute;
+    bottom: 130%; /* Acima do texto */
+    left: 50%;
+    transform: translateX(-50%);
+    
+    /* --- VISUAL RESTAURADO --- */
+    background-color: rgba(15, 23, 42, 0.98); /* Fundo quase preto */
+    color: #e2e8f0; /* Texto claro */
+    border: 1px solid #6366f1; /* Borda Índigo Neon */
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.8), 0 0 10px rgba(99, 102, 241, 0.3); /* Sombra com brilho */
+    
+    padding: 12px 16px;
+    border-radius: 8px;
+    
+    /* Dimensões */
+    width: max-content;
+    max-width: 280px; 
+    min-width: 160px;
+    
+    white-space: pre-wrap; /* Respeita quebras de linha */
+    text-align: left;
+    line-height: 1.5;
+    font-size: 0.85rem;
+    font-weight: normal;
+    font-style: normal;
+    
+    z-index: 1000;
+    pointer-events: none;
+}
+
+/* Setinha do Balão (Cor ajustada para o fundo escuro) */
+.termo-destaque:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 110%; /* Ajuste fino para encostar na caixa */
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    /* A cor da seta (topo) deve ser a borda neon ou o fundo escuro */
+    border-color: #6366f1 transparent transparent transparent; 
+    z-index: 1000;
+}
+
+/* --- PERÍCIAS --- */
+
+.secao-pericias-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.caixa-pericias {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    
+    /* Visual de "Caixa Circular/Oval" */
+    background-color: rgba(34, 211, 238, 0.05); /* Ciano bem transparente */
+    border: 1px solid rgba(34, 211, 238, 0.2);
+    padding: 30px;
+    border-radius: 100px; /* Borda bem redonda (Pílula) */
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.05);
+}
+
+.pericia-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+.circulo-pericia {
+    width: 60px; height: 60px; /* Levemente menor que atributos */
+    border-radius: 50%;
+    background-color: #161618;
+    border: 2px solid var(--color-skill);
+    display: flex; justify-content: center; align-items: center;
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.1);
+    transition: all 0.3s;
+}
+
+.circulo-pericia:focus-within {
+    box-shadow: 0 0 15px var(--color-skill);
+    background-color: #1c1c1f;
+    transform: scale(1.1);
+}
+/* 2. O Input em si (A parte crítica para não ficar branco) */
+.input-numero { 
+    background: transparent; /* Remove o fundo branco */
+    border: none;            /* Remove a borda quadrada */
+    color: white;            /* Cor do número */
+    font-size: 1.6rem; 
+    font-weight: bold; 
+    width: 100%; 
+    height: 100%; 
+    text-align: center; 
+}
+
+.input-numero:focus { 
+    outline: none; /* Remove a linha azul padrão ao clicar */
+}
+
+/* --- STATUS FOOTER --- */
+.painel-status {
+    background-color: #121214; width: 100%; max-width: 1100px;
+    border-radius: 16px; border: 1px solid #3f3f46; padding: 25px;
+    margin-top: 20px; box-shadow: 0 -10px 40px rgba(0,0,0,0.4);
+    display: grid;
+    grid-template-columns: 1fr 2fr; /* Coluna Barras (Menor) | Coluna Direita (Maior) */
+    gap: 30px;
+}
+
+/* --- BARRAS INTERATIVAS (Vida/Mana Atuais) --- */
+.status-barras { display: flex; flex-direction: column; gap: 20px; justify-content: center; }
+.barra-container { display: flex; flex-direction: column; gap: 5px; position: relative; }
+.barra-label { display: flex; justify-content: space-between; font-weight: bold; font-size: 0.85rem; z-index: 2; position: relative; padding: 0 5px; }
+.barra-total { height: 20px; background-color: #27272a; border-radius: 10px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.1); }
+.barra-preenchimento { height: 100%; width: 100%; transition: width 0.5s ease-out; }
+
+.inputs-barra { display: flex; gap: 5px; align-items: center; }
+.input-atual { 
+    background: transparent; border: none; color: white; font-weight: bold; width: 40px; text-align: right; font-size: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.2); 
+}
+.input-atual:focus { outline: none; border-bottom-color: white; }
+
+.vida .barra-preenchimento { background-color: var(--color-life); box-shadow: 0 0 10px var(--color-life); }
+.vida .inputs-barra { color: var(--color-life); }
+.mana .barra-preenchimento { background-color: var(--color-mana); box-shadow: 0 0 10px var(--color-mana); }
+.mana .inputs-barra { color: var(--color-mana); }
+.foco .barra-preenchimento { background-color: var(--color-foco); box-shadow: 0 0 10px var(--color-foco); }
+.foco .inputs-barra { color: var(--color-foco); }
+
+/* CONTAINER DA DIREITA */
+.status-direita { display: flex; flex-direction: column; gap: 20px; }
+.status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+.card-status { background-color: #1c1c1f; border: 1px solid #2e2e31; border-radius: 10px; padding: 15px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
+.card-status .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+.card-status .valor { font-size: 1.4rem; font-weight: bold; color: white; }
+.card-status.ataque .valor { color: var(--color-gold); }
+
+/* --- INVENTÁRIO (NOVO) --- */
+.painel-inventario { 
+    background-color: #1c1c1f; border-radius: 12px; padding: 15px; 
+    border: 1px solid #3f3f46; display: flex; flex-direction: column; gap: 10px; 
+    max-height: 250px; flex-grow: 1; /* Ocupa espaço */
+}
+.inv-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3f3f46; padding-bottom: 10px; }
+.inv-lista { display: flex; flex-direction: column; gap: 5px; overflow-y: auto; flex-grow: 1; }
+.inv-item { display: grid; grid-template-columns: 1fr 60px 30px; gap: 10px; align-items: center; background: #27272a; padding: 8px; border-radius: 4px; }
+.inv-add-btn { background-color: #3f3f46; border: none; color: white; padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: auto; }
+
+.inv-add-btn:hover { background-color: #52525b; }
+
+/* BOTÃO RESSONÂNCIA GRANDE (AJUSTADO) */
+.btn-ressonancia-big {
+    background: linear-gradient(145deg, #7f1d1d, #450a0a);
+    border: 2px solid #ef4444;
+    color: #fecaca;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
+    /* Tamanho ajustado para alinhar com o inventário se estivesse lado a lado, mas aqui ele ficará na esquerda */
+    padding: 15px;
+    margin-top: 10px; 
+    width: 100%;
+}
+.btn-ressonancia-big span.custo { font-size: 0.8rem; font-weight: normal; opacity: 0.8; letter-spacing: normal; }
+.btn-ressonancia-big:hover { filter: brightness(1.2); transform: translateY(-2px); }
+.btn-ressonancia-big.ativo {
+    background: linear-gradient(145deg, #ef4444, #991b1b); color: white; border-color: #fee2e2;
+    box-shadow: 0 0 20px #ef4444; animation: pulse-big 1.5s infinite;
+}
+
+@media (max-width: 900px) { .painel-status { grid-template-columns: 1fr; } }
+@media (max-width: 768px) { .grid-habilidades { grid-template-columns: 1fr; } }
+
+/* --- BOTÃO DE CRIAR FICHA --- */
+.container-submit {
+    width: 100%; max-width: 1100px;
+    display: flex; justify-content: flex-end;
+    margin-top: 30px;
+}
+.btn-criar-ficha {
+    background: linear-gradient(135deg, var(--color-secondary), #059669);
+    color: white;
+    border: none;
+    padding: 18px 40px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.btn-criar-ficha:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
+}
+.btn-criar-ficha:active { 
+    transform: translateY(1px); }
+.btn-criar-ficha:disabled { 
+    opacity: 0.5; 
+    cursor: not-allowed; 
+    transform: none; }
+
+/* Feedback de Auto-Save */
+.saving-indicator { position: fixed; bottom: 20px; right: 20px; background-color: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 0.8rem; pointer-events: none; opacity: 0; transition: opacity 0.3s; border: 1px solid #3f3f46; }
+.saving-indicator.visible { opacity: 1; }
+
+@keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }   

@@ -3,304 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Habilidades Inteligente</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f2f5;
-            color: #1c1e21;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .container-principal {
-            background-color: #ffffff;
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 500px;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 24px;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        .controle-nivel, .controle-classe {
-            margin-bottom: 24px;
-        }
-
-        .controle-nivel label, .controle-classe label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            font-size: 16px;
-            text-align: left;
-        }
-
-        .controle-nivel input[type="number"] {
-            padding: 8px 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 16px;
-            width: 100%;
-            box-sizing: border-box;
-            text-align: left;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        
-        .controle-nivel input[type="number"]:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-        }
-
-        .controle-classe select {
-            width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            background-color: #fff;
-            font-size: 14px;
-        }
-
-        #nome {
-            font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-            width: 80%;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            background-color: #fff;
-            font-size: 14px;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-
-        #container-selects {
-            margin-top: 20px;
-            text-align: left;
-        }
-
-        .select-wrapper {
-            margin-bottom: 15px;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .select-wrapper label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #555;
-        }
-        
-        .select-wrapper select {
-            width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            background-color: #fff;
-            font-size: 14px;
-        }
-
-        .atributos1 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            text-align: center;
-            padding: 5px;
-            gap: 5px;
-           
-        }
-        .statA {
-            display: grid;
-            text-align: center;
-            padding: 10px 80px;
-        }
-        .atributo {
-            margin-top: 10px;
-            box-sizing: border-box;
-            padding: 5px;
-            border-radius: 20px;
-            text-align: left;
-
-        }
-        .atrib3{
-            margin-top: 10px;
-        }
-        #at-vigor {
-            text-align: center;
-            display: grid;
-            padding: 0px 80px;
-        }
-        .statusPersonagem {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            text-align: center;
-            padding: 5px;
-            gap: 1px
-            
-        }
-        .statP {
-            display: grid;
-            padding: 10px 40px;
-            
-            
-        }
-        .atributo1 {
-            margin-bottom: 10px;
-            margin-top: 3px;
-            box-sizing: border-box;
-            padding: 5px;
-            border-radius: 20px;
-            text-align: left;
-
-        }
-    </style>
+    <title>Ficha de Personagem</title>
+    <link rel="stylesheet" href="/site_inicial/css/criarficha.css">    
 </head>
-<body>
-    
+<body class="modo-edicao">
 
-    <div class="container-principal">
-
-        <h1>Seleção de Habilidades</h1>
-
-        <div class="controle-classe">
-
-            <input type="text" id="nome" placeholder="Nome do personagem" maxlength="20">
-
-            <label for="Trilha">Trilha do Personagem:</label>
-            <select id="trilha">
-                <option value="">-- Escolha uma trilha --</option>
-                <option value="envoltura">Envoltura</option>
-                <option value="expansao">Expansão</option>
-                <option value="liberacao">Liberação</option>
-            </select>
-
-            <label for="Aura">Aura do personagem:</label>
-            <select id="aura">
-                <option value="">-- Escolha uma aura --</option>
-                <option value="reforco">Reforço</option>
-                <option value="emissao">Emissão</option>
-                <option value="transformacao">Transformação</option>
-                <option value="materializacao">Materialização</option>
-                <option value="manipulacao">Manipulação</option>
-            </select>
-       
-            <label for="classe-personagem">Classe do Personagem:</label>
-            <select id="classe-personagem">
-                <option value="">-- Escolha uma classe --</option>
-                <option value="mistico">Místico</option>
-                <option value="mago_elemental">Mago elemental</option>
-                <option value="mago_de_fronte">Mago de fronte</option>
-                <option value="fimbulwinter">Fimbulwinter</option>
-                <option value="feengari">Feengari</option>
-                <option value="ascendente">Ascendente</option>
-                <option value="espadachim">Espadachim</option>
-                <option value="arma_de_corda">Arma de Corda</option>
-                <option value="nordico">Nórdico</option>
-                <option value="lanceiro">Lanceiro</option>
-                <option value="atirador_de_elite">Atirador de elite</option>
-                <option value="assassino">Assassino</option>
-                <option value="gladiador">Gladiador</option>
-                <option value="charlatao">Charlatão</option>
-                <option value="alquimista">Alquimista</option>
-                <option value="artifice">Artífice</option>
-            </select>
-            </select>
-            </select>
-            </select>
+    <div class="header-container">
+        <div class="header-nome">
+            <label class="label-topo">Nome do Personagem</label>
+            <input type="text" class="input-nome" placeholder="Digite o nome...">
         </div>
 
-        <div class="controle-nivel">
-            <label for="nivel">Nível do Personagem:</label>
-            <input type="number" id="nivel" min="1" max="16" value="1">
+        <!-- SWITCH DE MODO -->
+        <div class="switch-container">
+            <span class="switch-label">Edição</span>
+            <label class="switch">
+                <input type="checkbox" id="switch-modo" onclick="toggleModo()">
+                <span class="slider"></span>
+            </label>
+            <span class="switch-label" style="color: var(--color-secondary)">Jogo</span>
         </div>
+    </div>
+
+    <div class="painel-principal">
         
-        <hr>
-
-        <div id="container-selects"></div>
-
-        <hr>
-
-       <header>Voce tem <span id="Pontos_disponiveis">0</span> Pontos sobrando!</header>
-
-        <div class="atributos1">
-
-            <section class="statA">
-                <label for="atributo-Força" class="atrib3">Força</label>
-                <input type="number" max="8" min="0" value="1" class="atributo" id="forca">
-
-                <label for="atributo-Destreza" class="atrib3">Destreza</label>
-                <input type="number" max="8" min="0" class="atributo" value="1" id="destreza">
-            </section>
-            <section class="statA">
-                <label for="atributo-Intelecto" class="atrib3">Intelecto</label>
-                <input type="number" max="8" min="0" class="atributo" value="1" id="intelecto">
-
-                <label for="atributo-Presença" class="atrib3">Presença</label>
-                <input type="number" max="8" min="0" class="atributo" value="1" id="presenca">
-            </section>
-            <div id="at-vigor">
-                <label for="atributo-Vigor">Vigor</label>
-                <input type="number" max="8" min="0" value="1" class="atributo" id="vigor">
+        <!-- ORIGEM -->
+        <div class="secao-origem">
+            <div class="grupo-input">
+                <label class="label-topo">Aura</label>
+                <select id="aura">
+                    <option value="">Escolha uma aura</option>
+                    <option value="reforco">Reforço</option>
+                    <option value="emissao">Emissão</option>
+                    <option value="transformacao">Transformação</option>
+                    <option value="materializacao">Materialização</option>
+                    <option value="manipulacao">Manipulação</option>
+                </select>
+            </div>
+            <div class="grupo-input">
+                <label class="label-topo">Classe</label>
+                <select id="classe">
+                    <option value="">Escolha uma classe</option>
+                    <option value="mistico">Místico</option>
+                    <option value="mago_elemental">Mago elemental</option>
+                    <option value="mago_de_fronte">Mago de fronte</option>
+                    <option value="fimbulwinter">Fimbulwinter</option>
+                    <option value="feengari">Feengari</option>
+                    <option value="ascendente">Ascendente</option>
+                    <option value="espadachim">Espadachim</option>
+                    <option value="arma_de_corda">Arma de Corda</option>
+                    <option value="nordico">Nórdico</option>
+                    <option value="lanceiro">Lanceiro</option>
+                    <option value="atirador_de_elite">Atirador de elite</option>
+                    <option value="assassino">Assassino</option>
+                    <option value="gladiador">Gladiador</option>
+                    <option value="charlatao">Charlatão</option>
+                    <option value="alquimista">Alquimista</option>
+                    <option value="artifice">Artífice</option>
+                </select>
+            </div>
+            <div class="grupo-input">
+                <label class="label-topo">Trilha</label>
+                <select id="trilha">
+                    <option value="">Escolha uma Trilha</option>
+                    <option value="envoltura">Envoltura</option>
+                    <option value="expansao">Expansão</option>
+                    <option value="liberacao">Liberação</option>
+                </select>
             </div>
         </div>
 
-        <hr>
-        
-        <header>Seus Status</header>
-        <div class="statusPersonagem">
-            <section class="statP">
-                <label for="vida">Vida Máxima</label>
-                <input type="text" id="vida" class="atributo1" readonly value="">
+        <div class="separador"></div>
 
-                <label for="foco">Foco Máximo</label>
-                <input type="text" id="foco" class="atributo1" readonly>
-
-                <label for="ataque">Bônus de Ataque</label>
-                <input type="text" id="ataque" class="atributo1" readonly>
-
-                <label for="esquiva">Esquiva</label>
-                <input type="text" id="esquiva" class="atributo1" readonly>
-            </section>
-            <section class="statP">
-                <label for="mana">Mana Máxima</label>
-                <input type="text" id="mana" class="atributo1" readonly>
-
-                <label for="carga">Carga Máxima</label>
-                <input type="text" id="carga" class="atributo1" readonly>
-                
-                <label for="movimento">Movimento</label>
-                <input type="text" id="movimento" class="atributo1" readonly>
-
-                <label for="bloqueio">Bloqueio</label>
-                <input type="text" id="bloqueio" class="atributo1" readonly> 
-            </section>
-
+        <!-- NÍVEL CENTRALIZADO -->
+        <div class="box-nivel-container">
+            <div class="box-nivel">
+                <label class="label-topo" style="margin:0; color:white;">NÍVEL ATUAL</label>
+                <input type="number" id="nivel" class="input-numero input-nivel" min="1" max="16" value="1">
+            </div>
         </div>
 
+        <div class="separador"></div>
+
+        <!-- ÁREA DE ATRIBUTOS -->
+           <div class="cabecalho-secao">
+                <div class="titulo-secao">ATRIBUTOS</div>
+                <div class="badge-pontos pontos-attr editavel-apenas">
+                    PONTOS: <span id="pts-attr-atual">0</span> / <span id="pts-attr-total">0</span>
+                </div>
+            </div>
+
+            <div class="secao-atributos">
+                <div class="atributo-container"><div class="circulo-atributo"><input type="number" class="input-numero input-atributo" id="attr-forca" value="1" min="0"></div><span class="label-atributo">FORÇA</span></div>
+                <div class="atributo-container"><div class="circulo-atributo"><input type="number" class="input-numero input-atributo" id="attr-destreza" value="1" min="0"></div><span class="label-atributo">DESTREZA</span></div>
+                <div class="atributo-container"><div class="circulo-atributo"><input type="number" class="input-numero input-atributo" id="attr-vigor" value="1" min="0"></div><span class="label-atributo">VIGOR</span></div>
+                <div class="atributo-container"><div class="circulo-atributo"><input type="number" class="input-numero input-atributo" id="attr-intelecto" value="1" min="0"></div><span class="label-atributo">INTELECTO</span></div>
+                <div class="atributo-container"><div class="circulo-atributo"><input type="number" class="input-numero input-atributo" id="attr-presenca" value="1" min="0"></div><span class="label-atributo">PRESENÇA</span></div>
+            </div>
+
+            <!-- SEÇÃO DE ESCOLHA DE AFINIDADE (Oculta até nível 4) -->
+            <div id="container-afinidade" class="secao-afinidade editavel-apenas">
+                <div class="titulo-afinidade">
+                    <span>★ Desbloqueio de Afinidade (Nível 4) ★</span>
+                </div>
+                <div style="color: #ccc; font-size: 0.9rem; margin-bottom: 10px;">
+                    Escolha 1 especialização. Esta escolha é única.
+                </div>
+                
+                <div class="grid-afinidade" id="lista-afinidades">
+                    <!-- Os cartões serão gerados aqui via JS -->
+                </div>
+            </div>
 
     </div>
 
-    <script>
+    <!-- ÁREA DE HABILIDADES -->
+    <div style="width: 100%; max-width: 1200px;">
+        <div class="cabecalho-secao">
+            <span class="titulo-secao">HABILIDADES</span>
+            <!-- Caixa de Pontos Exclusiva para Habilidades -->
+            <div class="badge-pontos pontos-skill editavel-apenas">
+                DISPONÍVEIS: <span id="pts-skill-atual">0</span> / <span id="pts-skill-total">0</span>
+            </div>
+        </div>
 
+        <div class="grid-habilidades">
+            <div class="coluna" id="col-aura"><h2>Aura</h2><div id="lista-aura"></div></div>
+            <div class="coluna" id="col-classe"><h2>Classe</h2><div id="lista-classe"></div></div>
+            <div class="coluna" id="col-trilha"><h2>Trilha</h2><div id="lista-trilha"></div></div>
+        </div>
+    </div>
 
+    <!-- GRIMÓRIO ARCANO (A NOVA SEÇÃO) -->
+    <div id="container-grimorio" class="painel-grimorio">
+        <!-- Título Centralizado -->
+        <div class="titulo-grimorio">✦ Grimório Arcano ✦</div>
+        
+        <!-- Linha de Controle Centralizada -->
+        <div class="grimorio-controles">
+            <div style="color:#a5b4fc; font-size:0.9rem;">Magias Disponíveis</div>
+            <div class="badge-pontos pontos-magia editavel-apenas">
+                PONTOS: <span id="pts-magia-atual">0</span> / <span id="pts-magia-total">0</span>
+            </div>
+        </div>
+        
+        <div class="grid-magias" id="lista-magias"></div>
+    </div>
 
+    <!-- PERÍCIAS -->
+    <div class="painel-principal" style="margin-top: 30px;">
+        <div class="cabecalho-secao">
+            <div class="titulo-secao">PERÍCIAS</div>
+            <div class="badge-pontos pontos-pericia editavel-apenas">PONTOS: <span id="pts-pericia-atual">0</span> / <span id="pts-pericia-total">0</span></div>
+        </div>
+        <div class="secao-pericias-container">
+            <div class="caixa-pericias">
+                <div class="pericia-item"><div class="circulo-pericia"><input type="number" class="input-numero input-pericia" id="per-medicina" value="0" min="0"></div><span class="label-circulo">Medicina</span></div>
+                <div class="pericia-item"><div class="circulo-pericia"><input type="number" class="input-numero input-pericia" id="per-arcano" value="0" min="0"></div><span class="label-circulo">Arcano</span></div>
+                <div class="pericia-item"><div class="circulo-pericia"><input type="number" class="input-numero input-pericia" id="per-diplomacia" value="0" min="0"></div><span class="label-circulo">Diplomacia</span></div>
+                <div class="pericia-item"><div class="circulo-pericia"><input type="number" class="input-numero input-pericia" id="per-adestrar" value="0" min="0"></div><span class="label-circulo">Adestrar</span></div>
+                <div class="pericia-item"><div class="circulo-pericia"><input type="number" class="input-numero input-pericia" id="per-tecnologia" value="0" min="0"></div><span class="label-circulo">Tecnologia</span></div>
+            </div>
+        </div>
+    </div>    
 
-    </script>
+    <!-- STATUS FOOTER -->
+    <div class="painel-status">
+        <div class="status-barras">
+            <!-- Barra VIDA -->
+            <div class="barra-container vida">
+                <div class="barra-label">
+                    <span>VIDA</span>
+                    <div class="inputs-barra">
+                        <input type="number" id="vida-atual" class="input-atual" oninput="atualizarBarras(); autoSalvarStatus()">
+                        <span>/ <span id="stat-vida">100</span></span>
+                    </div>
+                </div>
+                <div class="barra-total"><div class="barra-preenchimento" id="bar-vida-fill"></div></div>
+            </div>
+            
+            <!-- Barra MANA -->
+            <div class="barra-container mana">
+                <div class="barra-label">
+                    <span>MANA</span>
+                    <div class="inputs-barra">
+                        <input type="number" id="mana-atual" class="input-atual" oninput="atualizarBarras(); autoSalvarStatus()">
+                        <span>/ <span id="stat-mana">50</span></span>
+                    </div>
+                </div>
+                <div class="barra-total"><div class="barra-preenchimento" id="bar-mana-fill"></div></div>
+            </div>
+            
+            <!-- Barra FOCO -->
+            <div class="barra-container foco">
+                <div class="barra-label">
+                    <span>FOCO</span>
+                    <div class="inputs-barra">
+                        <input type="number" id="foco-atual" class="input-atual" oninput="atualizarBarras(); autoSalvarStatus()">
+                        <span>/ <span id="stat-foco">0</span></span>
+                    </div>
+                </div>
+                <div class="barra-total"><div class="barra-preenchimento" id="bar-foco-fill"></div></div>
+            </div>
 
+            <!-- Botão Ressonância movido para cá -->
+            <button id="btn-ressonancia-big" class="btn-ressonancia-big jogo-apenas" onclick="toggleRessonancia()">
+                ⚡ RESSONÂNCIA
+                <span class="custo" id="custo-ressonancia">-1 Mana/turno</span>
+            </button>            
+        </div>
+        <div class="status-direita">
+            <div class="status-grid">
+                <div class="card-status ataque"><span class="label">Ataque</span><span class="valor" id="stat-ataque">+0</span></div>
+                <div class="card-status"><span class="label">Bloqueio</span><span class="valor" id="stat-bloqueio">0</span></div>
+                <div class="card-status"><span class="label">Esquiva</span><span class="valor" id="stat-esquiva">0</span></div>
+                <div class="card-status"><span class="label">Carga</span><span class="valor"><span id="peso-atual" style="color:var(--text-muted)">0</span> / <span id="stat-carga">0</span></span></div>
+                <div class="card-status"><span class="label">Movimento</span><span class="valor" id="stat-movimento">9m</span></div>
+            </div>
+
+            <!-- NOVO: INVENTÁRIO -->
+            <div class="painel-inventario jogo-apenas" style="flex-grow:1;">
+                <div class="inv-header">
+                    <span style="font-weight:bold; color:white;">INVENTÁRIO</span>
+                </div>
+                <div class="inv-lista" id="lista-inventario">
+                    <!-- Itens via JS -->
+                </div>
+                <button class="inv-add-btn" onclick="adicionarItem()">+ Adicionar Item</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- BOTÃO FINAL -->
+    <div class="container-submit editavel-apenas">
+        <button class="btn-criar-ficha" onclick="salvarFicha()">CRIAR / ATUALIZAR FICHA</button>
+    </div>
+
+    <div id="saving-indicator" class="saving-indicator">Salvando alterações...</div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/site_inicial/js/criarficha.js"></script>
 </body>
-</html>
