@@ -504,22 +504,275 @@ function toggleModo() {
     atualizarTudo(); // Re-renderiza para limpar estados visuais
 }
 
-// --- INVENTÁRIO ---
-function adicionarItem() {
-    const nome = prompt("Nome do Item:");
-    if(!nome) return;
-    const peso = parseFloat(prompt("Peso do Item (kg):")) || 0;
-    inventario.push({nome, peso});
+// --- LÓGICA MODAL CONSUMÍVEL ---
+function toggleCamposConsumivel() {
+    const tipo = document.getElementById('input-criar-tipo').value;
+    const camposExtra = document.getElementById('campos-consumivel');
+    if (tipo === 'consumivel') camposExtra.style.display = 'block';
+    else camposExtra.style.display = 'none';
+    document.getElementById('campos-equipamento').style.display = (tipo === 'equipamento') ? 'block' : 'none'; // Novo
+
+}
+
+// --- LÓGICA DE INVENTÁRIO (ATUALIZADA V36) ---
+function abrirModalItem() { document.getElementById('modal-item').style.display = 'flex'; mudarAba('criar'); }
+function fecharModalItem() { 
+    document.getElementById('modal-item').style.display = 'none';
+    // Limpa campos
+    document.getElementById('input-criar-nome').value = '';
+    document.getElementById('input-criar-peso').value = '0.0';
+    document.getElementById('input-criar-magico').checked = false;
+    document.getElementById('input-criar-tipo').value = 'item';
+    document.getElementById('campos-consumivel').style.display = 'none';
+}
+
+function mudarAba(aba) {
+    document.querySelectorAll('.tab-content').forEach(el=>el.style.display='none');
+    document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+    document.getElementById(`aba-${aba}`).style.display='flex';
+    if(aba==='buscar') buscarItensNoBanco();
+}
+
+async function criarItemNoBanco() {
+    const nome = document.getElementById('input-criar-nome').value;
+    const tipo = document.getElementById('input-criar-tipo').value;
+    const peso = parseFloat(document.getElementById('input-criar-peso').value) || 0;
+    const magico = document.getElementById('input-criar-magico').checked;
+    
+    // Captura os valores locais
+    let efeito = null, valor = 0, empunhadura = null;
+    if (tipo === 'consumivel') {
+        efeito = document.getElementById('input-criar-efeito').value;
+        valor = parseInt(document.getElementById('input-criar-valor').value) || 0;
+    }
+    if (tipo === 'equipamento') {
+        // Captura se é 1 mão ou 2 mãos
+        empunhadura = document.getElementById('input-criar-empunhadura').value;
+    }
+
+
+    if(!nome) return alert("Dê um nome ao item!");
+
+    try {
+        // Tenta salvar no Supabase
+        const { data, error } = await supabaseClient
+            .from('itens')
+            .insert([{ nome, tipo, peso, magico, efeito, valor, empunhadura }])
+            .select();
+        
+        if (error) {
+            console.warn("Aviso Banco (Item salvo apenas localmente):", error.message);
+            // Fallback Local se der erro no banco
+            adicionarAoInventario({ id: 'local_'+Date.now(), nome, tipo, peso, magico, efeito, valor, empunhadura });
+        } else if (data && data.length > 0) {
+            // TRUQUE DE SEGURANÇA:
+            // Mesclamos o que veio do banco (data[0]) com o que digitamos (efeito, valor).
+            // Assim, se o banco não tiver a coluna 'efeito', usamos o valor local e o item não quebra.
+            const itemFinal = { ...data[0], efeito: efeito, valor: valor };
+            
+            adicionarAoInventario(itemFinal);
+        }
+        
+        alert("Criado!");
+        fecharModalItem();
+    } catch(e) { console.error(e); }
+}
+
+async function buscarItensNoBanco() {
+    const termo = document.getElementById('input-buscar-termo').value;
+    const listaDiv = document.getElementById('lista-banco-itens');
+    let query = supabaseClient.from('itens').select('*').limit(10);
+    if(termo) query = query.ilike('nome', `%${termo}%`);
+    const {data} = await query;
+    listaDiv.innerHTML = '';
+    if(data) {
+        data.forEach(item => {
+            const div = document.createElement('div'); div.className = 'db-item';
+            div.innerHTML = `<div><div style="font-weight:bold; color:${item.magico?'#a855f7':'white'}">${item.nome}</div><div style="font-size:0.8rem; color:#888;">${item.tipo.toUpperCase()} | ${item.peso}kg</div></div><button class="btn-pegar" onclick='adicionarAoInventario(${JSON.stringify(item)})'>Pegar</button>`;
+            listaDiv.appendChild(div);
+        });
+    }
+}
+
+function adicionarAoInventario(itemDados) {
+    const itemLocal = {
+        id_origem: itemDados.id,
+        instancia_id: crypto.randomUUID(),
+
+        nome: itemDados.nome,
+        tipo: itemDados.tipo,
+        peso: itemDados.peso,
+        isMagico: itemDados.magico,
+        empunhadura: itemDados.empunhadura,
+
+        // 🔽 ESTAVA FALTANDO
+        efeito: itemDados.efeito ?? null,
+        valor: itemDados.valor ?? 0,
+
+        equipado: false,
+        slotId: null
+    };
+
+    inventario.push(itemLocal);
     renderizarInventario();
-    atualizarBarras(); // Para recalcular peso total
+    atualizarBarras();
+    atualizarSlotsVisuais();
     autoSalvarStatus();
 }
 
-function removerItem(index) {
+// --- CONSUMIR ITEM (NOVO) ---
+function consumirItem(index) {
+    const item = inventario[index];
+    
+    // Diagnóstico
+    console.log("Tentando usar:", item); 
+
+    if (!confirm(`Deseja usar ${item.nome}?`)) return;
+
+    // Verifica se os dados existem
+    if (!item.efeito) {
+        alert(`ERRO: O item '${item.nome}' não tem um Efeito configurado. (efeito: ${item.efeito})`);
+        return;
+    }
+    if (!item.valor) {
+        alert(`ERRO: O item '${item.nome}' não tem um Valor de recuperação. (valor: ${item.valor})`);
+        return;
+    }
+
+    const val = parseInt(item.valor);
+
+    // Lógica de Aplicação
+    if (item.efeito === 'vida') {
+        const max = parseInt(document.getElementById('stat-vida').textContent) || 100;
+        let atual = parseInt(document.getElementById('vida-atual').value) || 0;
+        document.getElementById('vida-atual').value = Math.min(max, atual + val);
+        alert(`Recuperou ${val} de Vida!`);
+    } else if (item.efeito === 'mana') {
+        const max = parseInt(document.getElementById('stat-mana').textContent) || 50;
+        let atual = parseInt(document.getElementById('mana-atual').value) || 0;
+        document.getElementById('mana-atual').value = Math.min(max, atual + val);
+        alert(`Recuperou ${val} de Mana!`);
+    } else if (item.efeito === 'foco') {
+        const max = parseInt(document.getElementById('stat-foco').textContent) || 0;
+        let atual = parseInt(document.getElementById('foco-atual').value) || 0;
+        document.getElementById('foco-atual').value = Math.min(max, atual + val);
+        alert(`Recuperou ${val} de Foco!`);
+    } else {
+        alert(`Efeito desconhecido: ${item.efeito}`);
+        return;
+    }
+
+    // Sucesso: Remove e Salva
     inventario.splice(index, 1);
     renderizarInventario();
     atualizarBarras();
     autoSalvarStatus();
+}
+function removerItem(index) {
+    if(confirm("Remover?")) { inventario.splice(index, 1); renderizarInventario(); atualizarBarras(); atualizarSlotsVisuais(); autoSalvarStatus(); }
+}
+
+function renderizarInventario() {
+    const lista = document.getElementById('lista-inventario'); lista.innerHTML = '';
+    const icones = { item: '📦', equipamento: '⚔️', armadura: '🛡️', acessorio: '💍', consumivel: '🧪' };
+    let pesoTotal = 0;
+
+    inventario.forEach((item, index) => {
+        pesoTotal += (item.peso||0);
+        const div = document.createElement('div'); div.className = 'inv-item';
+        const tipoSeguro = item.tipo || 'item';
+        
+        let btnAcao = '';
+        // Botão EQUIPAR (Armas/Armaduras)
+        if(['equipamento','armadura','acessorio'].includes(tipoSeguro)) {
+            const estilo = item.equipado ? 'background:#eab308; color:black; font-weight:bold;' : 'background:none; border:1px solid #555; color:#aaa;';
+            const texto = item.equipado ? 'ON' : 'EQ';
+            btnAcao = `<button style="cursor:pointer; border-radius:4px; padding:2px 6px; ${estilo}" onclick="toggleEquiparItem(${index})">${texto}</button>`;
+        }
+        // Botão USAR (Consumíveis)
+        else if (tipoSeguro === 'consumivel') {
+            btnAcao = `<button class="btn-usar-item" onclick="consumirItem(${index})">USAR</button>`;
+        }
+
+        div.innerHTML = `<div class="inv-icon" style="font-size:1.2rem; text-align:center;">${icones[tipoSeguro]||'📦'}</div><div style="display:flex; flex-direction:column; justify-content:center;"><span style="color:${item.isMagico?'#a855f7':'#ddd'}; font-weight:500;">${item.nome||'Item'}</span><span style="font-size:0.7rem; color:#666;">${tipoSeguro.toUpperCase()}</span></div><div style="display:flex; align-items:center; justify-content:center;">${btnAcao}</div><span style="color:#aaa; text-align:right; font-size:0.8rem;">${(item.peso||0)}kg</span><button style="color:#ef4444; background:none; border:none; cursor:pointer; font-weight:bold;" onclick="removerItem(${index})">✕</button>`;
+        lista.appendChild(div);
+    });
+    const elPeso = document.getElementById('peso-atual');
+    const maxCarga = parseInt(document.getElementById('stat-carga').textContent)||0;
+    if(elPeso) { elPeso.textContent = pesoTotal.toFixed(1); elPeso.style.color = pesoTotal > maxCarga ? 'red' : '#aaa'; }
+    atualizarSlotsVisuais();
+}
+
+function toggleEquiparItem(index) {
+    const item = inventario[index];
+    if(item.equipado) { item.equipado = false; item.slotId = null; }
+    else {
+        if(item.isMagico) {
+            const magicos = inventario.filter(i=>i.equipado && i.isMagico).length;
+            if(magicos >= 3) return alert("Limite de sintonização atingido!");
+        }
+        if(item.tipo === 'equipamento') { 
+            // SE FOR 2 MÃOS (Lógica Antiga: Ocupa Principal, Limpa Secundária)
+            if (item.empunhadura === '2maos') {
+                // Limpa Main Hand
+                inventario.forEach(i => { if(i.slotId==='mainhand') { i.equipado=false; i.slotId=null; }});
+                // Limpa Off Hand (Porque ocupa as duas)
+                inventario.forEach(i => { if(i.slotId==='offhand') { i.equipado=false; i.slotId=null; }});
+                
+                item.slotId = 'mainhand'; // Fica visualmente na principal
+            } 
+            // SE FOR 1 MÃO (Lógica Nova: Tenta Main, depois Off)
+            else {
+                const mainOcupado = inventario.find(i => i.slotId === 'mainhand');
+                // Mas cuidado: Se o que está na Main for 2 mãos, não posso equipar na Off
+                if (mainOcupado && mainOcupado.empunhadura === '2maos') {
+                        // Desequipa a de 2 mãos para liberar
+                        mainOcupado.equipado = false; mainOcupado.slotId = null;
+                        item.slotId = 'mainhand';
+                }
+                else if (!mainOcupado) {
+                    item.slotId = 'mainhand';
+                } else {
+                    const offOcupado = inventario.find(i => i.slotId === 'offhand');
+                    if (!offOcupado) {
+                        item.slotId = 'offhand';
+                    } else {
+                        // Substitui Offhand
+                        offOcupado.equipado = false; offOcupado.slotId = null;
+                        item.slotId = 'offhand';
+                    }
+                }
+            }
+        }
+        else if(item.tipo === 'armadura') { inventario.forEach(i=>{if(i.slotId==='armor'){i.equipado=false;i.slotId=null}}); item.slotId='armor'; }
+        else if(item.tipo === 'acessorio') {
+            const s1 = inventario.find(i=>i.slotId==='acc1');
+            if(!s1) item.slotId='acc1';
+            else { const s2=inventario.find(i=>i.slotId==='acc2'); if(s2){s2.equipado=false;s2.slotId=null} item.slotId='acc2'; }
+        } else return alert("Não equipável.");
+        item.equipado = true;
+    }
+    renderizarInventario(); atualizarSlotsVisuais(); autoSalvarStatus();
+}
+
+function atualizarSlotsVisuais() {
+    ['mainhand','offhand','armor','acc1','acc2'].forEach(sid => {
+        const el = document.getElementById(`slot-${sid}`);
+        if(el) { el.className = 'equip-slot'; el.querySelector('.slot-item').textContent = 'Vazio'; }
+    });
+    let countMagicos = 0;
+    inventario.forEach(item => {
+        if(item.equipado && item.slotId) {
+            const el = document.getElementById(`slot-${item.slotId}`);
+            if(el) {
+                el.classList.add('filled');
+                if(item.isMagico) { el.classList.add('magic'); countMagicos++; }
+                el.querySelector('.slot-item').textContent = item.nome;
+            }
+        }
+    });
+    const counter = document.getElementById('magic-counter');
+    if(counter) { counter.textContent = `✨ ${countMagicos}/3 Sintonizados`; counter.style.color = countMagicos > 3 ? 'red' : '#a855f7'; }
 }
 
 // --- ATUALIZA AS BARRAS VISUAIS ---
@@ -557,21 +810,6 @@ function atualizarBarras() {
     } else {
         document.getElementById('peso-atual').style.color = 'var(--text-muted)';
     }
-}
-
-function renderizarInventario() {
-    const lista = document.getElementById('lista-inventario');
-    lista.innerHTML = '';
-    inventario.forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = 'inv-item';
-        div.innerHTML = `
-            <span style="color:#ddd">${item.nome}</span>
-            <span style="color:#aaa; text-align:right">${item.peso}kg</span>
-            <button class="inv-btn-remove" onclick="removerItem(${index})">X</button>
-        `;
-        lista.appendChild(div);
-    });
 }
 
 // --- ELEMENTOS ---

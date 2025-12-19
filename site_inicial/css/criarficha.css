@@ -77,21 +77,40 @@ input:checked + .slider:before { transform: translateX(26px); }
     width: 100%; max-width: 1100px; display: flex; flex-direction: column; gap: 30px;
     box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
 }
-/* Classes de Controle de Visibilidade */
+/* --- CONTROLE DE MODOS (CORRIGIDO) --- */
 body.modo-jogo .editavel-apenas { display: none !important; }
 body.modo-jogo .jogo-apenas { display: flex !important; }
 body.modo-edicao .jogo-apenas { display: none !important; }
 
-/* Regra Mágica: Esconde botões não selecionados no modo jogo */
+/* Oculta botões não selecionados no modo jogo */
 body.modo-jogo .btn-habilidade:not(.selecionado):not(.info),
-body.modo-jogo .btn-magia:not(.selecionado):not(.info) {
-    display: none !important;
+body.modo-jogo .btn-magia:not(.selecionado):not(.info) { display: none !important; }
+
+/* CORREÇÃO AQUI: Aplica o travamento APENAS aos selects da área de origem, não aos do modal */
+body.modo-jogo .secao-origem select { 
+    pointer-events: none; 
+    background-color: transparent; 
+    border: none; 
+    appearance: none; 
+    padding: 0; 
+    font-size: 1.2rem; 
+    font-weight: bold; 
+    color: var(--color-gold); 
 }
 
-/* No modo jogo, selects viram texto estático visualmente */
-body.modo-jogo select { pointer-events: none; background-color: transparent; border: none; appearance: none; padding: 0; font-size: 1.2rem; font-weight: bold; color: var(--color-gold); }
-body.modo-jogo .input-nome { pointer-events: none; background-color: transparent; border: none; appearance: none; padding: 0;  font-weight: bold; color: var(--color-gold); }
-body.modo-jogo .circulo-atributo { border-color: #3f3f46; background-color: #121214; }
+/* CORREÇÃO AQUI: Travamento apenas para os círculos de atributos/perícias */
+body.modo-jogo .circulo-atributo, 
+body.modo-jogo .circulo-pericia { 
+    border-color: #3f3f46; 
+    background-color: #121214; 
+}
+
+/* CORREÇÃO AQUI: Travamento apenas para inputs dentro dos círculos */
+body.modo-jogo .circulo-atributo .input-numero, 
+body.modo-jogo .circulo-pericia .input-numero { 
+    pointer-events: none; 
+    color: #a1a1aa; 
+}
 body.modo-jogo .input-numero { pointer-events: none; color: #a1a1aa; } /* Trava atributos */
 
 .secao-origem { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
@@ -517,17 +536,34 @@ select:focus { outline: none; border-color: var(--color-primary); }
 .card-status.ataque .valor { color: var(--color-gold); }
 
 /* --- INVENTÁRIO (NOVO) --- */
-.painel-inventario { 
-    background-color: #1c1c1f; border-radius: 12px; padding: 15px; 
-    border: 1px solid #3f3f46; display: flex; flex-direction: column; gap: 10px; 
-    max-height: 250px; flex-grow: 1; /* Ocupa espaço */
-}
-.inv-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3f3f46; padding-bottom: 10px; }
-.inv-lista { display: flex; flex-direction: column; gap: 5px; overflow-y: auto; flex-grow: 1; }
-.inv-item { display: grid; grid-template-columns: 1fr 60px 30px; gap: 10px; align-items: center; background: #27272a; padding: 8px; border-radius: 4px; }
-.inv-add-btn { background-color: #3f3f46; border: none; color: white; padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: auto; }
+        .equip-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; width: 100%; }
+        .equip-slot { background-color: #27272a; border: 2px dashed #3f3f46; border-radius: 8px; height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; position: relative; text-align: center; padding: 5px; }
+        .equip-slot:hover { border-color: var(--text-muted); background-color: #323238; }
+        .equip-slot.filled { border-style: solid; border-color: var(--color-gold); background-color: #2a2210; }
+        .equip-slot.magic { border-color: var(--color-epic); background-color: #2e1065; box-shadow: 0 0 10px rgba(168, 85, 247, 0.2); }
+        .slot-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
+        .slot-item { font-size: 0.8rem; font-weight: bold; color: white; word-break: break-word; line-height: 1.1; }
+        .slot-icon { font-size: 1.5rem; color: #52525b; margin-bottom: 5px; }
+        .filled .slot-icon { color: var(--color-gold); }
+        .magic .slot-icon { color: var(--color-epic); }
 
-.inv-add-btn:hover { background-color: #52525b; }
+/* INVENTÁRIO (COM SUPORTE A CONSUMÍVEL) */
+.painel-inventario { background-color: #1c1c1f; border-radius: 12px; padding: 15px; border: 1px solid #3f3f46; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+.inv-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3f3f46; padding-bottom: 10px; }
+.magic-slots { background-color: rgba(168, 85, 247, 0.1); color: var(--color-epic); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; border: 1px solid var(--color-epic); }
+.inv-lista { display: flex; flex-direction: column; gap: 5px; overflow-y: auto; flex-grow: 1; max-height: 250px; }
+.inv-item { display: grid; grid-template-columns: 30px 1fr 30px 50px 30px; gap: 10px; align-items: center; background: #27272a; padding: 8px; border-radius: 4px; transition: 0.2s; }
+.inv-item:hover { background-color: #323238; }
+.inv-icon { font-size: 1.2rem; text-align: center; }
+.inv-add-btn { background-color: #3f3f46; border: none; color: white; padding: 10px; border-radius: 6px; cursor: pointer; width: 100%; margin-top: auto; font-weight: bold; }
+.inv-add-btn:hover { background-color: var(--color-secondary); color: #000; }
+
+.btn-equip-toggle { background: none; border: 1px solid #52525b; color: #aaa; border-radius: 4px; font-size: 0.7rem; cursor: pointer; padding: 2px 4px; }
+.btn-equip-toggle.equipped { background-color: var(--color-gold); color: black; border-color: var(--color-gold); }
+
+/* BOTÃO DE USAR CONSUMÍVEL */
+.btn-usar-item { background: var(--color-primary); color: white; border: none; border-radius: 4px; font-size: 0.7rem; padding: 2px 6px; cursor: pointer; font-weight: bold; }
+.btn-usar-item:hover { filter: brightness(1.2); }
 
 /* BOTÃO RESSONÂNCIA GRANDE (AJUSTADO) */
 .btn-ressonancia-big {
@@ -592,6 +628,43 @@ select:focus { outline: none; border-color: var(--color-primary); }
     opacity: 0.5; 
     cursor: not-allowed; 
     transform: none; }
+
+/* MODAL */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); }
+.modal-box { background-color: #18181b; border: 1px solid #3f3f46; border-radius: 12px; width: 90%; max-width: 500px; padding: 25px; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes modalPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.modal-header h2 { margin: 0; color: white; font-size: 1.2rem; }
+.modal-tabs { display: flex; border-bottom: 1px solid #3f3f46; margin-bottom: 10px; }
+.tab-btn { background: none; border: none; color: #aaa; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+.tab-btn.active { color: var(--color-secondary); border-bottom: 2px solid var(--color-secondary); }
+.tab-content { display: none; flex-direction: column; gap: 15px; }
+.tab-content.active { display: flex; }
+.modal-body input, .modal-body select { width: 100%; padding: 10px; background-color: #27272a; border: 1px solid #3f3f46; color: white; border-radius: 6px; margin-bottom: 10px; }
+.modal-body label { display: block; margin-bottom: 5px; color: #aaa; font-size: 0.9rem; }
+.magic-check { display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 10px; }
+.magic-check input { width: auto; margin: 0; }
+.db-lista { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+.db-item { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 8px; border-radius: 4px; border: 1px solid #333; }
+.db-item:hover { border-color: var(--color-secondary); }
+.btn-pegar { background: var(--color-primary); border: none; color: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.btn-cancel { background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+.btn-confirm { background: var(--color-secondary); border: none; color: black; font-weight: bold; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+
+
+/* Melhoria Visual na Lista de Itens */
+.inv-item {
+    display: grid; 
+    grid-template-columns: 40px 1fr 80px 30px; /* Ícone | Nome | Peso | Delete */
+    gap: 10px; align-items: center;
+    background: #27272a; padding: 10px; border-radius: 6px;
+    transition: 0.2s; border: 1px solid transparent;
+}
+.inv-item:hover { border-color: #52525b; }
+.item-icon { font-size: 1.4rem; text-align: center; }
+.item-name { color: #e4e4e7; font-weight: 500; }
+.item-sub { font-size: 0.75rem; color: #71717a; text-transform: uppercase; }
+.item-magic { color: var(--color-epic); text-shadow: 0 0 5px rgba(168, 85, 247, 0.3); }
 
 /* Feedback de Auto-Save */
 .saving-indicator { position: fixed; bottom: 20px; right: 20px; background-color: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 0.8rem; pointer-events: none; opacity: 0; transition: opacity 0.3s; border: 1px solid #3f3f46; }

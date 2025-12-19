@@ -221,15 +221,23 @@
                 <div class="card-status"><span class="label">Movimento</span><span class="valor" id="stat-movimento">9m</span></div>
             </div>
 
-            <!-- NOVO: INVENTÁRIO -->
+            <!-- SLOTS DE EQUIPAMENTO -->
+            <div class="equip-grid jogo-apenas">
+                <div class="equip-slot" id="slot-mainhand" onclick="toggleEquiparSlot('mainhand')"><div class="slot-label">Mão D.</div><div class="slot-icon">⚔️</div><div class="slot-item">Vazio</div></div>
+                <div class="equip-slot" id="slot-offhand" onclick="toggleEquiparSlot('offhand')"><div class="slot-label">Mão E.</div><div class="slot-icon">🛡️</div><div class="slot-item">Vazio</div></div>
+                <div class="equip-slot" id="slot-armor" onclick="toggleEquiparSlot('armor')"><div class="slot-label">Corpo</div><div class="slot-icon">👕</div><div class="slot-item">Vazio</div></div>
+                <div class="equip-slot" id="slot-acc1" onclick="toggleEquiparSlot('acc1')"><div class="slot-label">Acessório</div><div class="slot-icon">💍</div><div class="slot-item">Vazio</div></div>
+                <div class="equip-slot" id="slot-acc2" onclick="toggleEquiparSlot('acc2')"><div class="slot-label">Acessório</div><div class="slot-icon">📿</div><div class="slot-item">Vazio</div></div>
+            </div>
+
+            <!-- INVENTÁRIO -->
             <div class="painel-inventario jogo-apenas" style="flex-grow:1;">
                 <div class="inv-header">
                     <span style="font-weight:bold; color:white;">INVENTÁRIO</span>
+                    <span class="magic-slots" id="magic-counter">✨ 0/3 Sintonizados</span>
                 </div>
-                <div class="inv-lista" id="lista-inventario">
-                    <!-- Itens via JS -->
-                </div>
-                <button class="inv-add-btn" onclick="adicionarItem()">+ Adicionar Item</button>
+                <div class="inv-lista" id="lista-inventario"></div>
+                <button class="inv-add-btn" onclick="abrirModalItem()">+ ADICIONAR ITEM</button>
             </div>
         </div>
     </div>
@@ -239,6 +247,57 @@
         <button class="btn-criar-ficha" onclick="salvarFicha()">CRIAR / ATUALIZAR FICHA</button>
     </div>
 
+    <!-- MODAL -->
+    <div class="modal-overlay" id="modal-item">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Biblioteca de Itens</h2>
+                <div class="modal-tabs"><button class="tab-btn active" onclick="mudarAba('criar')">Criar Novo</button><button class="tab-btn" onclick="mudarAba('buscar')">Buscar Existente</button></div>
+                <button class="tab-btn" style="margin-left: auto; color: #ef4444;" onclick="fecharModalItem()">✕</button>
+            </div>
+            <div id="aba-criar" class="tab-content active modal-body">
+                <label>Nome do Item</label><input type="text" id="input-criar-nome" placeholder="Ex: Espada Longa">
+                <label>Tipo</label>
+                <!-- NOVA OPÇÃO CONSUMIVEL -->
+                <select id="input-criar-tipo" onchange="toggleCamposConsumivel()">
+                    <option value="item">📦 Item Comum</option>
+                    <option value="equipamento">⚔️ Equipamento</option>
+                    <option value="armadura">👕 Armadura</option>
+                    <option value="acessorio">💍 Acessório</option>
+                    <option value="consumivel">🧪 Consumível</option>
+                </select>
+                
+                <!-- CONTAINER: CAMPOS ESPECIAIS -->
+                <div id="campos-equipamento" style="display:none; background:#222; padding:10px; border-radius:6px; margin-bottom:10px;">
+                    <label style="color:var(--color-gold)">Empunhadura:</label>
+                    <select id="input-criar-empunhadura">
+                        <option value="1mao">1 Mão</option>
+                        <option value="2maos">2 Mãos (Ocupa as duas)</option>
+                    </select>
+                </div>
+
+                <!-- CAMPOS EXTRAS PARA CONSUMÍVEL -->
+                <div id="campos-consumivel" style="display:none; background:#222; padding:10px; border-radius:6px; margin-bottom:10px;">
+                    <label style="color:var(--color-primary)">Efeito (Restaura):</label>
+                    <select id="input-criar-efeito">
+                        <option value="vida">Vida</option>
+                        <option value="mana">Mana</option>
+                        <option value="foco">Foco</option>
+                    </select>
+                    <label style="color:var(--color-primary)">Quantidade:</label>
+                    <input type="number" id="input-criar-valor" value="10">
+                </div>
+
+                <input type="number" id="input-criar-peso" value="0.0" step="0.1">
+                <label class="magic-check" style="display:flex; align-items:center; gap:10px; margin-top:10px; cursor:pointer;"><input type="checkbox" id="input-criar-magico" style="width:auto;"><span style="color:#a855f7; font-weight:bold;">É um Item Mágico? ✨</span></label>
+                <div class="modal-actions" style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;"><button class="btn-confirm" style="background:#10b981; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="criarItemNoBanco()">Salvar no Banco & Pegar</button></div>
+            </div>
+            <div id="aba-buscar" class="tab-content modal-body" style="display:none;">
+                <input type="text" id="input-buscar-termo" placeholder="Digite para pesquisar..." onkeyup="buscarItensNoBanco()">
+                <div class="db-lista" id="lista-banco-itens" style="margin-top:10px; max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:5px;"><div style="color:#555; text-align:center;">Resultados aparecerão aqui...</div></div>
+            </div>
+        </div>
+    </div>
     <div id="saving-indicator" class="saving-indicator">Salvando alterações...</div>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
