@@ -1331,6 +1331,16 @@ function renderizarGrimorio(classe, saldoMagia) {
 function recalcularPontosGastosMagia() {
     return magiasAprendidas.size;
 }
+function sincronizarMagiasAprendidas() {
+    magiasAprendidas.clear();
+
+    magiasSelecionadas.forEach(id => {
+        const magia = encontrarMagiaPorId(id);
+        if (magia && !magia.fromTome) {
+            magiasAprendidas.add(id);
+        }
+    });
+}
 
 // --- ATUALIZAÇÃO GERAL ---
 function atualizarTudo() {
@@ -1719,6 +1729,7 @@ async function carregarFicha() {
         if (d.magias) {
             magiasSelecionadas = new Set(d.magias);
             pontosGastosMagia = d.magias.length;
+            
         }  
         if (d.afinidade) {
             // d.afinidade é uma string ID (ex: 'af_reforco')
@@ -1751,6 +1762,8 @@ async function carregarFicha() {
             inventario = d.inventario;
             renderizarInventario()
         }
+        sincronizarMagiasAprendidas();
+
         atualizarTudo();
         
 
@@ -1760,7 +1773,7 @@ async function carregarFicha() {
             document.getElementById('foco-atual').value = d.statusAtuais.foco;
         }
 
-
+        
         atualizarBarras();
 
         console.log("Ficha carregada:", data.nome);
