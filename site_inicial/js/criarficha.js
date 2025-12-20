@@ -358,6 +358,7 @@ let pontosGastosMagia = 0; // NOVO ESTADO
 let idFichaAtual = null;
 let inventario = []; // [{nome: "Espada", peso: 2}]
 let ressonanciaAtiva = false;
+const magiasAprendidas = new Set();
 
 // --- REALTIME & AUTO-SAVE ---
 let timerAutoSave;
@@ -504,14 +505,30 @@ function toggleModo() {
     atualizarTudo(); // Re-renderiza para limpar estados visuais
 }
 
+function encontrarMagiaPorId(id) {
+    // Varre todas as listas de magias
+    for (const categoria in dadosMagias) {
+        const encontrada = dadosMagias[categoria].find(m => m.id === id.trim());
+        if (encontrada) return encontrada;
+    }
+    return null; // Não achou
+}
+
 // 1. CONTROLE VISUAL DO MODAL
 function toggleCamposConsumivel() {
     const tipo = document.getElementById('input-criar-tipo').value;
+    const subtipo = document.getElementById('input-criar-subtipo').value
+    console.log(subtipo)
     
     // Esconde tudo primeiro
     document.getElementById('campos-consumivel').style.display = 'none';
     document.getElementById('campos-equipamento').style.display = 'none';
     document.getElementById('campos-armadura').style.display = 'none';
+
+    document.getElementById('campos-arma').style.display = 'none';
+    document.getElementById('campos-escudo').style.display = 'none';
+    document.getElementById('campos-cajado').style.display = 'none';
+    document.getElementById('campos-tomo').style.display = 'none';
 
     // Mostra o específico
     if (tipo === 'consumivel') {
@@ -519,6 +536,19 @@ function toggleCamposConsumivel() {
     } 
     else if (tipo === 'equipamento') {
         document.getElementById('campos-equipamento').style.display = 'block';
+
+        if (subtipo === 'arma') {
+            document.getElementById('campos-arma').style.display = 'block';
+        }
+        else if (subtipo === 'escudo') {
+            document.getElementById('campos-escudo').style.display = 'block';
+        }
+        else if (subtipo === 'cajado') {
+            document.getElementById('campos-cajado').style.display = 'block';
+        }
+        else if (subtipo === 'tomo') {
+            document.getElementById('campos-tomo').style.display = 'block';
+        }
     }
     else if (tipo === 'armadura') {
         document.getElementById('campos-armadura').style.display = 'block';
@@ -536,10 +566,13 @@ function fecharModalItem() {
     document.getElementById('input-criar-tipo').value = 'item';
     document.getElementById('input-criar-dano').value = ''; // Limpa dano
     document.getElementById('input-criar-descricao').value = ''; // Limpa descrição
+    document.getElementById('input-magias-tomo').value = ''; // Limpa magias
+    document.getElementById('input-criar-bloqueio').value = '0';
 
 
     document.getElementById('campos-consumivel').style.display = 'none';
     document.getElementById('campos-equipamento').style.display = 'none';
+    document.getElementById('campos-armadura').style.display = 'none';
 
 }
 
@@ -574,8 +607,20 @@ async function criarItemNoBanco() {
     else if (tipo === 'equipamento') {
         empunhadura = document.getElementById('input-criar-empunhadura').value;
         subtipo = document.getElementById('input-criar-subtipo').value;
-        dano = document.getElementById('input-criar-dano').value;
-
+            // Captura específica baseada no subtipo
+            if (subtipo === 'arma') {
+                dano = document.getElementById('input-dano-arma').value;
+                efeito = 'ataque';
+            } else if (subtipo === 'escudo') {
+                valor = parseInt(document.getElementById('input-bloqueio-escudo').value) || 0;
+                efeito = 'bloqueio';
+            } else if (subtipo === 'cajado') {
+                dano = document.getElementById('input-dano-cajado').value;
+                // Pode adicionar lógica extra aqui
+            } else if (subtipo === 'tomo') {
+                dano = document.getElementById('input-magias-tomo').value; 
+                efeito = 'tomo';
+            }
     }
     
     // LÓGICA PARA ARMADURA (NOVO)
@@ -655,6 +700,9 @@ function adicionarAoInventario(itemDados) {
     atualizarBarras();
     atualizarSlotsVisuais();
     autoSalvarStatus();
+    atualizarTudo()
+    calcularStatus(parseInt(elNivel.value)||1); 
+
 }
 
 // --- CONSUMIR ITEM (NOVO) ---
@@ -743,8 +791,8 @@ function renderizarInventario() {
         // Texto do tipo
         let textoTipo = tipoSeguro.toUpperCase();
         if (item.subtipo) textoTipo += ` | ${item.subtipo.toUpperCase()}`;
-        else if (item.empunhadura)
-            textoTipo += ` (${item.empunhadura === '2maos' ? '2H' : '1H'})`;
+        if (item.empunhadura && item.subtipo)
+            textoTipo += ` ${item.empunhadura === '2maos' ? '| 2H' : '| 1H'}`;
 
         let btnAcao = '';
         if (item.descricao != null) { textoTipo += ` | ${item.descricao.toUpperCase()}`}
@@ -848,7 +896,7 @@ function toggleEquiparItem(index) {
         } else return alert("Não equipável.");
         item.equipado = true;
     }
-    renderizarInventario(); atualizarSlotsVisuais(); autoSalvarStatus();
+    renderizarInventario(); atualizarSlotsVisuais(); autoSalvarStatus(); atualizarTudo()
     // --- A CORREÇÃO MÁGICA ESTÁ AQUI ---
     // Recalcula os status (Bloqueio, Ataque) imediatamente após equipar/desequipar
     const nivelAtual = parseInt(document.getElementById('nivel').value) || 1;
@@ -1022,19 +1070,18 @@ function calcularStatus(nivel) {
     // --- LÓGICA DE DANO DA ARMA ---
     let danoDisplay = "d4"; // Padrão
     
-    // Procura arma na mão direita
     const mainWeapon = inventario.find(i => i.equipado && i.slotId === 'mainhand' && i.tipo === 'equipamento');
-    // Procura arma na mão esquerda (se houver dual wield)
     const offWeapon = inventario.find(i => i.equipado && i.slotId === 'offhand' && i.tipo === 'equipamento');
+    
+    // Verifica se é Tomo ou Escudo para IGNORAR o campo dano no status visual
+    const ignoraDano = ['tomo', 'escudo'];
 
-    if (mainWeapon && mainWeapon.dano) {
+    if (mainWeapon && mainWeapon.dano && !ignoraDano.includes(mainWeapon.subtipo)) {
         danoDisplay = mainWeapon.dano;
-        // Se tiver duas armas, mostra as duas (ex: "1d8 / 1d6")
-        if (offWeapon && offWeapon.dano) {
+        if (offWeapon && offWeapon.dano && !ignoraDano.includes(offWeapon.subtipo)) {
             danoDisplay += ` / ${offWeapon.dano}`;
         }
-    } else if (offWeapon && offWeapon.dano) {
-            // Caso raro: só tem arma na esquerda
+    } else if (offWeapon && offWeapon.dano && !ignoraDano.includes(offWeapon.subtipo)) {
             danoDisplay = offWeapon.dano;
     }
 
@@ -1104,6 +1151,37 @@ function renderizarGrimorio(classe, saldoMagia) {
     else lista = dadosMagias.genericas;
 
     if (!lista) return;
+    // --- LIMPA MAGIAS DE TOMOS ANTIGOS ---
+    lista = lista.filter(m => !m.fromTome);
+
+    // Remove também do set de selecionadas
+    magiasSelecionadas.forEach(id => {
+        const magia = encontrarMagiaPorId(id);
+        if (magia && magia.fromTome) {
+            magiasSelecionadas.delete(id);
+            magiasAprendidas.delete(magia.id);
+        }
+    });
+
+    // 2. Procura Tomos Equipados e Adiciona Magias Extras
+    inventario.forEach(item => {
+        if (item.equipado && item.tipo === 'equipamento' && item.subtipo === 'tomo' && item.dano) {
+            // O campo 'dano' guarda os IDs separados por vírgula (ex: "mag_1, fim_2")
+            const idsExtras = item.dano.split(',').map(s => s.trim());
+            
+            idsExtras.forEach(id => {
+                const magiaExtra = encontrarMagiaPorId(id);
+                if (magiaExtra) {
+                    // Cria uma cópia para não alterar o original e adiciona flag
+                    const magiaClone = { ...magiaExtra, fromTome: true, tomeName: item.nome };
+                    // Evita duplicatas se já tiver na lista (opcional)
+                    if (!lista.find(m => m.id === magiaClone.id)) {
+                        lista.push(magiaClone);
+                    }
+                }
+            });
+        }
+    });
 
     // Contexto para cálculo de custo
     const nivel = parseInt(elNivel.value) || 1;
@@ -1119,11 +1197,28 @@ function renderizarGrimorio(classe, saldoMagia) {
         const btn = document.createElement('div');
         btn.className = 'btn-magia';
 
+        // Estilo especial para magias de Tomo
+        if (magia.fromTome) {
+            btn.style.borderColor = 'var(--color-gold)';
+            btn.innerHTML = `<span style="font-size:0.7rem; color:var(--color-gold); position:absolute; top:2px; left:5px;">📖 ${magia.tomeName}</span>`;
+        }
+
         if (magia.tier > maxTierMagia) {
             btn.classList.add('bloqueado');
             btn.textContent = `🔒 ${magia.nome} (Req. Arcano ${magia.tier * 5})`;
         } else {
-            if (magiasSelecionadas.has(magia.id)) {
+            if (magia.fromTome) {
+                // Magias de Tomo já começam selecionadas
+                btn.classList.add('selecionado');
+                btn.dataset.state = 2;
+                magiasSelecionadas.add(magia.id);
+
+                btn.innerHTML =
+                    `<span style="font-size:0.7rem; color:var(--color-gold); position:absolute; top:2px; left:5px;">
+                        📖 ${magia.tomeName}
+                    </span>` + magia.nome;
+
+            } else if (magiasSelecionadas.has(magia.id)) {
                 btn.classList.add('selecionado');
                 btn.textContent = magia.nome;
                 btn.dataset.state = 2;
@@ -1204,29 +1299,37 @@ function renderizarGrimorio(classe, saldoMagia) {
                     btn.innerHTML = magia.desc; // Permite HTML
                     btn.classList.add('info');
                 } else if (st === 1) {
-                    if (saldoMagia > 0) {
-                        btn.dataset.state = 2;
-                        btn.textContent = magia.nome;
-                        btn.classList.add('selecionado');
-                        magiasSelecionadas.add(magia.id);
-                        pontosGastosMagia++;
-                        atualizarTudo();
+                    if (magia.fromTome) {
+                        btn.dataset.state = 2; btn.innerHTML = (magia.fromTome ? `<span style="font-size:0.7rem; color:var(--color-gold); position:absolute; top:2px; left:5px;">📖 ${magia.tomeName}</span>` : '') + magia.nome; btn.classList.add('selecionado'); magiasSelecionadas.add(magia.id); return;
                     } else {
-                        alert("Sem pontos de magia suficientes!");
-                        btn.dataset.state = 0;
-                        btn.textContent = magia.nome;
-                    }
+                         if (saldoMagia > 0) {
+                            btn.dataset.state = 2;
+                            btn.textContent = magia.nome;
+                            btn.classList.add('selecionado');
+                            magiasSelecionadas.add(magia.id);
+                            magiasAprendidas.add(magia.id);
+                            atualizarTudo();
+                        } else {
+                            alert("Sem pontos de magia suficientes!");
+                            btn.dataset.state = 0;
+                            btn.textContent = magia.nome;
+                        }
+                    }       
                 } else {
                     btn.dataset.state = 0;
                     btn.textContent = magia.nome;
                     magiasSelecionadas.delete(magia.id);
-                    pontosGastosMagia--;
+                    magiasAprendidas.delete(magia.id);
                     atualizarTudo();
                 }
             };
         }
         container.appendChild(btn);
     });
+}
+
+function recalcularPontosGastosMagia() {
+    return magiasAprendidas.size;
 }
 
 // --- ATUALIZAÇÃO GERAL ---
@@ -1267,11 +1370,12 @@ function atualizarTudo() {
         afinidadeEscolhida = null;
     }
 
-    let pontosTotaisMagia = Math.floor(nivel / 2);
+    let pontosTotaisMagia = Math.round(nivel / 3);
 
     if (afinidadeEscolhida && afinidadeEscolhida.id === 'afin-arc') {
-        pontosTotaisMagia = Math.floor(nivel / 2) + intelecto;
+        pontosTotaisMagia = Math.round(nivel / 3) + intelecto;
     }
+    pontosGastosMagia = recalcularPontosGastosMagia();
     const saldoMagia = pontosTotaisMagia - pontosGastosMagia;
     
 

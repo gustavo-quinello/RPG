@@ -278,16 +278,34 @@
 
                     <!-- NOVO: SUBTIPO AGORA SERÁ ADICIONADO AQUI NO MODAL -->
                     <label style="color:var(--color-gold); margin-top:5px;">Categoria:</label>
-                    <select id="input-criar-subtipo">
+                    <select id="input-criar-subtipo" onchange="toggleCamposConsumivel()">                 
                         <option value="arma">Arma</option>
                         <option value="escudo">Escudo</option>
                         <option value="cajado">Cajado</option>
                         <option value="tomo">Tomo</option>
                     </select>
+                    <!-- DIVS ESPECÍFICAS PARA CADA SUBTIPO -->
+                    <div id="campos-arma" style="display:none; margin-top:10px;">
+                        <label style="color:var(--color-damage)">Dano (Arma):</label>
+                        <input type="text" id="input-dano-arma" placeholder="Ex: 1d8">
+                    </div>
 
-                    <!-- NOVO: CAMPO DE DANO -->
-                    <label style="color:var(--color-damage); margin-top:5px;">Dano (Ex: 1d8):</label>
-                    <input type="text" id="input-criar-dano" placeholder="1d4">
+                    <div id="campos-escudo" style="display:none; margin-top:10px;">
+                        <label style="color:var(--color-secondary)">Bloqueio Bônus:</label>
+                        <input type="number" id="input-bloqueio-escudo" value="0">
+                    </div>
+
+                    <div id="campos-cajado" style="display:none; margin-top:10px;">
+                        <label style="color:var(--color-damage)">Dano Físico:</label>
+                        <input type="text" id="input-dano-cajado" placeholder="Ex: 1d6 + 2">
+                    </div>
+
+                    <!-- NOVO: CAMPO PARA TOMO -->
+                    <div id="campos-tomo" style="display:none; margin-top:10px;">
+                        <label style="color:var(--color-mana); margin-top:5px;">IDs das Magias (separados por vírgula):</label>
+                        <textarea id="input-magias-tomo" placeholder="ex: mag_1, fim_2" style="width:100%; padding:10px; background-color:#27272a; border:1px solid #3f3f46; color:white; border-radius:6px;"></textarea>
+                    </div>
+
                 </div>
 
                 <!-- 2. CAMPOS DE ARMADURA (NOVO!) -->
