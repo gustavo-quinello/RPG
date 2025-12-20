@@ -215,21 +215,30 @@
         <div class="status-direita">
             <div class="status-grid">
                 <div class="card-status ataque"><span class="label">Ataque</span><span class="valor" id="stat-ataque">+0</span></div>
+                <div class="card-status dano"><span class="label">Dano</span><span class="valor" id="stat-dano">d4</span></div>
                 <div class="card-status"><span class="label">Bloqueio</span><span class="valor" id="stat-bloqueio">0</span></div>
                 <div class="card-status"><span class="label">Esquiva</span><span class="valor" id="stat-esquiva">0</span></div>
                 <div class="card-status"><span class="label">Carga</span><span class="valor"><span id="peso-atual" style="color:var(--text-muted)">0</span> / <span id="stat-carga">0</span></span></div>
                 <div class="card-status"><span class="label">Movimento</span><span class="valor" id="stat-movimento">9m</span></div>
             </div>
 
-            <!-- NOVO: INVENTÁRIO -->
+            <!-- SLOTS DE EQUIPAMENTO -->
+            <div class="equip-grid jogo-apenas">
+                <div class="equip-slot" id="slot-mainhand" onclick="toggleEquiparSlot('mainhand')"><div class="slot-label">Mão D.</div><div class="slot-icon"><span id="icone-slot">⚔️</span></div><div class="slot-item">Vazio</div></div>
+                <div class="equip-slot" id="slot-offhand" onclick="toggleEquiparSlot('offhand')"><div class="slot-label">Mão E.</div><div class="slot-icon">🛡️</div><div class="slot-item">Vazio</div></div>
+                <div class="equip-slot" id="slot-armor" onclick="toggleEquiparSlot('armor')"><div class="slot-label">Corpo</div><div class="slot-icon">👕</div><div class="slot-item">Vazio</div></div>
+                <div class="equip-slot" id="slot-acc1" onclick="toggleEquiparSlot('acc1')"><div class="slot-label">Acessório</div><div class="slot-icon">💍</div><div class="slot-item">Vazio</div></div>
+                <div class="equip-slot" id="slot-acc2" onclick="toggleEquiparSlot('acc2')"><div class="slot-label">Acessório</div><div class="slot-icon">📿</div><div class="slot-item">Vazio</div></div>
+            </div>
+
+            <!-- INVENTÁRIO -->
             <div class="painel-inventario jogo-apenas" style="flex-grow:1;">
                 <div class="inv-header">
                     <span style="font-weight:bold; color:white;">INVENTÁRIO</span>
+                    <span class="magic-slots" id="magic-counter">✨ 0/3 Sintonizados</span>
                 </div>
-                <div class="inv-lista" id="lista-inventario">
-                    <!-- Itens via JS -->
-                </div>
-                <button class="inv-add-btn" onclick="adicionarItem()">+ Adicionar Item</button>
+                <div class="inv-lista" id="lista-inventario"></div>
+                <button class="inv-add-btn" onclick="abrirModalItem()">+ ADICIONAR ITEM</button>
             </div>
         </div>
     </div>
@@ -239,6 +248,104 @@
         <button class="btn-criar-ficha" onclick="salvarFicha()">CRIAR / ATUALIZAR FICHA</button>
     </div>
 
+    <!-- MODAL -->
+    <div class="modal-overlay" id="modal-item">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Biblioteca de Itens</h2>
+                <div class="modal-tabs"><button class="tab-btn active" onclick="mudarAba('criar')">Criar Novo</button><button class="tab-btn" onclick="mudarAba('buscar')">Buscar Existente</button></div>
+                <button class="tab-btn" style="margin-left: auto; color: #ef4444;" onclick="fecharModalItem()">✕</button>
+            </div>
+            <div id="aba-criar" class="tab-content active modal-body">
+                <label>Nome do Item</label><input type="text" id="input-criar-nome" placeholder="Ex: Espada Longa">
+                <label>Tipo</label>
+                <!-- NOVA OPÇÃO CONSUMIVEL -->
+                <select id="input-criar-tipo" onchange="toggleCamposConsumivel()">
+                    <option value="item">📦 Item Comum</option>
+                    <option value="equipamento">⚔️ Equipamento</option>
+                    <option value="armadura">👕 Armadura</option>
+                    <option value="acessorio">💍 Acessório</option>
+                    <option value="consumivel">🧪 Consumível</option>
+                </select>
+                
+                <!-- CONTAINER: CAMPOS ESPECIAIS -->
+                <div id="campos-equipamento" style="display:none; background:#222; padding:10px; border-radius:6px; margin-bottom:10px;">
+                    <label style="color:var(--color-gold)">Empunhadura:</label>
+                    <select id="input-criar-empunhadura">
+                        <option value="1mao">1 Mão</option>
+                        <option value="2maos">2 Mãos (Ocupa as duas)</option>
+                    </select>
+
+                    <!-- NOVO: SUBTIPO AGORA SERÁ ADICIONADO AQUI NO MODAL -->
+                    <label style="color:var(--color-gold); margin-top:5px;">Categoria:</label>
+                    <select id="input-criar-subtipo" onchange="toggleCamposConsumivel()">                 
+                        <option value="arma">Arma</option>
+                        <option value="escudo">Escudo</option>
+                        <option value="cajado">Cajado</option>
+                        <option value="tomo">Tomo</option>
+                    </select>
+                    <!-- DIVS ESPECÍFICAS PARA CADA SUBTIPO -->
+                    <div id="campos-arma" style="display:none; margin-top:10px;">
+                        <label style="color:var(--color-damage)">Dano (Arma):</label>
+                        <input type="text" id="input-dano-arma" placeholder="Ex: 1d8">
+                    </div>
+
+                    <div id="campos-escudo" style="display:none; margin-top:10px;">
+                        <label style="color:var(--color-secondary)">Bloqueio Bônus:</label>
+                        <input type="number" id="input-bloqueio-escudo" value="0">
+                    </div>
+
+                    <div id="campos-cajado" style="display:none; margin-top:10px;">
+                        <label style="color:var(--color-damage)">Dano Físico:</label>
+                        <input type="text" id="input-dano-cajado" placeholder="Ex: 1d6 + 2">
+                    </div>
+
+                    <!-- NOVO: CAMPO PARA TOMO -->
+                    <div id="campos-tomo" style="display:none; margin-top:10px;">
+                        <label style="color:var(--color-mana); margin-top:5px;">IDs das Magias (separados por vírgula):</label>
+                        <textarea id="input-magias-tomo" placeholder="ex: mag_1, fim_2" style="width:100%; padding:10px; background-color:#27272a; border:1px solid #3f3f46; color:white; border-radius:6px;"></textarea>
+                    </div>
+
+                </div>
+
+                <!-- 2. CAMPOS DE ARMADURA (NOVO!) -->
+                <div id="campos-armadura" style="display:none; background:#222; padding:10px; border-radius:6px; margin-bottom:10px;">
+                    <label style="color:var(--color-primary)">Bônus de Bloqueio:</label>
+                    <input type="number" id="input-criar-bloqueio" value="0">
+                    
+                    <label style="color:var(--color-primary); margin-top:5px;">Categoria:</label>
+                    <select id="input-criar-tipo-armadura">
+                         <option value="leve">Leve</option>
+                         <option value="pesada">Pesada</option>
+                    </select>
+                </div>
+
+                <!-- CAMPOS EXTRAS PARA CONSUMÍVEL -->
+                <div id="campos-consumivel" style="display:none; background:#222; padding:10px; border-radius:6px; margin-bottom:10px;">
+                    <label style="color:var(--color-primary)">Efeito (Restaura):</label>
+                    <select id="input-criar-efeito">
+                        <option value="vida">Vida</option>
+                        <option value="mana">Mana</option>
+                        <option value="foco">Foco</option>
+                    </select>
+                    <label style="color:var(--color-primary)">Quantidade:</label>
+                    <input type="number" id="input-criar-valor" value="10">
+                </div>
+
+                <!-- DESCRIÇÃO NOVO -->
+                <label>Descrição</label>
+                <textarea id="input-criar-descricao" placeholder="Detalhes do item..." rows="2" style="width: 100%; padding: 10px; background-color: #27272a; border: 1px solid #3f3f46; color: white; border-radius: 6px; margin-bottom: 10px; resize: vertical;"></textarea>
+
+                <input type="number" id="input-criar-peso" value="0.0" step="0.1">
+                <label class="magic-check" style="display:flex; align-items:center; gap:10px; margin-top:10px; cursor:pointer;"><input type="checkbox" id="input-criar-magico" style="width:auto;"><span style="color:#a855f7; font-weight:bold;">É um Item Mágico? ✨</span></label>
+                <div class="modal-actions" style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;"><button class="btn-confirm" style="background:#10b981; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="criarItemNoBanco()">Salvar no Banco & Pegar</button></div>
+            </div>
+            <div id="aba-buscar" class="tab-content modal-body" style="display:none;">
+                <input type="text" id="input-buscar-termo" placeholder="Digite para pesquisar..." onkeyup="buscarItensNoBanco()">
+                <div class="db-lista" id="lista-banco-itens" style="margin-top:10px; max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:5px;"><div style="color:#555; text-align:center;">Resultados aparecerão aqui...</div></div>
+            </div>
+        </div>
+    </div>
     <div id="saving-indicator" class="saving-indicator">Salvando alterações...</div>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

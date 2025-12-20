@@ -358,6 +358,7 @@ let pontosGastosMagia = 0; // NOVO ESTADO
 let idFichaAtual = null;
 let inventario = []; // [{nome: "Espada", peso: 2}]
 let ressonanciaAtiva = false;
+const magiasAprendidas = new Set();
 
 // --- REALTIME & AUTO-SAVE ---
 let timerAutoSave;
@@ -504,22 +505,436 @@ function toggleModo() {
     atualizarTudo(); // Re-renderiza para limpar estados visuais
 }
 
-// --- INVENTÁRIO ---
-function adicionarItem() {
-    const nome = prompt("Nome do Item:");
-    if(!nome) return;
-    const peso = parseFloat(prompt("Peso do Item (kg):")) || 0;
-    inventario.push({nome, peso});
-    renderizarInventario();
-    atualizarBarras(); // Para recalcular peso total
-    autoSalvarStatus();
+function encontrarMagiaPorId(id) {
+    // Varre todas as listas de magias
+    for (const categoria in dadosMagias) {
+        const encontrada = dadosMagias[categoria].find(m => m.id === id.trim());
+        if (encontrada) return encontrada;
+    }
+    return null; // Não achou
 }
 
-function removerItem(index) {
+// 1. CONTROLE VISUAL DO MODAL
+function toggleCamposConsumivel() {
+    const tipo = document.getElementById('input-criar-tipo').value;
+    const subtipo = document.getElementById('input-criar-subtipo').value
+    console.log(subtipo)
+    
+    // Esconde tudo primeiro
+    document.getElementById('campos-consumivel').style.display = 'none';
+    document.getElementById('campos-equipamento').style.display = 'none';
+    document.getElementById('campos-armadura').style.display = 'none';
+
+    document.getElementById('campos-arma').style.display = 'none';
+    document.getElementById('campos-escudo').style.display = 'none';
+    document.getElementById('campos-cajado').style.display = 'none';
+    document.getElementById('campos-tomo').style.display = 'none';
+
+    // Mostra o específico
+    if (tipo === 'consumivel') {
+        document.getElementById('campos-consumivel').style.display = 'block';
+    } 
+    else if (tipo === 'equipamento') {
+        document.getElementById('campos-equipamento').style.display = 'block';
+
+        if (subtipo === 'arma') {
+            document.getElementById('campos-arma').style.display = 'block';
+        }
+        else if (subtipo === 'escudo') {
+            document.getElementById('campos-escudo').style.display = 'block';
+        }
+        else if (subtipo === 'cajado') {
+            document.getElementById('campos-cajado').style.display = 'block';
+        }
+        else if (subtipo === 'tomo') {
+            document.getElementById('campos-tomo').style.display = 'block';
+        }
+    }
+    else if (tipo === 'armadura') {
+        document.getElementById('campos-armadura').style.display = 'block';
+    }
+}
+
+// --- LÓGICA DE INVENTÁRIO (ATUALIZADA V36) ---
+function abrirModalItem() { document.getElementById('modal-item').style.display = 'flex'; mudarAba('criar'); }
+function fecharModalItem() { 
+    document.getElementById('modal-item').style.display = 'none';
+    // Limpa campos
+    document.getElementById('input-criar-nome').value = '';
+    document.getElementById('input-criar-peso').value = '0.0';
+    document.getElementById('input-criar-magico').checked = false;
+    document.getElementById('input-criar-tipo').value = 'item';
+    document.getElementById('input-criar-dano').value = ''; // Limpa dano
+    document.getElementById('input-criar-descricao').value = ''; // Limpa descrição
+    document.getElementById('input-magias-tomo').value = ''; // Limpa magias
+    document.getElementById('input-criar-bloqueio').value = '0';
+
+
+    document.getElementById('campos-consumivel').style.display = 'none';
+    document.getElementById('campos-equipamento').style.display = 'none';
+    document.getElementById('campos-armadura').style.display = 'none';
+
+}
+
+function mudarAba(aba) {
+    document.querySelectorAll('.tab-content').forEach(el=>el.style.display='none');
+    document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+    document.getElementById(`aba-${aba}`).style.display='flex';
+    if(aba==='buscar') buscarItensNoBanco();
+}
+
+// 2. CRIAÇÃO DO ITEM (SALVANDO BLOQUEIO)
+async function criarItemNoBanco() {
+    const nome = document.getElementById('input-criar-nome').value;
+    const tipo = document.getElementById('input-criar-tipo').value;
+    const peso = parseFloat(document.getElementById('input-criar-peso').value) || 0;
+    const magico = document.getElementById('input-criar-magico').checked;
+    const descricao = document.getElementById('input-criar-descricao').value; // Captura Descrição
+
+    
+    let efeito = null; 
+    let valor = 0; 
+    let empunhadura = null; 
+    let subtipo = null;
+
+    // Lógica para Consumível
+    if (tipo === 'consumivel') {
+        efeito = document.getElementById('input-criar-efeito').value; // 'vida', 'mana', etc.
+        valor = parseInt(document.getElementById('input-criar-valor').value) || 0;
+    }
+    
+    // Lógica para Equipamento (Arma)
+    else if (tipo === 'equipamento') {
+        empunhadura = document.getElementById('input-criar-empunhadura').value;
+        subtipo = document.getElementById('input-criar-subtipo').value;
+            // Captura específica baseada no subtipo
+            if (subtipo === 'arma') {
+                dano = document.getElementById('input-dano-arma').value;
+                efeito = 'ataque';
+            } else if (subtipo === 'escudo') {
+                valor = parseInt(document.getElementById('input-bloqueio-escudo').value) || 0;
+                efeito = 'bloqueio';
+            } else if (subtipo === 'cajado') {
+                dano = document.getElementById('input-dano-cajado').value;
+                // Pode adicionar lógica extra aqui
+            } else if (subtipo === 'tomo') {
+                dano = document.getElementById('input-magias-tomo').value; 
+                efeito = 'tomo';
+            }
+    }
+    
+    // LÓGICA PARA ARMADURA (NOVO)
+    else if (tipo === 'armadura') {
+        // Salvamos o Bônus de Bloqueio na coluna 'valor'
+        valor = parseInt(document.getElementById('input-criar-bloqueio').value) || 0;
+        // Salvamos Leve/Pesada na coluna 'empunhadura' (reaproveitamento) ou 'subtipo'
+        empunhadura = document.getElementById('input-criar-tipo-armadura').value; 
+        efeito = 'bloqueio'; // Define que afeta bloqueio
+    }
+
+    if(!nome) return alert("Dê um nome ao item!");
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('itens')
+            .insert([{ nome, tipo, peso, magico, efeito, valor, empunhadura, subtipo, dano, descricao }])
+            .select();
+        
+        if (error) {
+            console.warn("Aviso Banco:", error.message);
+            // Fallback Local
+            adicionarAoInventario({ id: 'local_'+Date.now(), nome, tipo, peso, magico, efeito, valor, empunhadura, subtipo, dano, descricao });
+        } else if (data && data.length > 0) {
+            adicionarAoInventario(data[0]);
+        }
+        
+        alert("Item Criado!");
+        fecharModalItem();
+        
+        // Reset dos campos específicos
+        document.getElementById('input-criar-bloqueio').value = '0';
+        
+    } catch(e) { console.error(e); }
+}
+
+async function buscarItensNoBanco() {
+    const termo = document.getElementById('input-buscar-termo').value;
+    const listaDiv = document.getElementById('lista-banco-itens');
+    let query = supabaseClient.from('itens').select('*').limit(10);
+    if(termo) query = query.ilike('nome', `%${termo}%`);
+    const {data} = await query;
+    listaDiv.innerHTML = '';
+    if(data) {
+        data.forEach(item => {
+            const div = document.createElement('div'); div.className = 'db-item';
+            div.innerHTML = `<div><div style="font-weight:bold; color:${item.magico?'#a855f7':'white'}">${item.nome}</div><div style="font-size:0.8rem; color:#888;">${item.tipo.toUpperCase()} | ${item.peso}kg</div></div><button class="btn-pegar" onclick='adicionarAoInventario(${JSON.stringify(item)})'>Pegar</button>`;
+            listaDiv.appendChild(div);
+        });
+    }
+}
+
+function adicionarAoInventario(itemDados) {
+    const itemLocal = {
+        id_origem: itemDados.id,
+        instancia_id: crypto.randomUUID(),
+
+        nome: itemDados.nome,
+        tipo: itemDados.tipo,
+        peso: itemDados.peso,
+        isMagico: itemDados.magico,
+        dano: itemDados.dano,
+        empunhadura: itemDados.empunhadura,
+        subtipo: itemDados.subtipo,
+        descricao: itemDados.descricao,
+
+        // 🔽 ESTAVA FALTANDO
+        efeito: itemDados.efeito ?? null,
+        valor: itemDados.valor ?? 0,
+
+        equipado: false,
+        slotId: null
+    };
+
+    inventario.push(itemLocal);
+    renderizarInventario();
+    atualizarBarras();
+    atualizarSlotsVisuais();
+    autoSalvarStatus();
+    atualizarTudo()
+    calcularStatus(parseInt(elNivel.value)||1); 
+
+}
+
+// --- CONSUMIR ITEM (NOVO) ---
+function consumirItem(index) {
+    const item = inventario[index];
+    
+    // Diagnóstico
+    console.log("Tentando usar:", item); 
+
+    if (!confirm(`Deseja usar ${item.nome}?`)) return;
+
+    // Verifica se os dados existem
+    if (!item.efeito) {
+        alert(`ERRO: O item '${item.nome}' não tem um Efeito configurado. (efeito: ${item.efeito})`);
+        return;
+    }
+    if (!item.valor) {
+        alert(`ERRO: O item '${item.nome}' não tem um Valor de recuperação. (valor: ${item.valor})`);
+        return;
+    }
+
+    const val = parseInt(item.valor);
+
+    // Lógica de Aplicação
+    if (item.efeito === 'vida') {
+        const max = parseInt(document.getElementById('stat-vida').textContent) || 100;
+        let atual = parseInt(document.getElementById('vida-atual').value) || 0;
+        document.getElementById('vida-atual').value = Math.min(max, atual + val);
+        alert(`Recuperou ${val} de Vida!`);
+    } else if (item.efeito === 'mana') {
+        const max = parseInt(document.getElementById('stat-mana').textContent) || 50;
+        let atual = parseInt(document.getElementById('mana-atual').value) || 0;
+        document.getElementById('mana-atual').value = Math.min(max, atual + val);
+        alert(`Recuperou ${val} de Mana!`);
+    } else if (item.efeito === 'foco') {
+        const max = parseInt(document.getElementById('stat-foco').textContent) || 0;
+        let atual = parseInt(document.getElementById('foco-atual').value) || 0;
+        document.getElementById('foco-atual').value = Math.min(max, atual + val);
+        alert(`Recuperou ${val} de Foco!`);
+    } else {
+        alert(`Efeito desconhecido: ${item.efeito}`);
+        return;
+    }
+
+    // Sucesso: Remove e Salva
     inventario.splice(index, 1);
     renderizarInventario();
     atualizarBarras();
     autoSalvarStatus();
+}
+function removerItem(index) {
+    if(confirm("Remover?")) { inventario.splice(index, 1); renderizarInventario(); atualizarBarras(); atualizarSlotsVisuais(); autoSalvarStatus(); }
+}
+
+function renderizarInventario() {
+    const lista = document.getElementById('lista-inventario');
+    lista.innerHTML = '';
+
+    const icones = {
+        item: '📦',
+        equipamento: '⚔️',
+        armadura: '👕',
+        acessorio: '💍',
+        consumivel: '🧪'
+    };
+
+    let pesoTotal = 0;
+
+    inventario.forEach((item, index) => {
+        pesoTotal += (item.peso || 0);
+
+        const div = document.createElement('div');
+        div.className = 'inv-item';
+
+        const tipoSeguro = item.tipo || 'item';
+
+        // 🔹 Define ícone do item (SEM alterar o objeto base)
+        let iconeItem = icones[tipoSeguro] || '📦';
+
+        if (tipoSeguro === 'equipamento') {
+            if (item.subtipo === 'escudo') iconeItem = '🛡️';
+            else if (item.subtipo === 'tomo') iconeItem = '📖';
+            else if (item.subtipo === 'cajado') iconeItem = '🪄';
+        }
+
+        // Texto do tipo
+        let textoTipo = tipoSeguro.toUpperCase();
+        if (item.subtipo) textoTipo += ` | ${item.subtipo.toUpperCase()}`;
+        if (item.empunhadura && item.subtipo)
+            textoTipo += ` ${item.empunhadura === '2maos' ? '| 2H' : '| 1H'}`;
+
+        let btnAcao = '';
+        if (item.descricao != null) { textoTipo += ` | ${item.descricao.toUpperCase()}`}
+        
+
+        // Botão EQUIPAR
+        if (['equipamento', 'armadura', 'acessorio'].includes(tipoSeguro)) {
+            const estilo = item.equipado
+                ? 'background:#eab308; color:black; font-weight:bold;'
+                : 'background:none; border:1px solid #555; color:#aaa;';
+            const texto = item.equipado ? 'ON' : 'EQ';
+
+            btnAcao = `<button style="cursor:pointer; border-radius:4px; padding:2px 6px; ${estilo}"
+                onclick="toggleEquiparItem(${index})">${texto}</button>`;
+        }
+        // Botão USAR
+        else if (tipoSeguro === 'consumivel') {
+            btnAcao = `<button class="btn-usar-item" onclick="consumirItem(${index})">USAR</button>`;
+        }
+
+        div.innerHTML = `
+            <div class="inv-icon" style="font-size:1.2rem; text-align:center;">${iconeItem}</div>
+            <div style="display:flex; flex-direction:column; justify-content:center;">
+                <span style="color:${item.isMagico ? '#a855f7' : '#ddd'}; font-weight:500;">
+                    ${item.nome || 'Item'}
+                </span>
+                <span style="font-size:0.7rem; color:#666;">
+                    ${textoTipo}
+                </span>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:center;">
+                ${btnAcao}
+            </div>
+            <span style="color:#aaa; text-align:right; font-size:0.8rem;">
+                ${(item.peso || 0)}kg
+            </span>
+            <button style="color:#ef4444; background:none; border:none; cursor:pointer; font-weight:bold;"
+                onclick="removerItem(${index})">✕</button>
+        `;
+
+        lista.appendChild(div);
+    });
+
+    const elPeso = document.getElementById('peso-atual');
+    const maxCarga = parseInt(document.getElementById('stat-carga').textContent) || 0;
+
+    if (elPeso) {
+        elPeso.textContent = pesoTotal.toFixed(1);
+        elPeso.style.color = pesoTotal > maxCarga ? 'red' : '#aaa';
+    }
+
+    atualizarSlotsVisuais();
+}
+
+function toggleEquiparItem(index) {
+    const item = inventario[index];
+    if(item.equipado) { item.equipado = false; item.slotId = null; }
+    else {
+        if(item.isMagico) {
+            const magicos = inventario.filter(i=>i.equipado && i.isMagico).length;
+            if(magicos >= 3) return alert("Limite de sintonização atingido!");
+        }
+        if(item.tipo === 'equipamento') { 
+            // SE FOR 2 MÃOS (Lógica Antiga: Ocupa Principal, Limpa Secundária)
+            if (item.empunhadura === '2maos') {
+                // Limpa Main Hand
+                inventario.forEach(i => { if(i.slotId==='mainhand') { i.equipado=false; i.slotId=null; }});
+                // Limpa Off Hand (Porque ocupa as duas)
+                inventario.forEach(i => { if(i.slotId==='offhand') { i.equipado=false; i.slotId=null; }});
+                
+                item.slotId = 'mainhand'; // Fica visualmente na principal
+            } 
+            // SE FOR 1 MÃO (Lógica Nova: Tenta Main, depois Off)
+            else {
+                const mainOcupado = inventario.find(i => i.slotId === 'mainhand');
+                // Mas cuidado: Se o que está na Main for 2 mãos, não posso equipar na Off
+                if (mainOcupado && mainOcupado.empunhadura === '2maos') {
+                        // Desequipa a de 2 mãos para liberar
+                        mainOcupado.equipado = false; mainOcupado.slotId = null;
+                        item.slotId = 'mainhand';
+                }
+                else if (!mainOcupado) {
+                    item.slotId = 'mainhand';
+                } else {
+                    const offOcupado = inventario.find(i => i.slotId === 'offhand');
+                    if (!offOcupado) {
+                        item.slotId = 'offhand';
+                    } else {
+                        // Substitui Offhand
+                        offOcupado.equipado = false; offOcupado.slotId = null;
+                        item.slotId = 'offhand';
+                    }
+                }
+            }
+        }
+        else if(item.tipo === 'armadura') { inventario.forEach(i=>{if(i.slotId==='armor'){i.equipado=false;i.slotId=null}}); item.slotId='armor'; }
+        else if(item.tipo === 'acessorio') {
+            const s1 = inventario.find(i=>i.slotId==='acc1');
+            if(!s1) item.slotId='acc1';
+            else { const s2=inventario.find(i=>i.slotId==='acc2'); if(s2){s2.equipado=false;s2.slotId=null} item.slotId='acc2'; }
+        } else return alert("Não equipável.");
+        item.equipado = true;
+    }
+    renderizarInventario(); atualizarSlotsVisuais(); autoSalvarStatus(); atualizarTudo()
+    // --- A CORREÇÃO MÁGICA ESTÁ AQUI ---
+    // Recalcula os status (Bloqueio, Ataque) imediatamente após equipar/desequipar
+    const nivelAtual = parseInt(document.getElementById('nivel').value) || 1;
+    calcularStatus(nivelAtual); 
+}
+
+function atualizarSlotsVisuais() {
+    // Mapeamento de Ícones Padrão
+    const defaultIcons = { mainhand: '✋', offhand: '🤚', armor: '👕', acc1: '💍', acc2: '📿' };
+
+    ['mainhand','offhand','armor','acc1','acc2'].forEach(sid => {
+        const el = document.getElementById(`slot-${sid}`);
+        if(el) { 
+            el.className = 'equip-slot'; 
+            el.querySelector('.slot-item').textContent = 'Vazio';
+            // Reseta ícone
+            el.querySelector('.slot-icon').textContent = defaultIcons[sid];
+        }
+    });
+    let countMagicos = 0;
+    inventario.forEach(item => {
+        if(item.equipado && item.slotId) {
+            const el = document.getElementById(`slot-${item.slotId}`);
+            if(el) {
+                el.classList.add('filled');
+                if(item.isMagico) { el.classList.add('magic'); countMagicos++; }
+                el.querySelector('.slot-item').textContent = item.nome;
+                
+                // Ícone Dinâmico no Slot
+                if(item.subtipo === 'escudo') el.querySelector('.slot-icon').textContent = '🛡️';
+                else if(item.subtipo === 'tomo') el.querySelector('.slot-icon').textContent = '📖';
+                else if(item.subtipo === 'cajado') el.querySelector('.slot-icon').textContent = '🪄';
+                else if(item.subtipo === 'arma') el.querySelector('.slot-icon').textContent = '⚔️';
+            }
+        }
+    });
+    const counter = document.getElementById('magic-counter');
+    if(counter) { counter.textContent = `✨ ${countMagicos}/3 Sintonizados`; counter.style.color = countMagicos > 3 ? 'red' : '#a855f7'; }
 }
 
 // --- ATUALIZA AS BARRAS VISUAIS ---
@@ -557,21 +972,6 @@ function atualizarBarras() {
     } else {
         document.getElementById('peso-atual').style.color = 'var(--text-muted)';
     }
-}
-
-function renderizarInventario() {
-    const lista = document.getElementById('lista-inventario');
-    lista.innerHTML = '';
-    inventario.forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = 'inv-item';
-        div.innerHTML = `
-            <span style="color:#ddd">${item.nome}</span>
-            <span style="color:#aaa; text-align:right">${item.peso}kg</span>
-            <button class="inv-btn-remove" onclick="removerItem(${index})">X</button>
-        `;
-        lista.appendChild(div);
-    });
 }
 
 // --- ELEMENTOS ---
@@ -613,6 +1013,7 @@ function calcularStatus(nivel) {
     let carga = 4 + forca * 2;
     let movimento = 2 + destreza + Math.floor(nivel * 0.2);
 
+
     let bloqueio = 0;
     if (gruposDeClasse.combatente.includes(classe)) bloqueio = forca * 3 + combat_points * 3 + 2 * mod_generico;
     else if (gruposDeClasse.arcanista.includes(classe)) bloqueio = forca * 3 + combat_points * 2 + 2 * mod_generico;
@@ -648,6 +1049,45 @@ function calcularStatus(nivel) {
         }
     }
 
+    let bonusBloqueioItens = 0;
+    
+    inventario.forEach(item => {
+        if (item.equipado) {
+            // Se for Armadura, pega o valor do bloqueio
+            if (item.tipo === 'armadura') {
+                bonusBloqueioItens += (parseInt(item.valor) || 0);
+            }
+            // Se for Escudo (que é um subtipo de equipamento), pode ter lógica futura aqui
+             if (item.subtipo === 'escudo') {
+                // Se escudo tiver valor de bloqueio salvo, soma aqui também
+                bonusBloqueioItens += (parseInt(item.valor) || 0);
+            }
+        }
+    });
+
+    bloqueio += bonusBloqueioItens;
+
+    // --- LÓGICA DE DANO DA ARMA ---
+    let danoDisplay = "d4"; // Padrão
+    
+    const mainWeapon = inventario.find(i => i.equipado && i.slotId === 'mainhand' && i.tipo === 'equipamento');
+    const offWeapon = inventario.find(i => i.equipado && i.slotId === 'offhand' && i.tipo === 'equipamento');
+    
+    // Verifica se é Tomo ou Escudo para IGNORAR o campo dano no status visual
+    const ignoraDano = ['tomo', 'escudo'];
+
+    if (mainWeapon && mainWeapon.dano && !ignoraDano.includes(mainWeapon.subtipo)) {
+        danoDisplay = mainWeapon.dano;
+        if (offWeapon && offWeapon.dano && !ignoraDano.includes(offWeapon.subtipo)) {
+            danoDisplay += ` / ${offWeapon.dano}`;
+        }
+    } else if (offWeapon && offWeapon.dano && !ignoraDano.includes(offWeapon.subtipo)) {
+            danoDisplay = offWeapon.dano;
+    }
+
+    // Atualiza na tela
+    document.getElementById('stat-bloqueio').textContent = bloqueio;
+
     // Atualiza HTML
     document.getElementById('stat-vida').textContent = vida;
     document.getElementById('stat-mana').textContent = mana;
@@ -657,6 +1097,34 @@ function calcularStatus(nivel) {
     document.getElementById('stat-bloqueio').textContent = bloqueio;
     document.getElementById('stat-esquiva').textContent = esquiva;
     document.getElementById('stat-ataque').textContent = '+' + ataqueBonus;
+
+    document.getElementById('stat-dano').textContent = danoDisplay;
+
+    atualizarBarras();
+}
+
+// Procure a função setupRealtime e adicione a chamada no final do bloco 'postgres_changes'
+function setupRealtime(id) {
+    const channel = supabaseClient
+        .channel('mudancas-ficha')
+        .on('postgres_changes', { /* ...config... */ }, payload => {
+            const d = payload.new.dados;
+            
+            // ... (códigos de statusAtuais e inventario) ...
+
+            if (d.inventario && JSON.stringify(d.inventario) !== JSON.stringify(inventario)) {
+                inventario = d.inventario;
+                renderizarInventario();
+                atualizarSlotsVisuais(); // Importante atualizar os slots visuais também
+                
+                // ADICIONE ISTO: Recalcula status se o inventário mudou remotamente
+                const nivel = parseInt(document.getElementById('nivel').value) || 1;
+                calcularStatus(nivel);
+            }
+            
+            atualizarBarras();
+        })
+        .subscribe();
 }
 
 // --- RENDERIZA O GRIMÓRIO (NOVA FUNÇÃO) ---
@@ -683,6 +1151,37 @@ function renderizarGrimorio(classe, saldoMagia) {
     else lista = dadosMagias.genericas;
 
     if (!lista) return;
+    // --- LIMPA MAGIAS DE TOMOS ANTIGOS ---
+    lista = lista.filter(m => !m.fromTome);
+
+    // Remove também do set de selecionadas
+    magiasSelecionadas.forEach(id => {
+        const magia = encontrarMagiaPorId(id);
+        if (magia && magia.fromTome) {
+            magiasSelecionadas.delete(id);
+            magiasAprendidas.delete(magia.id);
+        }
+    });
+
+    // 2. Procura Tomos Equipados e Adiciona Magias Extras
+    inventario.forEach(item => {
+        if (item.equipado && item.tipo === 'equipamento' && item.subtipo === 'tomo' && item.dano) {
+            // O campo 'dano' guarda os IDs separados por vírgula (ex: "mag_1, fim_2")
+            const idsExtras = item.dano.split(',').map(s => s.trim());
+            
+            idsExtras.forEach(id => {
+                const magiaExtra = encontrarMagiaPorId(id);
+                if (magiaExtra) {
+                    // Cria uma cópia para não alterar o original e adiciona flag
+                    const magiaClone = { ...magiaExtra, fromTome: true, tomeName: item.nome };
+                    // Evita duplicatas se já tiver na lista (opcional)
+                    if (!lista.find(m => m.id === magiaClone.id)) {
+                        lista.push(magiaClone);
+                    }
+                }
+            });
+        }
+    });
 
     // Contexto para cálculo de custo
     const nivel = parseInt(elNivel.value) || 1;
@@ -698,11 +1197,28 @@ function renderizarGrimorio(classe, saldoMagia) {
         const btn = document.createElement('div');
         btn.className = 'btn-magia';
 
+        // Estilo especial para magias de Tomo
+        if (magia.fromTome) {
+            btn.style.borderColor = 'var(--color-gold)';
+            btn.innerHTML = `<span style="font-size:0.7rem; color:var(--color-gold); position:absolute; top:2px; left:5px;">📖 ${magia.tomeName}</span>`;
+        }
+
         if (magia.tier > maxTierMagia) {
             btn.classList.add('bloqueado');
             btn.textContent = `🔒 ${magia.nome} (Req. Arcano ${magia.tier * 5})`;
         } else {
-            if (magiasSelecionadas.has(magia.id)) {
+            if (magia.fromTome) {
+                // Magias de Tomo já começam selecionadas
+                btn.classList.add('selecionado');
+                btn.dataset.state = 2;
+                magiasSelecionadas.add(magia.id);
+
+                btn.innerHTML =
+                    `<span style="font-size:0.7rem; color:var(--color-gold); position:absolute; top:2px; left:5px;">
+                        📖 ${magia.tomeName}
+                    </span>` + magia.nome;
+
+            } else if (magiasSelecionadas.has(magia.id)) {
                 btn.classList.add('selecionado');
                 btn.textContent = magia.nome;
                 btn.dataset.state = 2;
@@ -783,29 +1299,37 @@ function renderizarGrimorio(classe, saldoMagia) {
                     btn.innerHTML = magia.desc; // Permite HTML
                     btn.classList.add('info');
                 } else if (st === 1) {
-                    if (saldoMagia > 0) {
-                        btn.dataset.state = 2;
-                        btn.textContent = magia.nome;
-                        btn.classList.add('selecionado');
-                        magiasSelecionadas.add(magia.id);
-                        pontosGastosMagia++;
-                        atualizarTudo();
+                    if (magia.fromTome) {
+                        btn.dataset.state = 2; btn.innerHTML = (magia.fromTome ? `<span style="font-size:0.7rem; color:var(--color-gold); position:absolute; top:2px; left:5px;">📖 ${magia.tomeName}</span>` : '') + magia.nome; btn.classList.add('selecionado'); magiasSelecionadas.add(magia.id); return;
                     } else {
-                        alert("Sem pontos de magia suficientes!");
-                        btn.dataset.state = 0;
-                        btn.textContent = magia.nome;
-                    }
+                         if (saldoMagia > 0) {
+                            btn.dataset.state = 2;
+                            btn.textContent = magia.nome;
+                            btn.classList.add('selecionado');
+                            magiasSelecionadas.add(magia.id);
+                            magiasAprendidas.add(magia.id);
+                            atualizarTudo();
+                        } else {
+                            alert("Sem pontos de magia suficientes!");
+                            btn.dataset.state = 0;
+                            btn.textContent = magia.nome;
+                        }
+                    }       
                 } else {
                     btn.dataset.state = 0;
                     btn.textContent = magia.nome;
                     magiasSelecionadas.delete(magia.id);
-                    pontosGastosMagia--;
+                    magiasAprendidas.delete(magia.id);
                     atualizarTudo();
                 }
             };
         }
         container.appendChild(btn);
     });
+}
+
+function recalcularPontosGastosMagia() {
+    return magiasAprendidas.size;
 }
 
 // --- ATUALIZAÇÃO GERAL ---
@@ -846,11 +1370,12 @@ function atualizarTudo() {
         afinidadeEscolhida = null;
     }
 
-    let pontosTotaisMagia = Math.floor(nivel / 2);
+    let pontosTotaisMagia = Math.round(nivel / 3);
 
     if (afinidadeEscolhida && afinidadeEscolhida.id === 'afin-arc') {
-        pontosTotaisMagia = Math.floor(nivel / 2) + intelecto;
+        pontosTotaisMagia = Math.round(nivel / 3) + intelecto;
     }
+    pontosGastosMagia = recalcularPontosGastosMagia();
     const saldoMagia = pontosTotaisMagia - pontosGastosMagia;
     
 
