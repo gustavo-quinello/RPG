@@ -504,14 +504,25 @@ function toggleModo() {
     atualizarTudo(); // Re-renderiza para limpar estados visuais
 }
 
-// --- LÓGICA MODAL CONSUMÍVEL ---
+// 1. CONTROLE VISUAL DO MODAL
 function toggleCamposConsumivel() {
     const tipo = document.getElementById('input-criar-tipo').value;
-    const camposExtra = document.getElementById('campos-consumivel');
-    if (tipo === 'consumivel') camposExtra.style.display = 'block';
-    else camposExtra.style.display = 'none';
-    document.getElementById('campos-equipamento').style.display = (tipo === 'equipamento') ? 'block' : 'none'; // Novo
+    
+    // Esconde tudo primeiro
+    document.getElementById('campos-consumivel').style.display = 'none';
+    document.getElementById('campos-equipamento').style.display = 'none';
+    document.getElementById('campos-armadura').style.display = 'none';
 
+    // Mostra o específico
+    if (tipo === 'consumivel') {
+        document.getElementById('campos-consumivel').style.display = 'block';
+    } 
+    else if (tipo === 'equipamento') {
+        document.getElementById('campos-equipamento').style.display = 'block';
+    }
+    else if (tipo === 'armadura') {
+        document.getElementById('campos-armadura').style.display = 'block';
+    }
 }
 
 // --- LÓGICA DE INVENTÁRIO (ATUALIZADA V36) ---
@@ -523,7 +534,13 @@ function fecharModalItem() {
     document.getElementById('input-criar-peso').value = '0.0';
     document.getElementById('input-criar-magico').checked = false;
     document.getElementById('input-criar-tipo').value = 'item';
+    document.getElementById('input-criar-dano').value = ''; // Limpa dano
+    document.getElementById('input-criar-descricao').value = ''; // Limpa descrição
+
+
     document.getElementById('campos-consumivel').style.display = 'none';
+    document.getElementById('campos-equipamento').style.display = 'none';
+
 }
 
 function mudarAba(aba) {
@@ -533,48 +550,65 @@ function mudarAba(aba) {
     if(aba==='buscar') buscarItensNoBanco();
 }
 
+// 2. CRIAÇÃO DO ITEM (SALVANDO BLOQUEIO)
 async function criarItemNoBanco() {
     const nome = document.getElementById('input-criar-nome').value;
     const tipo = document.getElementById('input-criar-tipo').value;
     const peso = parseFloat(document.getElementById('input-criar-peso').value) || 0;
     const magico = document.getElementById('input-criar-magico').checked;
+    const descricao = document.getElementById('input-criar-descricao').value; // Captura Descrição
+
     
-    // Captura os valores locais
-    let efeito = null, valor = 0, empunhadura = null;
+    let efeito = null; 
+    let valor = 0; 
+    let empunhadura = null; 
+    let subtipo = null;
+
+    // Lógica para Consumível
     if (tipo === 'consumivel') {
-        efeito = document.getElementById('input-criar-efeito').value;
+        efeito = document.getElementById('input-criar-efeito').value; // 'vida', 'mana', etc.
         valor = parseInt(document.getElementById('input-criar-valor').value) || 0;
     }
-    if (tipo === 'equipamento') {
-        // Captura se é 1 mão ou 2 mãos
+    
+    // Lógica para Equipamento (Arma)
+    else if (tipo === 'equipamento') {
         empunhadura = document.getElementById('input-criar-empunhadura').value;
-    }
+        subtipo = document.getElementById('input-criar-subtipo').value;
+        dano = document.getElementById('input-criar-dano').value;
 
+    }
+    
+    // LÓGICA PARA ARMADURA (NOVO)
+    else if (tipo === 'armadura') {
+        // Salvamos o Bônus de Bloqueio na coluna 'valor'
+        valor = parseInt(document.getElementById('input-criar-bloqueio').value) || 0;
+        // Salvamos Leve/Pesada na coluna 'empunhadura' (reaproveitamento) ou 'subtipo'
+        empunhadura = document.getElementById('input-criar-tipo-armadura').value; 
+        efeito = 'bloqueio'; // Define que afeta bloqueio
+    }
 
     if(!nome) return alert("Dê um nome ao item!");
 
     try {
-        // Tenta salvar no Supabase
         const { data, error } = await supabaseClient
             .from('itens')
-            .insert([{ nome, tipo, peso, magico, efeito, valor, empunhadura }])
+            .insert([{ nome, tipo, peso, magico, efeito, valor, empunhadura, subtipo, dano, descricao }])
             .select();
         
         if (error) {
-            console.warn("Aviso Banco (Item salvo apenas localmente):", error.message);
-            // Fallback Local se der erro no banco
-            adicionarAoInventario({ id: 'local_'+Date.now(), nome, tipo, peso, magico, efeito, valor, empunhadura });
+            console.warn("Aviso Banco:", error.message);
+            // Fallback Local
+            adicionarAoInventario({ id: 'local_'+Date.now(), nome, tipo, peso, magico, efeito, valor, empunhadura, subtipo, dano, descricao });
         } else if (data && data.length > 0) {
-            // TRUQUE DE SEGURANÇA:
-            // Mesclamos o que veio do banco (data[0]) com o que digitamos (efeito, valor).
-            // Assim, se o banco não tiver a coluna 'efeito', usamos o valor local e o item não quebra.
-            const itemFinal = { ...data[0], efeito: efeito, valor: valor };
-            
-            adicionarAoInventario(itemFinal);
+            adicionarAoInventario(data[0]);
         }
         
-        alert("Criado!");
+        alert("Item Criado!");
         fecharModalItem();
+        
+        // Reset dos campos específicos
+        document.getElementById('input-criar-bloqueio').value = '0';
+        
     } catch(e) { console.error(e); }
 }
 
@@ -603,7 +637,10 @@ function adicionarAoInventario(itemDados) {
         tipo: itemDados.tipo,
         peso: itemDados.peso,
         isMagico: itemDados.magico,
+        dano: itemDados.dano,
         empunhadura: itemDados.empunhadura,
+        subtipo: itemDados.subtipo,
+        descricao: itemDados.descricao,
 
         // 🔽 ESTAVA FALTANDO
         efeito: itemDados.efeito ?? null,
@@ -673,33 +710,92 @@ function removerItem(index) {
 }
 
 function renderizarInventario() {
-    const lista = document.getElementById('lista-inventario'); lista.innerHTML = '';
-    const icones = { item: '📦', equipamento: '⚔️', armadura: '🛡️', acessorio: '💍', consumivel: '🧪' };
+    const lista = document.getElementById('lista-inventario');
+    lista.innerHTML = '';
+
+    const icones = {
+        item: '📦',
+        equipamento: '⚔️',
+        armadura: '👕',
+        acessorio: '💍',
+        consumivel: '🧪'
+    };
+
     let pesoTotal = 0;
 
     inventario.forEach((item, index) => {
-        pesoTotal += (item.peso||0);
-        const div = document.createElement('div'); div.className = 'inv-item';
+        pesoTotal += (item.peso || 0);
+
+        const div = document.createElement('div');
+        div.className = 'inv-item';
+
         const tipoSeguro = item.tipo || 'item';
-        
-        let btnAcao = '';
-        // Botão EQUIPAR (Armas/Armaduras)
-        if(['equipamento','armadura','acessorio'].includes(tipoSeguro)) {
-            const estilo = item.equipado ? 'background:#eab308; color:black; font-weight:bold;' : 'background:none; border:1px solid #555; color:#aaa;';
-            const texto = item.equipado ? 'ON' : 'EQ';
-            btnAcao = `<button style="cursor:pointer; border-radius:4px; padding:2px 6px; ${estilo}" onclick="toggleEquiparItem(${index})">${texto}</button>`;
+
+        // 🔹 Define ícone do item (SEM alterar o objeto base)
+        let iconeItem = icones[tipoSeguro] || '📦';
+
+        if (tipoSeguro === 'equipamento') {
+            if (item.subtipo === 'escudo') iconeItem = '🛡️';
+            else if (item.subtipo === 'tomo') iconeItem = '📖';
+            else if (item.subtipo === 'cajado') iconeItem = '🪄';
         }
-        // Botão USAR (Consumíveis)
+
+        // Texto do tipo
+        let textoTipo = tipoSeguro.toUpperCase();
+        if (item.subtipo) textoTipo += ` | ${item.subtipo.toUpperCase()}`;
+        else if (item.empunhadura)
+            textoTipo += ` (${item.empunhadura === '2maos' ? '2H' : '1H'})`;
+
+        let btnAcao = '';
+        if (item.descricao != null) { textoTipo += ` | ${item.descricao.toUpperCase()}`}
+        
+
+        // Botão EQUIPAR
+        if (['equipamento', 'armadura', 'acessorio'].includes(tipoSeguro)) {
+            const estilo = item.equipado
+                ? 'background:#eab308; color:black; font-weight:bold;'
+                : 'background:none; border:1px solid #555; color:#aaa;';
+            const texto = item.equipado ? 'ON' : 'EQ';
+
+            btnAcao = `<button style="cursor:pointer; border-radius:4px; padding:2px 6px; ${estilo}"
+                onclick="toggleEquiparItem(${index})">${texto}</button>`;
+        }
+        // Botão USAR
         else if (tipoSeguro === 'consumivel') {
             btnAcao = `<button class="btn-usar-item" onclick="consumirItem(${index})">USAR</button>`;
         }
 
-        div.innerHTML = `<div class="inv-icon" style="font-size:1.2rem; text-align:center;">${icones[tipoSeguro]||'📦'}</div><div style="display:flex; flex-direction:column; justify-content:center;"><span style="color:${item.isMagico?'#a855f7':'#ddd'}; font-weight:500;">${item.nome||'Item'}</span><span style="font-size:0.7rem; color:#666;">${tipoSeguro.toUpperCase()}</span></div><div style="display:flex; align-items:center; justify-content:center;">${btnAcao}</div><span style="color:#aaa; text-align:right; font-size:0.8rem;">${(item.peso||0)}kg</span><button style="color:#ef4444; background:none; border:none; cursor:pointer; font-weight:bold;" onclick="removerItem(${index})">✕</button>`;
+        div.innerHTML = `
+            <div class="inv-icon" style="font-size:1.2rem; text-align:center;">${iconeItem}</div>
+            <div style="display:flex; flex-direction:column; justify-content:center;">
+                <span style="color:${item.isMagico ? '#a855f7' : '#ddd'}; font-weight:500;">
+                    ${item.nome || 'Item'}
+                </span>
+                <span style="font-size:0.7rem; color:#666;">
+                    ${textoTipo}
+                </span>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:center;">
+                ${btnAcao}
+            </div>
+            <span style="color:#aaa; text-align:right; font-size:0.8rem;">
+                ${(item.peso || 0)}kg
+            </span>
+            <button style="color:#ef4444; background:none; border:none; cursor:pointer; font-weight:bold;"
+                onclick="removerItem(${index})">✕</button>
+        `;
+
         lista.appendChild(div);
     });
+
     const elPeso = document.getElementById('peso-atual');
-    const maxCarga = parseInt(document.getElementById('stat-carga').textContent)||0;
-    if(elPeso) { elPeso.textContent = pesoTotal.toFixed(1); elPeso.style.color = pesoTotal > maxCarga ? 'red' : '#aaa'; }
+    const maxCarga = parseInt(document.getElementById('stat-carga').textContent) || 0;
+
+    if (elPeso) {
+        elPeso.textContent = pesoTotal.toFixed(1);
+        elPeso.style.color = pesoTotal > maxCarga ? 'red' : '#aaa';
+    }
+
     atualizarSlotsVisuais();
 }
 
@@ -753,12 +849,24 @@ function toggleEquiparItem(index) {
         item.equipado = true;
     }
     renderizarInventario(); atualizarSlotsVisuais(); autoSalvarStatus();
+    // --- A CORREÇÃO MÁGICA ESTÁ AQUI ---
+    // Recalcula os status (Bloqueio, Ataque) imediatamente após equipar/desequipar
+    const nivelAtual = parseInt(document.getElementById('nivel').value) || 1;
+    calcularStatus(nivelAtual); 
 }
 
 function atualizarSlotsVisuais() {
+    // Mapeamento de Ícones Padrão
+    const defaultIcons = { mainhand: '✋', offhand: '🤚', armor: '👕', acc1: '💍', acc2: '📿' };
+
     ['mainhand','offhand','armor','acc1','acc2'].forEach(sid => {
         const el = document.getElementById(`slot-${sid}`);
-        if(el) { el.className = 'equip-slot'; el.querySelector('.slot-item').textContent = 'Vazio'; }
+        if(el) { 
+            el.className = 'equip-slot'; 
+            el.querySelector('.slot-item').textContent = 'Vazio';
+            // Reseta ícone
+            el.querySelector('.slot-icon').textContent = defaultIcons[sid];
+        }
     });
     let countMagicos = 0;
     inventario.forEach(item => {
@@ -768,6 +876,12 @@ function atualizarSlotsVisuais() {
                 el.classList.add('filled');
                 if(item.isMagico) { el.classList.add('magic'); countMagicos++; }
                 el.querySelector('.slot-item').textContent = item.nome;
+                
+                // Ícone Dinâmico no Slot
+                if(item.subtipo === 'escudo') el.querySelector('.slot-icon').textContent = '🛡️';
+                else if(item.subtipo === 'tomo') el.querySelector('.slot-icon').textContent = '📖';
+                else if(item.subtipo === 'cajado') el.querySelector('.slot-icon').textContent = '🪄';
+                else if(item.subtipo === 'arma') el.querySelector('.slot-icon').textContent = '⚔️';
             }
         }
     });
@@ -851,6 +965,7 @@ function calcularStatus(nivel) {
     let carga = 4 + forca * 2;
     let movimento = 2 + destreza + Math.floor(nivel * 0.2);
 
+
     let bloqueio = 0;
     if (gruposDeClasse.combatente.includes(classe)) bloqueio = forca * 3 + combat_points * 3 + 2 * mod_generico;
     else if (gruposDeClasse.arcanista.includes(classe)) bloqueio = forca * 3 + combat_points * 2 + 2 * mod_generico;
@@ -886,6 +1001,46 @@ function calcularStatus(nivel) {
         }
     }
 
+    let bonusBloqueioItens = 0;
+    
+    inventario.forEach(item => {
+        if (item.equipado) {
+            // Se for Armadura, pega o valor do bloqueio
+            if (item.tipo === 'armadura') {
+                bonusBloqueioItens += (parseInt(item.valor) || 0);
+            }
+            // Se for Escudo (que é um subtipo de equipamento), pode ter lógica futura aqui
+             if (item.subtipo === 'escudo') {
+                // Se escudo tiver valor de bloqueio salvo, soma aqui também
+                bonusBloqueioItens += (parseInt(item.valor) || 0);
+            }
+        }
+    });
+
+    bloqueio += bonusBloqueioItens;
+
+    // --- LÓGICA DE DANO DA ARMA ---
+    let danoDisplay = "d4"; // Padrão
+    
+    // Procura arma na mão direita
+    const mainWeapon = inventario.find(i => i.equipado && i.slotId === 'mainhand' && i.tipo === 'equipamento');
+    // Procura arma na mão esquerda (se houver dual wield)
+    const offWeapon = inventario.find(i => i.equipado && i.slotId === 'offhand' && i.tipo === 'equipamento');
+
+    if (mainWeapon && mainWeapon.dano) {
+        danoDisplay = mainWeapon.dano;
+        // Se tiver duas armas, mostra as duas (ex: "1d8 / 1d6")
+        if (offWeapon && offWeapon.dano) {
+            danoDisplay += ` / ${offWeapon.dano}`;
+        }
+    } else if (offWeapon && offWeapon.dano) {
+            // Caso raro: só tem arma na esquerda
+            danoDisplay = offWeapon.dano;
+    }
+
+    // Atualiza na tela
+    document.getElementById('stat-bloqueio').textContent = bloqueio;
+
     // Atualiza HTML
     document.getElementById('stat-vida').textContent = vida;
     document.getElementById('stat-mana').textContent = mana;
@@ -895,6 +1050,34 @@ function calcularStatus(nivel) {
     document.getElementById('stat-bloqueio').textContent = bloqueio;
     document.getElementById('stat-esquiva').textContent = esquiva;
     document.getElementById('stat-ataque').textContent = '+' + ataqueBonus;
+
+    document.getElementById('stat-dano').textContent = danoDisplay;
+
+    atualizarBarras();
+}
+
+// Procure a função setupRealtime e adicione a chamada no final do bloco 'postgres_changes'
+function setupRealtime(id) {
+    const channel = supabaseClient
+        .channel('mudancas-ficha')
+        .on('postgres_changes', { /* ...config... */ }, payload => {
+            const d = payload.new.dados;
+            
+            // ... (códigos de statusAtuais e inventario) ...
+
+            if (d.inventario && JSON.stringify(d.inventario) !== JSON.stringify(inventario)) {
+                inventario = d.inventario;
+                renderizarInventario();
+                atualizarSlotsVisuais(); // Importante atualizar os slots visuais também
+                
+                // ADICIONE ISTO: Recalcula status se o inventário mudou remotamente
+                const nivel = parseInt(document.getElementById('nivel').value) || 1;
+                calcularStatus(nivel);
+            }
+            
+            atualizarBarras();
+        })
+        .subscribe();
 }
 
 // --- RENDERIZA O GRIMÓRIO (NOVA FUNÇÃO) ---

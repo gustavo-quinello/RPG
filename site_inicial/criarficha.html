@@ -215,6 +215,7 @@
         <div class="status-direita">
             <div class="status-grid">
                 <div class="card-status ataque"><span class="label">Ataque</span><span class="valor" id="stat-ataque">+0</span></div>
+                <div class="card-status dano"><span class="label">Dano</span><span class="valor" id="stat-dano">d4</span></div>
                 <div class="card-status"><span class="label">Bloqueio</span><span class="valor" id="stat-bloqueio">0</span></div>
                 <div class="card-status"><span class="label">Esquiva</span><span class="valor" id="stat-esquiva">0</span></div>
                 <div class="card-status"><span class="label">Carga</span><span class="valor"><span id="peso-atual" style="color:var(--text-muted)">0</span> / <span id="stat-carga">0</span></span></div>
@@ -223,7 +224,7 @@
 
             <!-- SLOTS DE EQUIPAMENTO -->
             <div class="equip-grid jogo-apenas">
-                <div class="equip-slot" id="slot-mainhand" onclick="toggleEquiparSlot('mainhand')"><div class="slot-label">Mão D.</div><div class="slot-icon">⚔️</div><div class="slot-item">Vazio</div></div>
+                <div class="equip-slot" id="slot-mainhand" onclick="toggleEquiparSlot('mainhand')"><div class="slot-label">Mão D.</div><div class="slot-icon"><span id="icone-slot">⚔️</span></div><div class="slot-item">Vazio</div></div>
                 <div class="equip-slot" id="slot-offhand" onclick="toggleEquiparSlot('offhand')"><div class="slot-label">Mão E.</div><div class="slot-icon">🛡️</div><div class="slot-item">Vazio</div></div>
                 <div class="equip-slot" id="slot-armor" onclick="toggleEquiparSlot('armor')"><div class="slot-label">Corpo</div><div class="slot-icon">👕</div><div class="slot-item">Vazio</div></div>
                 <div class="equip-slot" id="slot-acc1" onclick="toggleEquiparSlot('acc1')"><div class="slot-label">Acessório</div><div class="slot-icon">💍</div><div class="slot-item">Vazio</div></div>
@@ -274,6 +275,31 @@
                         <option value="1mao">1 Mão</option>
                         <option value="2maos">2 Mãos (Ocupa as duas)</option>
                     </select>
+
+                    <!-- NOVO: SUBTIPO AGORA SERÁ ADICIONADO AQUI NO MODAL -->
+                    <label style="color:var(--color-gold); margin-top:5px;">Categoria:</label>
+                    <select id="input-criar-subtipo">
+                        <option value="arma">Arma</option>
+                        <option value="escudo">Escudo</option>
+                        <option value="cajado">Cajado</option>
+                        <option value="tomo">Tomo</option>
+                    </select>
+
+                    <!-- NOVO: CAMPO DE DANO -->
+                    <label style="color:var(--color-damage); margin-top:5px;">Dano (Ex: 1d8):</label>
+                    <input type="text" id="input-criar-dano" placeholder="1d4">
+                </div>
+
+                <!-- 2. CAMPOS DE ARMADURA (NOVO!) -->
+                <div id="campos-armadura" style="display:none; background:#222; padding:10px; border-radius:6px; margin-bottom:10px;">
+                    <label style="color:var(--color-primary)">Bônus de Bloqueio:</label>
+                    <input type="number" id="input-criar-bloqueio" value="0">
+                    
+                    <label style="color:var(--color-primary); margin-top:5px;">Categoria:</label>
+                    <select id="input-criar-tipo-armadura">
+                         <option value="leve">Leve</option>
+                         <option value="pesada">Pesada</option>
+                    </select>
                 </div>
 
                 <!-- CAMPOS EXTRAS PARA CONSUMÍVEL -->
@@ -287,6 +313,10 @@
                     <label style="color:var(--color-primary)">Quantidade:</label>
                     <input type="number" id="input-criar-valor" value="10">
                 </div>
+
+                <!-- DESCRIÇÃO NOVO -->
+                <label>Descrição</label>
+                <textarea id="input-criar-descricao" placeholder="Detalhes do item..." rows="2" style="width: 100%; padding: 10px; background-color: #27272a; border: 1px solid #3f3f46; color: white; border-radius: 6px; margin-bottom: 10px; resize: vertical;"></textarea>
 
                 <input type="number" id="input-criar-peso" value="0.0" step="0.1">
                 <label class="magic-check" style="display:flex; align-items:center; gap:10px; margin-top:10px; cursor:pointer;"><input type="checkbox" id="input-criar-magico" style="width:auto;"><span style="color:#a855f7; font-weight:bold;">É um Item Mágico? ✨</span></label>
