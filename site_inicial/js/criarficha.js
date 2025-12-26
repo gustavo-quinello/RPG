@@ -363,31 +363,47 @@ const magiasAprendidas = new Set();
 // --- REALTIME & AUTO-SAVE ---
 let timerAutoSave;
 
-// --- LÓGICA DE RESSONÂNCIA ---
-function toggleRessonancia() {
+async function toggleRessonancia() {
+    if (!idFichaAtual) {
+        alert("Ficha ainda não carregada.");
+        return;
+    }
+
     ressonanciaAtiva = !ressonanciaAtiva;
+
     const btn = document.getElementById('btn-ressonancia-big');
-    
-    // Toggle na classe do BODY para o efeito de background
+
+    // Toggle visual
     document.body.classList.toggle('ressonancia-ativa');
-    
+
     if (ressonanciaAtiva) {
         btn.classList.add('ativo');
         btn.innerHTML = `⚡ ATIVA <span class="custo" id="custo-ressonancia">Drenando...</span>`;
-        
-        // MUDANÇA: Atualização Visual Dinâmica (Cor)
         atualizarVisualRessonancia(parseInt(elNivel.value)||1);
-
     } else {
         btn.classList.remove('ativo');
         btn.innerHTML = `⚡ RESSONÂNCIA <span class="custo" id="custo-ressonancia">Inativa</span>`;
-        
-        // Remove efeito visual
         document.body.style.removeProperty('--ressonancia-color');
         document.body.style.background = '';
     }
+
     atualizarTextoRessonancia(parseInt(elNivel.value)||1);
+
+    // 🔥 SALVA NO SUPABASE
+    try {
+        const { error } = await supabaseClient
+            .from('Personagens')
+            .update({ ressonancia: ressonanciaAtiva })
+            .eq('id', idFichaAtual);
+
+        if (error) throw error;
+
+    } catch (err) {
+        console.error("Erro ao salvar ressonância:", err);
+    }
 }
+
+
 function atualizarTextoRessonancia(nivel) {
      const custo = nivel; 
      const label = document.getElementById('custo-ressonancia'); 
@@ -441,55 +457,67 @@ function autoSalvarStatus() {
     }, 1000); // Espera 1 segundo após a última digitação
 }
 
-// Função para conectar no canal de Realtime do Supabase
 function setupRealtime(id) {
-    console.log("Tentando conectar Realtime para o ID:", id);
-    
-    const channel = supabaseClient
-        .channel('mudancas-ficha') // Nome qualquer para o canal
+    supabaseClient
+        .channel('mudancas-ficha')
         .on(
-            'postgres_changes', 
-            { 
-                event: 'UPDATE', 
-                schema: 'public', 
-                table: 'Personagens', // Tem que ser EXATAMENTE o nome da sua tabela
-                filter: `id=eq.${id}` // Filtra para ouvir SÓ essa ficha
-            }, 
-            (payload) => {
-                console.log("🔔 Mudança detectada no banco!", payload);
-                
-                // Pega os dados novos que chegaram
-                const novosDados = payload.new.dados;
-                
-                // Atualiza Vida/Mana/Foco se eles vierem no pacote
-                if (novosDados.statusAtuais) {
-                    // Só atualiza se o usuário NÃO estiver digitando no campo agora (pra não atrapalhar)
-                    if (document.activeElement.id !== 'vida-atual') 
-                        document.getElementById('vida-atual').value = novosDados.statusAtuais.vida;
-                    
-                    if (document.activeElement.id !== 'mana-atual') 
-                        document.getElementById('mana-atual').value = novosDados.statusAtuais.mana;
-                        
-                    if (document.activeElement.id !== 'foco-atual') 
-                        document.getElementById('foco-atual').value = novosDados.statusAtuais.foco;
-                }
-                
-                // Atualiza Inventário se mudou
-                if (novosDados.inventario) {
-                     // Verifica se é diferente para não redesenhar à toa
-                    if (JSON.stringify(inventario) !== JSON.stringify(novosDados.inventario)) {
-                        inventario = novosDados.inventario;
-                        renderizarInventario();
+            'postgres_changes',
+            {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'Personagens',
+                filter: `id=eq.${id}`
+            },
+            payload => {
+                const d = payload.new.dados;
+
+                // ---------- RESSONÂNCIA (REALTIME) ----------
+                if (typeof payload.new.ressonancia === 'boolean') {
+                    if (payload.new.ressonancia !== ressonanciaAtiva) {
+                        ressonanciaAtiva = payload.new.ressonancia;
+
+                        const btn = document.getElementById('btn-ressonancia-big');
+                        document.body.classList.toggle('ressonancia-ativa', ressonanciaAtiva);
+
+                    if (ressonanciaAtiva) {
+                        btn.classList.add('ativo');
+                        btn.innerHTML = `⚡ ATIVA <span class="custo" id="custo-ressonancia">Drenando...</span>`;
+                        atualizarVisualRessonancia(parseInt(elNivel.value) || 1);
+                    } else {
+                        btn.classList.remove('ativo');
+                        btn.innerHTML = `⚡ RESSONÂNCIA <span class="custo" id="custo-ressonancia">Inativa</span>`;
+                        document.body.style.removeProperty('--ressonancia-color');
+                        document.body.style.background = '';
+                    }
+
+                        atualizarTextoRessonancia(parseInt(elNivel.value) || 1);
                     }
                 }
-                
-                // Redesenha as barras coloridas
+
+                // ---------- STATUS ----------
+                if (d.statusAtuais) {
+                    if (document.activeElement.id !== 'vida-atual')
+                        document.getElementById('vida-atual').value = d.statusAtuais.vida;
+                    if (document.activeElement.id !== 'mana-atual')
+                        document.getElementById('mana-atual').value = d.statusAtuais.mana;
+                    if (document.activeElement.id !== 'foco-atual')
+                        document.getElementById('foco-atual').value = d.statusAtuais.foco;
+                }
+
+                // ---------- INVENTÁRIO ----------
+                if (d.inventario && JSON.stringify(d.inventario) !== JSON.stringify(inventario)) {
+                    inventario = d.inventario;
+                    renderizarInventario();
+                    atualizarSlotsVisuais();
+
+                    const nivel = parseInt(document.getElementById('nivel').value) || 1;
+                    calcularStatus(nivel);
+                }
+
                 atualizarBarras();
             }
         )
-        .subscribe((status) => {
-            console.log("Status da Conexão Realtime:", status);
-        });
+        .subscribe();
 }
 
 // --- FUNÇÕES DE MODO DE JOGO ---
@@ -785,7 +813,7 @@ function renderizarInventario() {
         if (tipoSeguro === 'equipamento') {
             if (item.subtipo === 'escudo') iconeItem = '🛡️';
             else if (item.subtipo === 'tomo') iconeItem = '📖';
-            else if (item.subtipo === 'cajado') iconeItem = '🪄';
+            else if (item.subtipo === 'cajado') iconeItem = '💥​';
         }
 
         // Texto do tipo
@@ -928,7 +956,7 @@ function atualizarSlotsVisuais() {
                 // Ícone Dinâmico no Slot
                 if(item.subtipo === 'escudo') el.querySelector('.slot-icon').textContent = '🛡️';
                 else if(item.subtipo === 'tomo') el.querySelector('.slot-icon').textContent = '📖';
-                else if(item.subtipo === 'cajado') el.querySelector('.slot-icon').textContent = '🪄';
+                else if(item.subtipo === 'cajado') el.querySelector('.slot-icon').textContent = '💥​';
                 else if(item.subtipo === 'arma') el.querySelector('.slot-icon').textContent = '⚔️';
             }
         }
@@ -1101,30 +1129,6 @@ function calcularStatus(nivel) {
     document.getElementById('stat-dano').textContent = danoDisplay;
 
     atualizarBarras();
-}
-
-// Procure a função setupRealtime e adicione a chamada no final do bloco 'postgres_changes'
-function setupRealtime(id) {
-    const channel = supabaseClient
-        .channel('mudancas-ficha')
-        .on('postgres_changes', { /* ...config... */ }, payload => {
-            const d = payload.new.dados;
-            
-            // ... (códigos de statusAtuais e inventario) ...
-
-            if (d.inventario && JSON.stringify(d.inventario) !== JSON.stringify(inventario)) {
-                inventario = d.inventario;
-                renderizarInventario();
-                atualizarSlotsVisuais(); // Importante atualizar os slots visuais também
-                
-                // ADICIONE ISTO: Recalcula status se o inventário mudou remotamente
-                const nivel = parseInt(document.getElementById('nivel').value) || 1;
-                calcularStatus(nivel);
-            }
-            
-            atualizarBarras();
-        })
-        .subscribe();
 }
 
 // --- RENDERIZA O GRIMÓRIO (NOVA FUNÇÃO) ---
@@ -1703,6 +1707,34 @@ async function carregarFicha() {
         document.getElementById('classe').value = data.classe;
 
         const d = data.dados;
+
+                // --- RESSONÂNCIA ---
+        if (typeof data.ressonancia === 'boolean') {
+            ressonanciaAtiva = data.ressonancia;
+        } else {
+            ressonanciaAtiva = false;
+        }
+
+        // Aplica visual inicial
+        if (ressonanciaAtiva) {
+            document.body.classList.add('ressonancia-ativa');
+            atualizarVisualRessonancia(parseInt(elNivel.value)||1);
+        } else {
+            document.body.classList.remove('ressonancia-ativa');
+        }
+
+        atualizarTextoRessonancia(parseInt(elNivel.value)||1);
+
+        const btn = document.getElementById('btn-ressonancia-big');
+        if (btn) {
+            if (ressonanciaAtiva) {
+                btn.classList.add('ativo');
+                btn.innerHTML = `⚡ ATIVA <span class="custo" id="custo-ressonancia">Drenando...</span>`;
+            } else {
+                btn.classList.remove('ativo');
+                btn.innerHTML = `⚡ RESSONÂNCIA <span class="custo" id="custo-ressonancia">Inativa</span>`;
+            }
+        }
 
         //ATRIBUTOS
         if (d.atributos) {

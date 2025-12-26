@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Mestre RPG - Ressonância</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        /* Animações Básicas */
+        .card-enter { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Turno Ativo */
+        .active-turn { 
+            border-color: #a855f7 !important; 
+            background-color: #1e293b !important; 
+            transform: scale(1.01);
+            z-index: 10;
+        }
+
+        /* --- EFEITO DE RESSONÂNCIA (MÁGICO) --- */
+        .card-ressonancia {
+            /* Borda Roxa Brilhante */
+            border-color: #d8b4fe !important;
+            
+            /* Sombra Externa e Interna (Glow) */
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.5), inset 0 0 20px rgba(168, 85, 247, 0.1) !important;
+            
+            /* Gradiente Sutil no Fundo */
+            background: linear-gradient(135deg, rgba(151, 180, 228) 0%, rgba(148, 7, 255, 0.25) 100%) !important;
+            
+            /* Animação de "Respiração" do brilho */
+            animation: pulseMagic 2s infinite alternate ease-in-out !important;
+        }
+
+@keyframes pulseMagic {
+    0% {
+        box-shadow: 0 0 15px rgba(168, 85, 247, 0.3), inset 0 0 10px rgba(168, 85, 247, 0.1);
+        /* Estado Normal (O que você definiu) */
+        background: linear-gradient(135deg, rgb(151, 180, 228) 0%, rgba(148, 7, 255, 0.25) 100%);
+    }
+    100% {
+        box-shadow: 0 0 25px rgba(192, 132, 252, 0.6), inset 0 0 20px rgba(168, 85, 247, 0.2);
+        border-color: #e9d5ff;
+        /* Estado "Ativado/Brilhante" (Mais claro e com roxo mais forte) */
+        background: linear-gradient(135deg, rgb(180, 200, 255) 0%, rgba(180, 80, 255, 0.4) 100%);
+    }
+}
+
+        /* Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 8px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #1e293b; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; margin: 0; 
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-20">
+
+    <!-- HEADER -->
+    <header class="bg-slate-950 border-b border-slate-800 p-4 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <svg class="text-purple-500 w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
+                    Painel do Mestre <span class="text-xs text-green-500 font-mono bg-green-900/30 px-2 py-0.5 rounded ml-2 border border-green-800" id="status-conn">● Online</span>
+                </h1>
+            </div>
+            
+            <button onclick="carregarPersonagens()" class="p-2 rounded-lg hover:bg-slate-800 text-slate-400 transition-colors" title="Sincronizar Manualmente">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-4">
+        
+        <div id="error-box" class="hidden bg-red-500/10 border border-red-500 text-red-200 p-3 rounded-lg mb-6 text-sm flex items-center gap-2">
+            <span id="error-msg">Erro</span>
+        </div>
+
+        <div id="view-combat">
+            <div class="flex flex-wrap gap-3 items-center bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-lg mb-6">
+                <button onclick="abrirModalImportacao()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-bold transition-all">Importar Fichas</button>
+                <button onclick="adicionarMonstro()" class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-bold transition-all">+ Monstro</button>
+                <div class="h-6 w-px bg-slate-600 mx-2 hidden sm:block"></div>
+                <button onclick="ordenarIniciativa()" class="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded text-sm font-bold transition-all">Ordenar Turnos</button>
+                <button onclick="proximoTurno()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded text-sm font-bold ml-auto shadow-lg shadow-emerald-900/50">Próximo Turno →</button>
+            </div>
+
+            <div id="combat-list" class="grid gap-3">
+                <div class="text-center py-24 text-slate-500 border-2 border-dashed border-slate-700 rounded-xl bg-slate-900/50">
+                    <p class="text-lg font-medium">Carregando sistema...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL IMPORTAÇÃO -->
+        <div id="modal-importacao" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+            <div class="bg-slate-900 w-full max-w-2xl rounded-xl border border-slate-700 shadow-2xl flex flex-col max-h-[90vh]">
+                <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900 rounded-t-xl">
+                    <h2 class="text-xl font-bold text-white">Selecionar Personagens</h2>
+                    <button onclick="fecharModalImportacao()" class="text-slate-500 hover:text-white"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                </div>
+                <div class="px-6 pt-4">
+                    <input type="text" id="busca-importacao" onkeyup="filtrarListaImportacao()" placeholder="Buscar..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-white focus:border-blue-500 outline-none">
+                </div>
+                <div class="p-6 overflow-y-auto custom-scroll flex-1">
+                    <div id="lista-importacao" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                </div>
+                <div class="p-4 border-t border-slate-800 bg-slate-900 rounded-b-xl flex justify-end gap-3">
+                    <button onclick="fecharModalImportacao()" class="px-4 py-2 text-slate-400 hover:text-white font-medium">Cancelar</button>
+                    <button onclick="confirmarImportacao()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold">Importar</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- CONFIGURAÇÃO ---
+        const { createClient } = window.supabase;
+        const supabaseUrl = "https://uoeixaiwyqjtbcqduzid.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvZWl4YWl3eXFqdGJjcWR1emlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4ODI2OTgsImV4cCI6MjA3MTQ1ODY5OH0.o_FY6xyjNetUjzsLiqaKrES_-d7_nYUE8vL8vFG8MDA";
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+        let combatentes = [];
+        let turnoAtual = 0;
+        let candidatosImportacao = [];
+        let selecionadosParaImportar = new Set();
+        let realtimeChannel = null;
+        let saveTimers = {}; 
+
+        // --- INICIALIZAÇÃO ---
+        window.onload = function() {
+            window.toggleSelecaoImportacao = toggleSelecaoImportacao;
+            renderizarLista();
+            iniciarRealtime();
+            carregarPersonagens();
+        };
+
+        // --- REALTIME LISTENER ---
+        function iniciarRealtime() {
+            if (realtimeChannel) supabaseClient.removeChannel(realtimeChannel);
+
+            realtimeChannel = supabaseClient
+                .channel('painel-mestre-global')
+                .on('postgres_changes', 
+                    { event: 'UPDATE', schema: 'public', table: 'Personagens' }, 
+                    payload => {
+                        const novoDado = payload.new;
+                        const idMudou = String(novoDado.id);
+                        const index = combatentes.findIndex(c => c.id === idMudou);
+
+                        if (index !== -1) {
+                            if (saveTimers[idMudou]) {
+                                console.log("Ignorando update realtime pois estou editando...");
+                                return;
+                            }
+
+                            const dadosAtualizados = parseCharacterData(novoDado);
+                            // Mescla os dados (incluindo a ressonância)
+                            combatentes[index] = { ...combatentes[index], ...dadosAtualizados };
+                            atualizarInterfaceUnitary(idMudou, combatentes[index]);
+                        }
+                    }
+                )
+                .subscribe((status) => {
+                    const statusEl = document.getElementById('status-conn');
+                    if (status === 'SUBSCRIBED') {
+                        statusEl.innerHTML = '● Online';
+                        statusEl.className = 'text-xs text-green-500 font-mono bg-green-900/30 px-2 py-0.5 rounded ml-2 border border-green-800';
+                    }
+                });
+        }
+
+        // --- SALVAMENTO ---
+        async function persistirAlteracoes(id) {
+            if (id.startsWith('mob_')) return;
+            const indicador = document.getElementById(`save-status-${id}`);
+            if (indicador) indicador.innerHTML = `<svg class="animate-spin w-4 h-4 text-yellow-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+
+            try {
+                const { data, error } = await supabaseClient.from('Personagens').select('dados').eq('id', id).single();
+                if (error) throw error;
+
+                const charLocal = combatentes.find(c => c.id === id);
+                if (!charLocal) return;
+
+                const dadosJson = data.dados || {};
+                if (!dadosJson.statusAtuais) dadosJson.statusAtuais = {};
+                
+                dadosJson.statusAtuais.vida = charLocal.hpAtual;
+                dadosJson.statusAtuais.mana = charLocal.manaAtual;
+                dadosJson.statusAtuais.foco = charLocal.focoAtual;
+                dadosJson.iniciativa = charLocal.iniciativa;
+
+                const { error: updateError } = await supabaseClient.from('Personagens').update({ dados: dadosJson }).eq('id', id);
+                if (updateError) throw updateError;
+
+                if (indicador) {
+                    indicador.innerHTML = `<svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+                    setTimeout(() => indicador.innerHTML = '', 2000);
+                }
+                delete saveTimers[id];
+
+            } catch (err) {
+                console.error("Erro ao salvar:", err);
+                if (indicador) indicador.innerHTML = `<span class="text-red-500 text-xs">Erro!</span>`;
+            }
+        }
+
+        function atualizarStatus(id, campo, valor) {
+            const index = combatentes.findIndex(c => c.id == id);
+            if (index !== -1) {
+                combatentes[index][campo] = parseInt(valor);
+                atualizarInterfaceUnitary(id, combatentes[index]);
+                if (saveTimers[id]) clearTimeout(saveTimers[id]);
+                saveTimers[id] = setTimeout(() => { persistirAlteracoes(id); }, 1000);
+            }
+        }
+
+        // --- RENDERIZAÇÃO ---
+        function atualizarInterfaceUnitary(id, char) {
+            const hpBar = document.getElementById(`bar-hp-${id}`);
+            const mpBar = document.getElementById(`bar-mp-${id}`);
+            const focoBar = document.getElementById(`bar-foco-${id}`);
+
+            if(hpBar) hpBar.style.width = `${char.hpMax > 0 ? Math.min(100, (char.hpAtual / char.hpMax) * 100) : 0}%`;
+            if(mpBar) mpBar.style.width = `${char.manaMax > 0 ? Math.min(100, (char.manaAtual / char.manaMax) * 100) : 0}%`;
+            if(focoBar) focoBar.style.width = `${char.focoMax > 0 ? Math.min(100, (char.focoAtual / char.focoMax) * 100) : 0}%`;
+
+            const inputHp = document.getElementById(`input-hp-${id}`);
+            const inputMp = document.getElementById(`input-mp-${id}`);
+            const inputFoco = document.getElementById(`input-foco-${id}`);
+
+            if (inputHp && document.activeElement !== inputHp) inputHp.value = char.hpAtual;
+            if (inputMp && document.activeElement !== inputMp) inputMp.value = char.manaAtual;
+            if (inputFoco && document.activeElement !== inputFoco) inputFoco.value = char.focoAtual;
+
+            // --- LÓGICA DE ATUALIZAÇÃO DA RESSONÂNCIA ---
+            const card = document.getElementById(`card-${id}`);
+            if (card) {
+                if (char.ressonancia) {
+                    card.classList.add('card-ressonancia');
+                } else {
+                    card.classList.remove('card-ressonancia');
+                }
+            }
+        }
+
+        function renderizarLista() {
+            const container = document.getElementById('combat-list');
+            if (combatentes.length === 0) {
+                container.innerHTML = `<div class="text-center py-24 text-slate-500 border-2 border-dashed border-slate-700 rounded-xl bg-slate-900/50"><p class="text-lg font-medium">Arena vazia</p></div>`;
+                return;
+            }
+
+            let html = '';
+            combatentes.forEach((char, index) => {
+                const isActive = index === turnoAtual;
+                // Base class + Active Class + Magic Class
+                let cardClasses = `relative flex flex-col md:flex-row items-center gap-4 p-4 rounded-xl border transition-all duration-300 card-enter `;
+                
+                if (isActive) cardClasses += 'active-turn border-purple-500 ';
+                else cardClasses += 'bg-slate-900 border-slate-800 opacity-90 ';
+                
+                // Se ressonância for true, adiciona a classe mágica
+                if (char.ressonancia) cardClasses += 'card-ressonancia ';
+
+                const isDead = char.hpAtual <= 0;
+                if (isDead) cardClasses += 'grayscale opacity-50 ';
+
+                const avatarBg = char.tipo === 'monstro' ? 'bg-red-900/40 text-red-400' : 'bg-blue-900/40 text-blue-400';
+                
+                const hpPct = char.hpMax > 0 ? Math.min(100, Math.max(0, (char.hpAtual / char.hpMax) * 100)) : 0;
+                const mpPct = char.manaMax > 0 ? Math.min(100, Math.max(0, (char.manaAtual / char.manaMax) * 100)) : 0;
+                const focoPct = char.focoMax > 0 ? Math.min(100, Math.max(0, (char.focoAtual / char.focoMax) * 100)) : 0;
+
+                html += `
+                <div id="card-${char.id}" class="${cardClasses}">
+                    
+                    <div class="flex items-center gap-4 w-full md:w-auto min-w-[200px]">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${avatarBg}">
+                            ${char.nome.charAt(0)}
+                        </div>
+                        <div class="overflow-hidden">
+                            <h3 class="font-bold text-lg text-slate-100 truncate w-32 flex items-center gap-2">
+                                ${char.nome}
+                                <span id="save-status-${char.id}"></span>
+                            </h3>
+                            <div class="text-xs text-slate-400">Nv. ${char.nivel} - ${char.classe}</div>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 w-full grid grid-cols-1 lg:grid-cols-3 gap-4 px-2">
+                        <!-- VIDA -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-red-500 text-xs font-bold w-6">HP</span>
+                            <div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                                <div id="bar-hp-${char.id}" class="h-full bg-red-600 transition-all duration-300" style="width: ${hpPct}%"></div>
+                            </div>
+                            <input type="number" id="input-hp-${char.id}"
+                                class="w-14 bg-slate-950 border border-slate-700 rounded text-center text-sm text-red-200 outline-none focus:border-red-500"
+                                value="${char.hpAtual}"
+                                oninput="atualizarStatus('${char.id}', 'hpAtual', this.value)">
+                        </div>
+
+                        <!-- MANA -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-cyan-500 text-xs font-bold w-6">MP</span>
+                            <div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                                <div id="bar-mp-${char.id}" class="h-full bg-cyan-600 transition-all duration-300" style="width: ${mpPct}%"></div>
+                            </div>
+                            <input type="number" id="input-mp-${char.id}"
+                                class="w-14 bg-slate-950 border border-slate-700 rounded text-center text-sm text-cyan-200 outline-none focus:border-cyan-500"
+                                value="${char.manaAtual}"
+                                oninput="atualizarStatus('${char.id}', 'manaAtual', this.value)">
+                        </div>
+
+                        <!-- FOCO -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-amber-500 text-xs font-bold w-6">FP</span>
+                            <div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                                <div id="bar-foco-${char.id}" class="h-full bg-amber-500 transition-all duration-300" style="width: ${focoPct}%"></div>
+                            </div>
+                            <input type="number" id="input-foco-${char.id}"
+                                class="w-14 bg-slate-950 border border-slate-700 rounded text-center text-sm text-amber-200 outline-none focus:border-amber-500"
+                                value="${char.focoAtual}"
+                                oninput="atualizarStatus('${char.id}', 'focoAtual', this.value)">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4 border-l border-slate-800 pl-4">
+                        <div class="text-center">
+                            <label class="text-[9px] text-slate-500 uppercase font-bold block">Inic</label>
+                            <input type="number" 
+                                class="w-12 bg-transparent text-xl font-bold text-center text-yellow-500 outline-none border-b border-transparent focus:border-yellow-500"
+                                value="${char.iniciativa}"
+                                onchange="atualizarStatus('${char.id}', 'iniciativa', this.value)">
+                        </div>
+                        <button onclick="removerCombatente('${char.id}')" class="text-slate-600 hover:text-red-500 transition-colors p-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // --- DADOS ---
+        async function carregarPersonagens() {
+            try {
+                const { data, error } = await supabaseClient.from('Personagens').select('*');
+                if (error) throw error;
+                if (data) {
+                    data.forEach(novo => {
+                        const idx = combatentes.findIndex(c => c.id === String(novo.id));
+                        if(idx !== -1 && !saveTimers[String(novo.id)]) {
+                            const parsed = parseCharacterData(novo);
+                            combatentes[idx] = { ...combatentes[idx], ...parsed };
+                        }
+                    });
+                    renderizarLista();
+                }
+            } catch (err) { mostrarErro("Erro sync: " + err.message); }
+        }
+
+        function parseCharacterData(char) {
+            const dados = char.dados || {};
+            return {
+                id: String(char.id),
+                nome: char.nome,
+                classe: (char.classe || 'N/C').toUpperCase(),
+                nivel: char.nivel || 0,
+                ressonancia: char.ressonancia === true, // Captura a Ressonância
+                iniciativa: parseInt(dados.iniciativa || 0),
+                hpAtual: parseInt(dados.statusAtuais?.vida || dados.statusCalculados?.vida || 0), 
+                hpMax: parseInt(dados.statusCalculados?.vida || 0),
+                manaAtual: parseInt(dados.statusAtuais?.mana || dados.statusCalculados?.mana || 0), 
+                manaMax: parseInt(dados.statusCalculados?.mana || 0),
+                focoAtual: parseInt(dados.statusAtuais?.foco || dados.statusCalculados?.foco || 0), 
+                focoMax: parseInt(dados.statusCalculados?.foco || 0),    
+                tipo: 'jogador'
+            };
+        }
+
+        // --- IMPORTAÇÃO E MODAL ---
+        async function abrirModalImportacao() {
+            document.getElementById('modal-importacao').classList.remove('hidden');
+            const lista = document.getElementById('lista-importacao');
+            lista.innerHTML = '<p class="text-slate-500 text-center col-span-2 py-8">Buscando...</p>';
+            try {
+                const { data, error } = await supabaseClient.from('Personagens').select('*').order('nome', { ascending: true });
+                if (error) throw error;
+                candidatosImportacao = data.map(parseCharacterData);
+                selecionadosParaImportar.clear();
+                renderizarListaImportacao();
+            } catch (err) { mostrarErro(err.message); fecharModalImportacao(); }
+        }
+        function renderizarListaImportacao() {
+            const container = document.getElementById('lista-importacao');
+            const termo = document.getElementById('busca-importacao').value.toLowerCase();
+            const filtrados = candidatosImportacao.filter(p => p.nome.toLowerCase().includes(termo));
+            if (filtrados.length === 0) { container.innerHTML = '<p class="text-slate-500 col-span-2 text-center">Nada encontrado.</p>'; return; }
+            let html = '';
+            filtrados.forEach(char => {
+                const jaEmCombate = combatentes.some(c => c.id === char.id);
+                const selecionado = selecionadosParaImportar.has(char.id);
+                const cardClass = jaEmCombate ? "bg-slate-950 opacity-50 cursor-not-allowed" : (selecionado ? "bg-blue-900/30 border-blue-500" : "bg-slate-800 hover:bg-slate-700");
+                const onclick = jaEmCombate ? '' : `onclick="toggleSelecaoImportacao('${char.id}')"`;
+                const check = selecionado ? `<svg class="w-6 h-6 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>` : `<div class="w-6 h-6 rounded-full border-2 border-slate-600"></div>`;
+                html += `<div ${onclick} class="border rounded-lg p-3 cursor-pointer flex justify-between items-center transition-all ${cardClass}"><div class="flex items-center gap-3 overflow-hidden"><div class="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center font-bold text-slate-400">${char.nome.charAt(0)}</div><div><h4 class="font-bold text-slate-200 truncate">${char.nome}</h4></div></div><div>${jaEmCombate ? '--' : check}</div></div>`;
+            });
+            container.innerHTML = html;
+        }
+        function toggleSelecaoImportacao(id) { const strId = String(id); if (selecionadosParaImportar.has(strId)) selecionadosParaImportar.delete(strId); else selecionadosParaImportar.add(strId); renderizarListaImportacao(); }
+        function confirmarImportacao() { const novos = candidatosImportacao.filter(c => selecionadosParaImportar.has(c.id)); if (novos.length > 0) { combatentes = [...combatentes, ...novos]; renderizarLista(); } fecharModalImportacao(); }
+        function filtrarListaImportacao() { renderizarListaImportacao(); }
+        function fecharModalImportacao() { document.getElementById('modal-importacao').classList.add('hidden'); }
+        function mostrarErro(msg) { const box = document.getElementById('error-box'); document.getElementById('error-msg').innerText = msg; box.classList.remove('hidden'); setTimeout(() => box.classList.add('hidden'), 5000); }
+        function adicionarMonstro() { const idRandom = Math.random().toString(36).substr(2, 9); combatentes.push({ id: `mob_${idRandom}`, nome: 'Monstro', classe: 'Inimigo', nivel: 1, iniciativa: Math.floor(Math.random() * 20) + 1, hpAtual: 30, hpMax: 30, manaAtual: 0, manaMax: 0, focoAtual: 0, focoMax: 0, tipo: 'monstro', ressonancia: false }); renderizarLista(); }
+        function removerCombatente(id) { combatentes = combatentes.filter(c => c.id !== id); if (turnoAtual >= combatentes.length) turnoAtual = 0; renderizarLista(); }
+        function ordenarIniciativa() { combatentes.sort((a, b) => b.iniciativa - a.iniciativa); turnoAtual = 0; renderizarLista(); }
+        function proximoTurno() { if (combatentes.length === 0) return; turnoAtual = (turnoAtual + 1) % combatentes.length; renderizarLista(); }
+    </script>
+</body>
+</html>
