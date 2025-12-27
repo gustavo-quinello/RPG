@@ -60,6 +60,73 @@
         .custom-scroll::-webkit-scrollbar-track { background: #1e293b; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+        /* Timeline Cards */
+        .timeline-card {
+            min-width: 60px;
+            height: 80px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* O Primeiro da fila (Vez atual) */
+        .timeline-card.first {
+            border-color: #a855f7;
+            background: #1e293b;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+            z-index: 10;
+            margin-right: 10px;
+        }
+
+        /* O Marco de Rodada */
+        .timeline-marker {
+            min-width: 4px;
+            height: 80px;
+            background: #fbbf24; /* Amarelo */
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+            margin: 0 5px;
+            position: relative;
+        }
+        .timeline-marker::after {
+            content: 'RODADA';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 8px;
+            color: #fbbf24;
+            font-weight: bold;
+        }
+        /* Estilos do Log */
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            gap: 6px;
+        }
+        .log-time { color: #64748b; font-size: 10px; min-width: 35px; }
+        .log-msg { color: #cbd5e1; word-break: break-word; }
+
+        /* Cores de Eventos */
+        .log-dano { color: #f87171; } /* Vermelho */
+        .log-cura { color: #4ade80; } /* Verde */
+        .log-mana { color: #22d3ee; } /* Azul */
+        .log-item { color: #fbbf24; } /* Amarelo */
+        .log-info { color: #94a3b8; } /* Cinza */
+
+        /* Estado Minimizado */
+        .log-minimized {
+            height: 40px !important;
+        }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen pb-20">
@@ -92,6 +159,14 @@
         </div>
 
         <div id="view-combat">
+            <!-- MÓDULO 5: TIMELINE VISUAL -->
+            <div class="mb-6">
+                <h3 class="text-xs font-bold text-slate-500 uppercase mb-2">Linha do Tempo (Próximos Turnos)</h3>
+                <div class="flex items-center gap-2 overflow-x-auto pb-2 custom-scroll" id="timeline-track">
+                    <!-- Ícones da timeline serão injetados aqui -->
+                </div>
+            </div>
+
             <div class="flex flex-wrap gap-3 items-center bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-lg mb-6">
                 <button onclick="abrirModalImportacao()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-bold transition-all">Importar</button>
                 <button onclick="adicionarMonstro()" class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-bold transition-all">+ Monstro</button>
@@ -199,6 +274,25 @@
         </div>
     </div>
 
+    <!-- MÓDULO 6: HISTÓRICO DE COMBATE -->
+    <div id="combat-log" class="fixed bottom-4 right-4 w-80 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl flex flex-col overflow-hidden transition-all duration-300 z-50 h-96">
+        <!-- Header com Toggle -->
+        <div class="bg-slate-950 p-3 border-b border-slate-800 flex justify-between items-center cursor-pointer hover:bg-slate-900" onclick="toggleLog()">
+            <h3 class="text-xs font-bold text-slate-400 uppercase flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                Histórico
+            </h3>
+            <button class="text-slate-500 hover:text-white">
+                <svg id="log-arrow" class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+        </div>
+        
+        <!-- Conteúdo do Log -->
+        <div id="log-content" class="flex-1 overflow-y-auto p-3 space-y-2 custom-scroll bg-slate-900/95 text-xs font-mono">
+            <div class="text-slate-600 italic text-center py-4">Início do registro...</div>
+        </div>
+    </div>
+
     <script>
         // --- CONFIGURAÇÃO ---
         const { createClient } = window.supabase;
@@ -213,6 +307,7 @@
         let realtimeChannel = null;
         let saveTimers = {};
         let idAlvoEfeito = null; // Guarda quem vai receber o efeito enquanto o modal está aberto
+        let tempoRodadaAcumulado = 100;
  
 
         // --- INICIALIZAÇÃO ---
@@ -251,10 +346,43 @@
                     const novoDado = payload.new;
                     const idMudou = String(novoDado.id);
                     const index = combatentes.findIndex(c => c.id === idMudou);
+                    const dadosAntigos = combatentes[index].dadosRaw || {}; // Pega o JSON completo que salvamos antes
+                    compararEGerarLog(combatentes[index].nome, dadosAntigos, novoDado.dados);
+
                     if (index !== -1) {
+                        // Ignora se eu mesmo estou editando
                         if (saveTimers[idMudou]) return;
+
+                        // --- MÓDULO 6: GERA O LOG ANTES DE ATUALIZAR ---
+                        // Pegamos o objeto de dados antigo (que está na memória do combatentes[index])
+                        // Precisamos reconstruir a estrutura original "dados" para comparar com o novo "dados"
+                        // Como 'combatentes' é uma versão processada, vamos comparar o que temos de mais importante
+                        
+                        // Estratégia: Recriar um objeto parcial 'antigo' baseado no que temos na memória
+                        const charAntigoSimulado = {
+                            statusAtuais: {
+                                vida: combatentes[index].hpAtual,
+                                mana: combatentes[index].manaAtual,
+                                foco: combatentes[index].focoAtual
+                            },
+                            // Para inventário, não temos na memória do combat tracker (só no objeto original se tivéssemos salvo)
+                            // Se você quiser log de inventário preciso, precisaria guardar o 'rawDados' no objeto combatente.
+                            // Mas para Vida/Mana funciona perfeitamente assim.
+                        };
+
+                        // O Payload novo traz o JSON completo em 'novoDado.dados'
+                        compararEGerarLog(combatentes[index].nome, charAntigoSimulado, novoDado.dados);
+                        
+                        // ------------------------------------------------
+
                         const dadosAtualizados = parseCharacterData(novoDado);
+                        
+                        // Atualiza a memória
                         combatentes[index] = { ...combatentes[index], ...dadosAtualizados };
+                        
+                        // Se quiser log de inventário completo, seria ideal guardar o 'novoDado.dados' dentro de combatentes[index].dadosRaw
+                        // combatentes[index].dadosRaw = novoDado.dados; 
+                        
                         atualizarInterfaceUnitary(idMudou, combatentes[index]);
                     }
                 })
@@ -268,27 +396,41 @@
             if (indicador) indicador.innerHTML = `<svg class="animate-spin w-4 h-4 text-yellow-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
 
             try {
+                // 1. Pega dados atuais do banco
                 const { data, error } = await supabaseClient.from('Personagens').select('dados').eq('id', id).single();
                 if (error) throw error;
+
                 const charLocal = combatentes.find(c => c.id === id);
                 if (!charLocal) return;
 
                 const dadosJson = data.dados || {};
                 if (!dadosJson.statusAtuais) dadosJson.statusAtuais = {};
                 
+                // 2. Atualiza Status
                 dadosJson.statusAtuais.vida = charLocal.hpAtual;
                 dadosJson.statusAtuais.mana = charLocal.manaAtual;
                 dadosJson.statusAtuais.foco = charLocal.focoAtual;
                 dadosJson.iniciativa = charLocal.iniciativa;
-
-                await supabaseClient.from('Personagens').update({ dados: dadosJson }).eq('id', id);
                 
+                // 3. ATENÇÃO: Salvar os Efeitos e Tempo também!
+                dadosJson.efeitos = charLocal.efeitos || [];
+                // Opcional: Salvar o tempo acumulado da timeline se quiser persistência de turno
+                // dadosJson.tempoCombate = charLocal.tempoAcumulado || 0; 
+
+                // 4. Envia pro banco
+                const { error: updateError } = await supabaseClient.from('Personagens').update({ dados: dadosJson }).eq('id', id);
+                if (updateError) throw updateError;
+
                 if (indicador) {
                     indicador.innerHTML = `<svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
                     setTimeout(() => indicador.innerHTML = '', 2000);
                 }
-                delete saveTimers[id];
-            } catch (err) { console.error(err); }
+                if (window.saveTimers && window.saveTimers[id]) delete window.saveTimers[id];
+
+            } catch (err) {
+                console.error("Erro ao salvar:", err);
+                if (indicador) indicador.innerHTML = `<span class="text-red-500 text-xs">Erro!</span>`;
+            }
         }
 
         function atualizarStatus(id, campo, valor) {
@@ -304,23 +446,180 @@
         // --- LÓGICA DE TURNO E MODULO 1 (RESSONÂNCIA) ---
         function proximoTurno() {
             if (combatentes.length === 0) return;
+
+            // 1. Descobre quem é o primeiro da fila (pode ser char ou marker)
+            let listaFila = combatentes.map(c => ({ 
+                tipo: 'char', ref: c, tempo: c.tempoAcumulado || 0 
+            }));
             
-            // Avança o turno
-            const novoTurno = (turnoAtual + 1) % combatentes.length;
+            // Adiciona o Marco de Rodada na simulação da fila
+            listaFila.push({ tipo: 'marker', tempo: tempoRodadaAcumulado });
             
-            // Verifica se a rodada completou (Voltou pro índice 0)
-            if (novoTurno === 0) {
-                processarFimDeRodada();
+            // Ordena: Menor tempo primeiro. Desempate: Marker sempre por último para garantir que chars ajam antes da virada
+            listaFila.sort((a, b) => {
+                if (Math.abs(a.tempo - b.tempo) < 0.1) {
+                    if (a.tipo === 'marker') return 1; // Marker vai pro fim
+                    if (b.tipo === 'marker') return -1;
+                }
+                return a.tempo - b.tempo;
+            });
+
+            const primeiro = listaFila[0];
+
+            // --- CENÁRIO A: É O MARCO DE RODADA ---
+            if (primeiro.tipo === 'marker') {
+                // Dispara os efeitos globais (dreno de mana, veneno, etc)
+                processarFimDeRodada(); 
+                
+                // --- CORREÇÃO DA RODADA ---
+                // Calcula a menor iniciativa da mesa para definir o tamanho da rodada
+                // (A rodada anda na velocidade do mais lento)
+                let menorIniciativa = 999;
+                combatentes.forEach(c => {
+                    // Ignora quem tem 0 ou menos de iniciativa para não quebrar a conta, mínimo 1
+                    const inic = Math.max(1, c.iniciativa);
+                    if (inic < menorIniciativa) menorIniciativa = inic;
+                });
+                
+                // Se não achou ninguém (lista vazia), usa padrão 10
+                if (menorIniciativa === 999) menorIniciativa = 10;
+
+                // O "Custo" da rodada é baseado no mais lento.
+                // Assim, a rodada só será alcançada novamente quando o mais lento tiver agido.
+                const incrementoRodada = 1000 / menorIniciativa;
+                
+                tempoRodadaAcumulado += incrementoRodada;
+                
+                // Chama recursivamente para pular o marco e ir para o próximo personagem imediatamente
+                proximoTurno(); 
+                return;
             }
 
-            turnoAtual = novoTurno;
-            renderizarLista();
+            // --- CENÁRIO B: É UM PERSONAGEM ---
+            const char = primeiro.ref;
+            
+            // Calcula o custo do turno baseado na iniciativa
+            const iniciativa = Math.max(1, char.iniciativa);
+            const custoTempo = 1000 / iniciativa;
+
+            // Atualiza o tempo acumulado dele (joga ele para o final da fila)
+            char.tempoAcumulado = (char.tempoAcumulado || 0) + custoTempo;
+
+            // Atualiza a tela (Timeline visual e Destaque no Card)
+            renderizarTimeline();
+            
+            // Se quiser salvar o tempo exato no banco para persistência entre refreshes:
+            // persistirAlteracoes(char.id); 
+        }
+
+        function renderizarTimeline() {
+            const track = document.getElementById('timeline-track');
+            if (!track) return;
+
+            // 1. CLONE PARA SIMULAÇÃO
+            // Criamos uma cópia dos tempos atuais para simular o futuro sem estragar o jogo real
+            let simulacao = combatentes.map(c => ({
+                id: c.id,
+                nome: c.nome,
+                avatar: c.nome.charAt(0),
+                iniciativa: Math.max(1, c.iniciativa),
+                tempo: c.tempoAcumulado || 0,
+                tipo: c.tipo,
+                cor: c.tipo === 'monstro' ? 'text-red-400' : 'text-blue-400'
+            }));
+
+            // Variável local para simular o avanço do Marco de Rodada
+            let simTempoRodada = tempoRodadaAcumulado;
+
+            let listaVisual = [];
+            const PASSOS_FUTUROS = 15; // Quantos turnos queremos ver no futuro
+
+            // 2. LOOP DE PREVISÃO
+            for (let i = 0; i < PASSOS_FUTUROS; i++) {
+                // Cria lista de candidatos (Chars simulados + Marco de Rodada simulado)
+                let candidatos = simulacao.map(c => ({ ...c, tipoObj: 'char' }));
+                
+                candidatos.push({ 
+                    tipoObj: 'marker', 
+                    tempo: simTempoRodada 
+                });
+
+                // Descobre quem age primeiro nessa iteração
+                candidatos.sort((a, b) => {
+                    if (Math.abs(a.tempo - b.tempo) < 0.1) {
+                        // Se empatar, marker fica por último
+                        if (a.tipoObj === 'marker') return 1;
+                        if (b.tipoObj === 'marker') return -1;
+                    }
+                    return a.tempo - b.tempo;
+                });
+
+                const vencedor = candidatos[0];
+                
+                // Adiciona à lista visual final
+                // Copiamos os dados para que o valor de 'tempo' fique "congelado" nesse passo
+                listaVisual.push({ ...vencedor });
+
+                // AVANÇA O TEMPO NA SIMULAÇÃO
+                if (vencedor.tipoObj === 'marker') {
+                    // Avança a rodada baseada no mais lento da simulação
+                    let menorIniciativa = 999;
+                    simulacao.forEach(c => {
+                        if (c.iniciativa < menorIniciativa) menorIniciativa = c.iniciativa;
+                    });
+                    if (menorIniciativa === 999) menorIniciativa = 10;
+                    
+                    simTempoRodada += (1000 / menorIniciativa);
+                } else {
+                    // Avança o personagem específico na simulação
+                    // Precisamos atualizar o objeto dentro da array 'simulacao' para as próximas iterações
+                    const charNaSimulacao = simulacao.find(c => c.id === vencedor.id);
+                    charNaSimulacao.tempo += (1000 / charNaSimulacao.iniciativa);
+                }
+            }
+
+            // 3. RENDERIZAÇÃO HTML
+            let html = '';
+            listaVisual.forEach((item, idx) => {
+                if (item.tipoObj === 'marker') {
+                    html += `<div class="timeline-marker" title="Fim da Rodada"></div>`;
+                } else {
+                    const isFirst = idx === 0;
+                    const classeFirst = isFirst ? 'first' : 'opacity-70 scale-90';
+                    
+                    html += `
+                    <div class="timeline-card ${classeFirst}">
+                        <div class="font-bold text-lg ${item.cor}">${item.avatar}</div>
+                        <div class="text-[8px] text-slate-400 truncate w-10 text-center">${item.nome}</div>
+                        <div class="absolute -bottom-2 bg-slate-800 text-[8px] px-1 rounded border border-slate-600">${Math.floor(item.tempo)}</div>
+                    </div>`;
+                }
+            });
+
+            track.innerHTML = html;
+
+            // 4. DESTAQUE NO CARD PRINCIPAL (Apenas para o atual real)
+            const atualId = listaVisual[0].tipoObj === 'char' ? listaVisual[0].id : null;
+            
+            combatentes.forEach(c => {
+                const card = document.getElementById(`card-${c.id}`);
+                if (card) {
+                    if (c.id === atualId) {
+                        card.classList.add('active-turn', 'border-purple-500');
+                        card.classList.remove('opacity-90', 'border-slate-800');
+                    } else {
+                        card.classList.remove('active-turn', 'border-purple-500');
+                        card.classList.add('opacity-90', 'border-slate-800');
+                    }
+                }
+            });
         }
 
         function processarFimDeRodada() {
             let afetadosRessonancia = 0;
             let totalDano = 0;
             let totalCura = 0;
+            let precisaRedesenharTela = false; // Nova flag para controlar atualização visual
 
             combatentes.forEach(char => {
                 let mudouAlgo = false;
@@ -336,16 +635,15 @@
                     }
                 }
 
-                // 2. Efeitos (Duração + MÓDULO 4: Modificadores)
+                // 2. Efeitos e Duração
                 if (char.efeitos && char.efeitos.length > 0) {
+                    const qtdInicial = char.efeitos.length;
                     
-                    // Aplica modificadores de cada efeito ATIVO
+                    // Aplica modificadores (Vida/Mana/Foco)
                     char.efeitos.forEach(ef => {
                         if (ef.mods) {
-                            // Vida
                             if (ef.mods.vida !== 0) {
                                 const antes = char.hpAtual;
-                                // Clampa entre 0 e Max
                                 char.hpAtual = Math.min(char.hpMax, Math.max(0, char.hpAtual + ef.mods.vida));
                                 if (char.hpAtual !== antes) {
                                     mudouAlgo = true;
@@ -353,13 +651,11 @@
                                     else totalCura += ef.mods.vida;
                                 }
                             }
-                            // Mana
                             if (ef.mods.mana !== 0) {
                                 const antes = char.manaAtual;
                                 char.manaAtual = Math.min(char.manaMax, Math.max(0, char.manaAtual + ef.mods.mana));
                                 if (char.manaAtual !== antes) mudouAlgo = true;
                             }
-                            // Foco
                             if (ef.mods.foco !== 0) {
                                 const antes = char.focoAtual;
                                 char.focoAtual = Math.min(char.focoMax, Math.max(0, char.focoAtual + ef.mods.foco));
@@ -369,26 +665,31 @@
                     });
 
                     // Decrementa Duração
-                    const qtdInicial = char.efeitos.length;
                     char.efeitos = char.efeitos.filter(ef => {
-                        if (ef.duracao === 0) return true;
+                        if (ef.duracao === 0) return true; // 0 = Infinito
                         ef.duracao -= 1;
-                        return ef.duracao > 0;
+                        return ef.duracao > 0; // Remove se chegar a 0
                     });
                     
+                    // Se a quantidade mudou OU se as durações mudaram (para atualizar o texto visual)
                     if (char.efeitos.length !== qtdInicial || char.efeitos.some(ef => ef.duracao >= 0)) {
                         mudouAlgo = true;
+                        precisaRedesenharTela = true; // Avisa que precisamos atualizar o HTML dos efeitos
                     }
                 }
 
-                // Salva e Atualiza
                 if (mudouAlgo) {
-                    atualizarInterfaceUnitary(char.id, char);
-                    persistirAlteracoes(char.id);
+                    atualizarInterfaceUnitary(char.id, char); // Atualiza barras
+                    persistirAlteracoes(char.id); // Salva no banco
                 }
             });
 
-            // Feedback Inteligente
+            // CORREÇÃO VISUAL: Se os efeitos mudaram, redesenha a lista para atualizar os números (3)->(2)
+            if (precisaRedesenharTela) {
+                renderizarLista();
+            }
+
+            // Toasts (Feedback)
             let msg = [];
             if (afetadosRessonancia > 0) msg.push(`${afetadosRessonancia} ressonâncias`);
             if (totalDano > 0) msg.push(`-${totalDano} HP total`);
@@ -639,7 +940,8 @@
                 manaMax: parseInt(dados.statusCalculados?.mana || 0),
                 focoAtual: parseInt(dados.statusAtuais?.foco || dados.statusCalculados?.foco || 0), 
                 focoMax: parseInt(dados.statusCalculados?.foco || 0),    
-                tipo: 'jogador'
+                tipo: 'jogador',
+                dadosRaw: dados, 
             };
         }
 
@@ -672,11 +974,84 @@
             container.innerHTML = html;
         }
         function toggleSelecaoImportacao(id) { const strId = String(id); if (selecionadosParaImportar.has(strId)) selecionadosParaImportar.delete(strId); else selecionadosParaImportar.add(strId); renderizarListaImportacao(); }
-        function confirmarImportacao() { const novos = candidatosImportacao.filter(c => selecionadosParaImportar.has(c.id)); if (novos.length > 0) { combatentes = [...combatentes, ...novos]; renderizarLista(); } fecharModalImportacao(); }
+        function confirmarImportacao() { 
+            const novos = candidatosImportacao.filter(c => selecionadosParaImportar.has(c.id)); if (novos.length > 0) { combatentes = [...combatentes, ...novos]; renderizarLista(); } fecharModalImportacao(); renderizarTimeline() }
         function filtrarListaImportacao() { renderizarListaImportacao(); }
         function fecharModalImportacao() { document.getElementById('modal-importacao').classList.add('hidden'); }
         function adicionarMonstro() { const idRandom = Math.random().toString(36).substr(2, 9); combatentes.push({ id: `mob_${idRandom}`, nome: 'Monstro', classe: 'Inimigo', nivel: 1, iniciativa: Math.floor(Math.random() * 20) + 1, hpAtual: 30, hpMax: 30, manaAtual: 0, manaMax: 0, focoAtual: 0, focoMax: 0, tipo: 'monstro', ressonancia: false }); renderizarLista(); }
         function removerCombatente(id) { combatentes = combatentes.filter(c => c.id !== id); if (turnoAtual >= combatentes.length) turnoAtual = 0; renderizarLista(); }
+
+        // --- LÓGICA DO HISTÓRICO (MÓDULO 6) ---
+
+        function toggleLog() {
+            const log = document.getElementById('combat-log');
+            const arrow = document.getElementById('log-arrow');
+            log.classList.toggle('log-minimized');
+            arrow.classList.toggle('rotate-180');
+        }
+
+        function adicionarLog(msg, tipo = 'info') {
+            const container = document.getElementById('log-content');
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            const div = document.createElement('div');
+            div.className = 'log-entry animate-pulse'; // Animação rápida ao entrar
+            div.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-msg ${tipo}">${msg}</span>`;
+            
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight; // Auto-scroll para o fim
+            
+            // Remove animação depois de um tempo
+            setTimeout(() => div.classList.remove('animate-pulse'), 1000);
+        }
+
+        // A FUNÇÃO DETETIVE
+        function compararEGerarLog(nome, dadosAntigos, dadosNovos) {
+            if (!dadosAntigos || !dadosNovos) return;
+
+            // 1. Status Atuais (Vida, Mana, Foco)
+            const statsA = dadosAntigos.statusAtuais || {};
+            const statsN = dadosNovos.statusAtuais || {};
+
+            // Vida
+            const diffVida = (parseInt(statsN.vida) || 0) - (parseInt(statsA.vida) || 0);
+            if (diffVida !== 0) {
+                if (diffVida < 0) adicionarLog(`${nome} perdeu ${Math.abs(diffVida)} HP`, 'log-dano');
+                else adicionarLog(`${nome} recuperou ${diffVida} HP`, 'log-cura');
+            }
+
+            // Mana
+            const diffMana = (parseInt(statsN.mana) || 0) - (parseInt(statsA.mana) || 0);
+            if (diffMana !== 0) {
+                if (diffMana < 0) adicionarLog(`${nome} gastou ${Math.abs(diffMana)} MP`, 'log-mana');
+                else adicionarLog(`${nome} recuperou ${diffMana} MP`, 'log-mana');
+            }
+
+            // Foco (Opcional, pode poluir se mudar muito)
+            const diffFoco = (parseInt(statsN.foco) || 0) - (parseInt(statsA.foco) || 0);
+            if (diffFoco !== 0) {
+                adicionarLog(`${nome} Foco: ${statsA.foco} -> ${statsN.foco}`, 'log-info');
+            }
+
+            // 2. Inventário (Equipar/Desequipar)
+            const invA = dadosAntigos.inventario || [];
+            const invN = dadosNovos.inventario || [];
+
+            // Verifica itens equipados
+            // Mapeia por ID ou Nome para comparar
+            invN.forEach(itemN => {
+                const itemA = invA.find(i => i.instancia_id === itemN.instancia_id || i.nome === itemN.nome);
+                
+                if (itemA) {
+                    // Se o item já existia, vê se mudou o status 'equipado'
+                    if (itemN.equipado && !itemA.equipado) {
+                        adicionarLog(`${nome} equipou: ${itemN.nome}`, 'log-item');
+                    } else if (!itemN.equipado && itemA.equipado) {
+                        adicionarLog(`${nome} desequipou: ${itemN.nome}`, 'log-info');
+                    }
+                }
+            });
+        }        
     </script>
 </body>
 </html>
