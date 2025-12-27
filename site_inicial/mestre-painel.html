@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel do Mestre RPG - Ressonância</title>
+    <title>Painel do Mestre - Módulo 1: Ressonância</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,56 +14,52 @@
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
-        /* Animações Básicas */
+        /* Animações */
         .card-enter { animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Turno Ativo */
         .active-turn { 
             border-color: #a855f7 !important; 
             background-color: #1e293b !important; 
             transform: scale(1.01);
+            box-shadow: 0 10px 15px -3px rgba(168, 85, 247, 0.2);
             z-index: 10;
         }
 
-        /* --- EFEITO DE RESSONÂNCIA (MÁGICO) --- */
+        /* Efeito de Ressonância */
         .card-ressonancia {
-            /* Borda Roxa Brilhante */
             border-color: #d8b4fe !important;
-            
-            /* Sombra Externa e Interna (Glow) */
-            box-shadow: 0 0 20px rgba(168, 85, 247, 0.5), inset 0 0 20px rgba(168, 85, 247, 0.1) !important;
-            
-            /* Gradiente Sutil no Fundo */
-            background: linear-gradient(135deg, rgba(151, 180, 228) 0%, rgba(148, 7, 255, 0.25) 100%) !important;
-            
-            /* Animação de "Respiração" do brilho */
             animation: pulseMagic 2s infinite alternate ease-in-out !important;
         }
 
-@keyframes pulseMagic {
-    0% {
-        box-shadow: 0 0 15px rgba(168, 85, 247, 0.3), inset 0 0 10px rgba(168, 85, 247, 0.1);
-        /* Estado Normal (O que você definiu) */
-        background: linear-gradient(135deg, rgb(151, 180, 228) 0%, rgba(148, 7, 255, 0.25) 100%);
-    }
-    100% {
-        box-shadow: 0 0 25px rgba(192, 132, 252, 0.6), inset 0 0 20px rgba(168, 85, 247, 0.2);
-        border-color: #e9d5ff;
-        /* Estado "Ativado/Brilhante" (Mais claro e com roxo mais forte) */
-        background: linear-gradient(135deg, rgb(180, 200, 255) 0%, rgba(180, 80, 255, 0.4) 100%);
-    }
-}
+        @keyframes pulseMagic {
+            0% {
+                box-shadow: 0 0 15px rgba(168, 85, 247, 0.3), inset 0 0 10px rgba(168, 85, 247, 0.1);
+                background: linear-gradient(135deg, rgb(151, 180, 228) 0%, rgba(148, 7, 255, 0.25) 100%);
+            }
+            100% {
+                box-shadow: 0 0 25px rgba(192, 132, 252, 0.6), inset 0 0 20px rgba(168, 85, 247, 0.2);
+                border-color: #e9d5ff;
+                background: linear-gradient(135deg, rgb(180, 200, 255) 0%, rgba(180, 80, 255, 0.4) 100%);
+            }
+        }
 
-        /* Scrollbar */
+        /* Notificação Toast */
+        #system-toast {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        #system-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Utilitários */
         .custom-scroll::-webkit-scrollbar { width: 8px; }
         .custom-scroll::-webkit-scrollbar-track { background: #1e293b; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; margin: 0; 
-        }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen pb-20">
@@ -77,12 +73,17 @@
                     Painel do Mestre <span class="text-xs text-green-500 font-mono bg-green-900/30 px-2 py-0.5 rounded ml-2 border border-green-800" id="status-conn">● Online</span>
                 </h1>
             </div>
-            
-            <button onclick="carregarPersonagens()" class="p-2 rounded-lg hover:bg-slate-800 text-slate-400 transition-colors" title="Sincronizar Manualmente">
+            <button onclick="carregarPersonagens()" class="p-2 rounded-lg hover:bg-slate-800 text-slate-400 transition-colors" title="Sincronizar">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
             </button>
         </div>
     </header>
+
+    <!-- TOAST DE SISTEMA -->
+    <div id="system-toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-blue-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 font-bold text-sm pointer-events-none border border-blue-400">
+        <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="toast-icon"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        <span id="toast-msg">Mensagem do Sistema</span>
+    </div>
 
     <main class="max-w-6xl mx-auto p-4">
         
@@ -92,16 +93,16 @@
 
         <div id="view-combat">
             <div class="flex flex-wrap gap-3 items-center bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-lg mb-6">
-                <button onclick="abrirModalImportacao()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-bold transition-all">Importar Fichas</button>
+                <button onclick="abrirModalImportacao()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-bold transition-all">Importar</button>
                 <button onclick="adicionarMonstro()" class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-bold transition-all">+ Monstro</button>
                 <div class="h-6 w-px bg-slate-600 mx-2 hidden sm:block"></div>
-                <button onclick="ordenarIniciativa()" class="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded text-sm font-bold transition-all">Ordenar Turnos</button>
-                <button onclick="proximoTurno()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded text-sm font-bold ml-auto shadow-lg shadow-emerald-900/50">Próximo Turno →</button>
+                <button onclick="ordenarIniciativa()" class="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded text-sm font-bold transition-all">Ordenar</button>
+                <button onclick="proximoTurno()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded text-sm font-bold ml-auto shadow-lg shadow-emerald-900/50 hover:scale-105 transition-transform">Próximo Turno →</button>
             </div>
 
             <div id="combat-list" class="grid gap-3">
                 <div class="text-center py-24 text-slate-500 border-2 border-dashed border-slate-700 rounded-xl bg-slate-900/50">
-                    <p class="text-lg font-medium">Carregando sistema...</p>
+                    <p class="text-lg font-medium">Carregando...</p>
                 </div>
             </div>
         </div>
@@ -127,6 +128,77 @@
         </div>
     </main>
 
+    <!-- MODAL DE EFEITOS (MÓDULO 4 - COMPLETO) -->
+    <div id="modal-efeitos" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div class="bg-slate-900 w-full max-w-sm rounded-xl border border-slate-700 shadow-2xl overflow-hidden">
+            <div class="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="font-bold text-white">Adicionar Condição</h3>
+                <button onclick="fecharModalEfeitos()" class="text-slate-500 hover:text-white">&times;</button>
+            </div>
+            
+            <!-- Configuração: Duração e Modificadores -->
+            <div class="px-4 pt-4 pb-4 bg-slate-900/50 border-b border-slate-800">
+                
+                <!-- Duração -->
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="flex-1">
+                        <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Duração (Rodadas)</label>
+                        <input type="number" id="input-duracao-efeito" value="3" min="0" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-white font-mono text-center focus:border-blue-500 outline-none">
+                    </div>
+                    <span class="text-[10px] text-slate-500 w-16 leading-tight mt-4">0 = Infinito</span>
+                </div>
+
+                <!-- MÓDULO 4: Modificadores por Rodada -->
+                <label class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Alteração por Rodada (Ex: -5 ou 5)</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <!-- Vida -->
+                    <div class="relative">
+                        <input type="number" id="mod-vida" placeholder="0" class="w-full bg-slate-950 border border-red-900/50 text-red-400 font-bold text-center rounded py-1 focus:border-red-500 outline-none placeholder-red-900/30">
+                        <span class="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] text-red-700 font-bold">HP</span>
+                    </div>
+                    <!-- Mana -->
+                    <div class="relative">
+                        <input type="number" id="mod-mana" placeholder="0" class="w-full bg-slate-950 border border-cyan-900/50 text-cyan-400 font-bold text-center rounded py-1 focus:border-cyan-500 outline-none placeholder-cyan-900/30">
+                        <span class="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] text-cyan-700 font-bold">MP</span>
+                    </div>
+                    <!-- Foco -->
+                    <div class="relative">
+                        <input type="number" id="mod-foco" placeholder="0" class="w-full bg-slate-950 border border-amber-900/50 text-amber-400 font-bold text-center rounded py-1 focus:border-amber-500 outline-none placeholder-amber-900/30">
+                        <span class="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] text-amber-700 font-bold">FP</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Botões Rápidos -->
+            <div class="p-4 grid grid-cols-2 gap-2">
+                <button onclick="aplicarEfeito('Queimadura', '🔥', 'text-orange-500', 'border-orange-500')" class="p-2 bg-slate-800 hover:bg-orange-900/30 border border-slate-700 hover:border-orange-500 rounded flex items-center justify-center gap-2 transition-all">
+                    <span>🔥</span> <span class="text-xs font-bold text-orange-200">Queimadura</span>
+                </button>
+                <button onclick="aplicarEfeito('Congelado', '❄️', 'text-cyan-400', 'border-cyan-400')" class="p-2 bg-slate-800 hover:bg-cyan-900/30 border border-slate-700 hover:border-cyan-400 rounded flex items-center justify-center gap-2 transition-all">
+                    <span>❄️</span> <span class="text-xs font-bold text-cyan-200">Congelado</span>
+                </button>
+                <button onclick="aplicarEfeito('Veneno', '🤢', 'text-green-500', 'border-green-500')" class="p-2 bg-slate-800 hover:bg-green-900/30 border border-slate-700 hover:border-green-500 rounded flex items-center justify-center gap-2 transition-all">
+                    <span>🤢</span> <span class="text-xs font-bold text-green-200">Veneno</span>
+                </button>
+                <button onclick="aplicarEfeito('Sangramento', '🩸', 'text-red-600', 'border-red-600')" class="p-2 bg-slate-800 hover:bg-red-900/30 border border-slate-700 hover:border-red-600 rounded flex items-center justify-center gap-2 transition-all">
+                    <span>🩸</span> <span class="text-xs font-bold text-red-200">Sangrando</span>
+                </button>
+                <button onclick="aplicarEfeito('Atordoado', '⚡', 'text-yellow-400', 'border-yellow-400')" class="p-2 bg-slate-800 hover:bg-yellow-900/30 border border-slate-700 hover:border-yellow-400 rounded flex items-center justify-center gap-2 transition-all">
+                    <span>⚡</span> <span class="text-xs font-bold text-yellow-200">Atordoado</span>
+                </button>
+                <button onclick="aplicarEfeito('Regeneração', '💖', 'text-pink-400', 'border-pink-400')" class="p-2 bg-slate-800 hover:bg-pink-900/30 border border-slate-700 hover:border-pink-400 rounded flex items-center justify-center gap-2 transition-all">
+                    <span>💖</span> <span class="text-xs font-bold text-pink-200">Regeneração</span>
+                </button>
+            </div>
+            
+            <!-- Custom -->
+            <div class="p-4 border-t border-slate-800 flex gap-2">
+                <input type="text" id="input-efeito-custom" placeholder="Outro..." class="flex-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-sm outline-none focus:border-blue-500">
+                <button onclick="aplicarEfeitoCustom()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm font-bold">Add</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- CONFIGURAÇÃO ---
         const { createClient } = window.supabase;
@@ -139,7 +211,9 @@
         let candidatosImportacao = [];
         let selecionadosParaImportar = new Set();
         let realtimeChannel = null;
-        let saveTimers = {}; 
+        let saveTimers = {};
+        let idAlvoEfeito = null; // Guarda quem vai receber o efeito enquanto o modal está aberto
+ 
 
         // --- INICIALIZAÇÃO ---
         window.onload = function() {
@@ -149,39 +223,42 @@
             carregarPersonagens();
         };
 
+        // --- TOAST NOTIFICATION ---
+        function mostrarToast(msg, tipo = 'info') {
+            const toast = document.getElementById('system-toast');
+            const msgEl = document.getElementById('toast-msg');
+            const iconEl = document.getElementById('toast-icon');
+            
+            msgEl.innerText = msg;
+            toast.className = `fixed top-20 left-1/2 -translate-x-1/2 z-[60] px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 font-bold text-sm pointer-events-none border transition-all duration-300 transform `;
+            
+            if (tipo === 'info') {
+                toast.classList.add('bg-blue-600', 'text-white', 'border-blue-400');
+            } else if (tipo === 'magic') {
+                toast.classList.add('bg-purple-600', 'text-white', 'border-purple-400');
+            }
+
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 1000);
+        }
+
         // --- REALTIME LISTENER ---
         function iniciarRealtime() {
             if (realtimeChannel) supabaseClient.removeChannel(realtimeChannel);
-
             realtimeChannel = supabaseClient
                 .channel('painel-mestre-global')
-                .on('postgres_changes', 
-                    { event: 'UPDATE', schema: 'public', table: 'Personagens' }, 
-                    payload => {
-                        const novoDado = payload.new;
-                        const idMudou = String(novoDado.id);
-                        const index = combatentes.findIndex(c => c.id === idMudou);
-
-                        if (index !== -1) {
-                            if (saveTimers[idMudou]) {
-                                console.log("Ignorando update realtime pois estou editando...");
-                                return;
-                            }
-
-                            const dadosAtualizados = parseCharacterData(novoDado);
-                            // Mescla os dados (incluindo a ressonância)
-                            combatentes[index] = { ...combatentes[index], ...dadosAtualizados };
-                            atualizarInterfaceUnitary(idMudou, combatentes[index]);
-                        }
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'Personagens' }, payload => {
+                    const novoDado = payload.new;
+                    const idMudou = String(novoDado.id);
+                    const index = combatentes.findIndex(c => c.id === idMudou);
+                    if (index !== -1) {
+                        if (saveTimers[idMudou]) return;
+                        const dadosAtualizados = parseCharacterData(novoDado);
+                        combatentes[index] = { ...combatentes[index], ...dadosAtualizados };
+                        atualizarInterfaceUnitary(idMudou, combatentes[index]);
                     }
-                )
-                .subscribe((status) => {
-                    const statusEl = document.getElementById('status-conn');
-                    if (status === 'SUBSCRIBED') {
-                        statusEl.innerHTML = '● Online';
-                        statusEl.className = 'text-xs text-green-500 font-mono bg-green-900/30 px-2 py-0.5 rounded ml-2 border border-green-800';
-                    }
-                });
+                })
+                .subscribe();
         }
 
         // --- SALVAMENTO ---
@@ -193,7 +270,6 @@
             try {
                 const { data, error } = await supabaseClient.from('Personagens').select('dados').eq('id', id).single();
                 if (error) throw error;
-
                 const charLocal = combatentes.find(c => c.id === id);
                 if (!charLocal) return;
 
@@ -205,19 +281,14 @@
                 dadosJson.statusAtuais.foco = charLocal.focoAtual;
                 dadosJson.iniciativa = charLocal.iniciativa;
 
-                const { error: updateError } = await supabaseClient.from('Personagens').update({ dados: dadosJson }).eq('id', id);
-                if (updateError) throw updateError;
-
+                await supabaseClient.from('Personagens').update({ dados: dadosJson }).eq('id', id);
+                
                 if (indicador) {
                     indicador.innerHTML = `<svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
                     setTimeout(() => indicador.innerHTML = '', 2000);
                 }
                 delete saveTimers[id];
-
-            } catch (err) {
-                console.error("Erro ao salvar:", err);
-                if (indicador) indicador.innerHTML = `<span class="text-red-500 text-xs">Erro!</span>`;
-            }
+            } catch (err) { console.error(err); }
         }
 
         function atualizarStatus(id, campo, valor) {
@@ -228,6 +299,112 @@
                 if (saveTimers[id]) clearTimeout(saveTimers[id]);
                 saveTimers[id] = setTimeout(() => { persistirAlteracoes(id); }, 1000);
             }
+        }
+
+        // --- LÓGICA DE TURNO E MODULO 1 (RESSONÂNCIA) ---
+        function proximoTurno() {
+            if (combatentes.length === 0) return;
+            
+            // Avança o turno
+            const novoTurno = (turnoAtual + 1) % combatentes.length;
+            
+            // Verifica se a rodada completou (Voltou pro índice 0)
+            if (novoTurno === 0) {
+                processarFimDeRodada();
+            }
+
+            turnoAtual = novoTurno;
+            renderizarLista();
+        }
+
+        function processarFimDeRodada() {
+            let afetadosRessonancia = 0;
+            let totalDano = 0;
+            let totalCura = 0;
+
+            combatentes.forEach(char => {
+                let mudouAlgo = false;
+
+                // 1. Ressonância
+                if (char.ressonancia === true) {
+                    const custo = char.nivel > 0 ? char.nivel : 1;
+                    const novaMana = Math.max(0, char.manaAtual - custo);
+                    if (novaMana !== char.manaAtual) {
+                        char.manaAtual = novaMana;
+                        afetadosRessonancia++;
+                        mudouAlgo = true;
+                    }
+                }
+
+                // 2. Efeitos (Duração + MÓDULO 4: Modificadores)
+                if (char.efeitos && char.efeitos.length > 0) {
+                    
+                    // Aplica modificadores de cada efeito ATIVO
+                    char.efeitos.forEach(ef => {
+                        if (ef.mods) {
+                            // Vida
+                            if (ef.mods.vida !== 0) {
+                                const antes = char.hpAtual;
+                                // Clampa entre 0 e Max
+                                char.hpAtual = Math.min(char.hpMax, Math.max(0, char.hpAtual + ef.mods.vida));
+                                if (char.hpAtual !== antes) {
+                                    mudouAlgo = true;
+                                    if (ef.mods.vida < 0) totalDano += Math.abs(ef.mods.vida);
+                                    else totalCura += ef.mods.vida;
+                                }
+                            }
+                            // Mana
+                            if (ef.mods.mana !== 0) {
+                                const antes = char.manaAtual;
+                                char.manaAtual = Math.min(char.manaMax, Math.max(0, char.manaAtual + ef.mods.mana));
+                                if (char.manaAtual !== antes) mudouAlgo = true;
+                            }
+                            // Foco
+                            if (ef.mods.foco !== 0) {
+                                const antes = char.focoAtual;
+                                char.focoAtual = Math.min(char.focoMax, Math.max(0, char.focoAtual + ef.mods.foco));
+                                if (char.focoAtual !== antes) mudouAlgo = true;
+                            }
+                        }
+                    });
+
+                    // Decrementa Duração
+                    const qtdInicial = char.efeitos.length;
+                    char.efeitos = char.efeitos.filter(ef => {
+                        if (ef.duracao === 0) return true;
+                        ef.duracao -= 1;
+                        return ef.duracao > 0;
+                    });
+                    
+                    if (char.efeitos.length !== qtdInicial || char.efeitos.some(ef => ef.duracao >= 0)) {
+                        mudouAlgo = true;
+                    }
+                }
+
+                // Salva e Atualiza
+                if (mudouAlgo) {
+                    atualizarInterfaceUnitary(char.id, char);
+                    persistirAlteracoes(char.id);
+                }
+            });
+
+            // Feedback Inteligente
+            let msg = [];
+            if (afetadosRessonancia > 0) msg.push(`${afetadosRessonancia} ressonâncias`);
+            if (totalDano > 0) msg.push(`-${totalDano} HP total`);
+            if (totalCura > 0) msg.push(`+${totalCura} HP total`);
+            
+            if (msg.length > 0) {
+                mostrarToast(`Fim de Rodada: ${msg.join(', ')}`, 'magic');
+            } else {
+                mostrarToast('Nova Rodada Iniciada', 'info');
+            }
+        }
+
+        function ordenarIniciativa() {
+            combatentes.sort((a, b) => b.iniciativa - a.iniciativa);
+            turnoAtual = 0;
+            renderizarLista();
         }
 
         // --- RENDERIZAÇÃO ---
@@ -248,14 +425,89 @@
             if (inputMp && document.activeElement !== inputMp) inputMp.value = char.manaAtual;
             if (inputFoco && document.activeElement !== inputFoco) inputFoco.value = char.focoAtual;
 
-            // --- LÓGICA DE ATUALIZAÇÃO DA RESSONÂNCIA ---
             const card = document.getElementById(`card-${id}`);
             if (card) {
-                if (char.ressonancia) {
-                    card.classList.add('card-ressonancia');
-                } else {
-                    card.classList.remove('card-ressonancia');
-                }
+                if (char.ressonancia) card.classList.add('card-ressonancia');
+                else card.classList.remove('card-ressonancia');
+            }
+        }
+
+        // --- FUNÇÕES DO MÓDULO 2 ---
+
+        function abrirModalEfeitos(id) {
+            idAlvoEfeito = id;
+            document.getElementById('modal-efeitos').classList.remove('hidden');
+            document.getElementById('input-efeito-custom').value = '';
+            document.getElementById('input-duracao-efeito').value = '3';
+            
+            // Limpa os modificadores
+            document.getElementById('mod-vida').value = '';
+            document.getElementById('mod-mana').value = '';
+            document.getElementById('mod-foco').value = '';
+        }
+
+
+        // Fecha o modal
+        function fecharModalEfeitos() {
+            document.getElementById('modal-efeitos').classList.add('hidden');
+            idAlvoEfeito = null;
+        }
+        function aplicarEfeito(nome, icone, corTexto, corBorda) {
+            if (!idAlvoEfeito) return;
+            
+            const duracao = parseInt(document.getElementById('input-duracao-efeito').value) || 0;
+            
+            // MÓDULO 4: Captura os modificadores
+            const modVida = parseInt(document.getElementById('mod-vida').value) || 0;
+            const modMana = parseInt(document.getElementById('mod-mana').value) || 0;
+            const modFoco = parseInt(document.getElementById('mod-foco').value) || 0;
+
+            adicionarDadosEfeito(idAlvoEfeito, {
+                id: Date.now().toString(),
+                nome: nome,
+                icone: icone,
+                classes: `${corTexto} ${corBorda}`,
+                duracao: duracao,
+                mods: { vida: modVida, mana: modMana, foco: modFoco } // Salva no objeto
+            });
+            
+            fecharModalEfeitos();
+        }
+
+        // Adiciona efeito digitado manualmente
+        function aplicarEfeitoCustom() {
+            const nome = document.getElementById('input-efeito-custom').value;
+            if (!nome || !idAlvoEfeito) return;
+            
+            aplicarEfeito(nome, '✨', 'text-white', 'border-slate-400');
+        }
+
+        // Lógica central de adicionar ao array de combatentes
+        function adicionarDadosEfeito(charId, efeitoObj) {
+            const index = combatentes.findIndex(c => c.id === charId);
+            if (index !== -1) {
+                // Inicializa array se não existir
+                if (!combatentes[index].efeitos) combatentes[index].efeitos = [];
+                
+                // Adiciona o efeito
+                combatentes[index].efeitos.push(efeitoObj);
+                
+                // Atualiza a tela imediatamente
+                renderizarLista(); 
+                
+                // (Opcional) Salvar no Supabase se quiser persistência agora, 
+                // mas podemos deixar para o próximo módulo se preferir.
+                // persistirAlteracoes(charId); 
+            }
+        }
+
+        // Remove um efeito ao clicar nele
+        function removerEfeito(charId, efeitoId) {
+            const index = combatentes.findIndex(c => c.id === charId);
+            if (index !== -1 && combatentes[index].efeitos) {
+                combatentes[index].efeitos = combatentes[index].efeitos.filter(e => e.id !== efeitoId);
+                renderizarLista();
+                // persistirAlteracoes(charId);
             }
         }
 
@@ -269,94 +521,92 @@
             let html = '';
             combatentes.forEach((char, index) => {
                 const isActive = index === turnoAtual;
-                // Base class + Active Class + Magic Class
                 let cardClasses = `relative flex flex-col md:flex-row items-center gap-4 p-4 rounded-xl border transition-all duration-300 card-enter `;
-                
-                if (isActive) cardClasses += 'active-turn border-purple-500 ';
-                else cardClasses += 'bg-slate-900 border-slate-800 opacity-90 ';
-                
-                // Se ressonância for true, adiciona a classe mágica
+                if (isActive) cardClasses += 'active-turn border-purple-500 '; else cardClasses += 'bg-slate-900 border-slate-800 opacity-90 ';
                 if (char.ressonancia) cardClasses += 'card-ressonancia ';
-
-                const isDead = char.hpAtual <= 0;
-                if (isDead) cardClasses += 'grayscale opacity-50 ';
+                if (char.hpAtual <= 0) cardClasses += 'grayscale opacity-50 ';
 
                 const avatarBg = char.tipo === 'monstro' ? 'bg-red-900/40 text-red-400' : 'bg-blue-900/40 text-blue-400';
-                
                 const hpPct = char.hpMax > 0 ? Math.min(100, Math.max(0, (char.hpAtual / char.hpMax) * 100)) : 0;
                 const mpPct = char.manaMax > 0 ? Math.min(100, Math.max(0, (char.manaAtual / char.manaMax) * 100)) : 0;
                 const focoPct = char.focoMax > 0 ? Math.min(100, Math.max(0, (char.focoAtual / char.focoMax) * 100)) : 0;
 
+                // --- RENDERIZAÇÃO DOS EFEITOS (EM COLUNA) ---
+                let htmlEfeitos = '';
+                if (char.efeitos && char.efeitos.length > 0) {
+                    // Alterado para 'flex-col' (coluna) e removido 'col-span-3'
+                    htmlEfeitos = `<div class="flex flex-col gap-1 mt-2 w-full">`;
+                    char.efeitos.forEach(ef => {
+                        const textoDuracao = ef.duracao > 0 ? `(${ef.duracao})` : '';
+
+                        // MÓDULO 4: Texto do Modificador
+                        let textoMod = '';
+                        if (ef.mods) {
+                            if (ef.mods.vida < 0) textoMod += ` <span class="text-red-400 font-bold">${ef.mods.vida}</span>`;
+                            if (ef.mods.vida > 0) textoMod += ` <span class="text-green-400 font-bold">+${ef.mods.vida}</span>`;
+                            // Você pode adicionar mana/foco aqui se quiser, mas pode poluir muito o card. HP é o principal.
+                        }
+
+                        htmlEfeitos += `
+                            <div onclick="removerEfeito('${char.id}', '${ef.id}')" 
+                                class="cursor-pointer bg-slate-950 border ${ef.classes || 'border-slate-600 text-slate-300'} px-2 py-0.5 rounded text-[10px] uppercase font-bold flex items-center gap-1 hover:bg-red-900/50 hover:border-red-500 transition-colors w-fit" title="Clique para remover">
+                                <span>${ef.icone}</span> ${ef.nome} ${textoMod} <span class="ml-1 text-[9px] opacity-70">${textoDuracao}</span>
+                            </div>
+                        `;
+                    });
+                    htmlEfeitos += `</div>`;
+                }
+
                 html += `
                 <div id="card-${char.id}" class="${cardClasses}">
                     
-                    <div class="flex items-center gap-4 w-full md:w-auto min-w-[200px]">
+                    <!-- Coluna 1: Avatar, Info e EFEITOS -->
+                    <div class="flex items-center gap-4 w-full md:w-auto min-w-[200px] self-start">
                         <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${avatarBg}">
                             ${char.nome.charAt(0)}
                         </div>
-                        <div class="overflow-hidden">
+                        <div class="overflow-hidden w-full">
                             <h3 class="font-bold text-lg text-slate-100 truncate w-32 flex items-center gap-2">
                                 ${char.nome}
                                 <span id="save-status-${char.id}"></span>
                             </h3>
                             <div class="text-xs text-slate-400">Nv. ${char.nivel} - ${char.classe}</div>
+                            
+                            <!-- Efeitos inseridos aqui (agora em coluna) -->
+                            ${htmlEfeitos}
                         </div>
                     </div>
 
+                    <!-- Coluna 2: Barras -->
                     <div class="flex-1 w-full grid grid-cols-1 lg:grid-cols-3 gap-4 px-2">
-                        <!-- VIDA -->
-                        <div class="flex items-center gap-2">
-                            <span class="text-red-500 text-xs font-bold w-6">HP</span>
-                            <div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-                                <div id="bar-hp-${char.id}" class="h-full bg-red-600 transition-all duration-300" style="width: ${hpPct}%"></div>
-                            </div>
-                            <input type="number" id="input-hp-${char.id}"
-                                class="w-14 bg-slate-950 border border-slate-700 rounded text-center text-sm text-red-200 outline-none focus:border-red-500"
-                                value="${char.hpAtual}"
-                                oninput="atualizarStatus('${char.id}', 'hpAtual', this.value)">
-                        </div>
-
-                        <!-- MANA -->
-                        <div class="flex items-center gap-2">
-                            <span class="text-cyan-500 text-xs font-bold w-6">MP</span>
-                            <div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-                                <div id="bar-mp-${char.id}" class="h-full bg-cyan-600 transition-all duration-300" style="width: ${mpPct}%"></div>
-                            </div>
-                            <input type="number" id="input-mp-${char.id}"
-                                class="w-14 bg-slate-950 border border-slate-700 rounded text-center text-sm text-cyan-200 outline-none focus:border-cyan-500"
-                                value="${char.manaAtual}"
-                                oninput="atualizarStatus('${char.id}', 'manaAtual', this.value)">
-                        </div>
-
-                        <!-- FOCO -->
-                        <div class="flex items-center gap-2">
-                            <span class="text-amber-500 text-xs font-bold w-6">FP</span>
-                            <div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-                                <div id="bar-foco-${char.id}" class="h-full bg-amber-500 transition-all duration-300" style="width: ${focoPct}%"></div>
-                            </div>
-                            <input type="number" id="input-foco-${char.id}"
-                                class="w-14 bg-slate-950 border border-slate-700 rounded text-center text-sm text-amber-200 outline-none focus:border-amber-500"
-                                value="${char.focoAtual}"
-                                oninput="atualizarStatus('${char.id}', 'focoAtual', this.value)">
-                        </div>
+                        <div class="flex items-center gap-2"><span class="text-red-500 text-xs font-bold w-6">HP</span><div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800"><div id="bar-hp-${char.id}" class="h-full bg-red-600 transition-all duration-300" style="width: ${hpPct}%"></div></div><input type="number" id="input-hp-${char.id}" class="w-14 bg-slate-950 border border-slate-700 rounded text-center text-sm text-red-200 outline-none focus:border-red-500" value="${char.hpAtual}" oninput="atualizarStatus('${char.id}', 'hpAtual', this.value)"></div>
+                        <div class="flex items-center gap-2"><span class="text-cyan-500 text-xs font-bold w-6">MP</span><div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800"><div id="bar-mp-${char.id}" class="h-full bg-cyan-600 transition-all duration-300" style="width: ${mpPct}%"></div></div><input type="number" id="input-mp-${char.id}" class="w-14 bg-slate-950 border border-slate-700 rounded text-center text-sm text-cyan-200 outline-none focus:border-cyan-500" value="${char.manaAtual}" oninput="atualizarStatus('${char.id}', 'manaAtual', this.value)"></div>
+                        <div class="flex items-center gap-2"><span class="text-amber-500 text-xs font-bold w-6">FP</span><div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800"><div id="bar-foco-${char.id}" class="h-full bg-amber-500 transition-all duration-300" style="width: ${focoPct}%"></div></div><input type="number" id="input-foco-${char.id}" class="w-14 bg-slate-950 border border-slate-700 rounded text-center text-sm text-amber-200 outline-none focus:border-amber-500" value="${char.focoAtual}" oninput="atualizarStatus('${char.id}', 'focoAtual', this.value)"></div>
                     </div>
 
-                    <div class="flex items-center gap-4 border-l border-slate-800 pl-4">
+                    <!-- Coluna 3: Iniciativa e Botões (CORRIGIDO) -->
+                    <div class="flex items-center gap-2 border-l border-slate-800 pl-4">
                         <div class="text-center">
                             <label class="text-[9px] text-slate-500 uppercase font-bold block">Inic</label>
-                            <input type="number" 
-                                class="w-12 bg-transparent text-xl font-bold text-center text-yellow-500 outline-none border-b border-transparent focus:border-yellow-500"
-                                value="${char.iniciativa}"
-                                onchange="atualizarStatus('${char.id}', 'iniciativa', this.value)">
+                            <input type="number" class="w-12 bg-transparent text-xl font-bold text-center text-yellow-500 outline-none border-b border-transparent focus:border-yellow-500" value="${char.iniciativa}" onchange="atualizarStatus('${char.id}', 'iniciativa', this.value)">
                         </div>
-                        <button onclick="removerCombatente('${char.id}')" class="text-slate-600 hover:text-red-500 transition-colors p-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                        
+                        <!-- Botão Efeitos -->
+                        <button onclick="abrirModalEfeitos('${char.id}')" class="text-slate-500 hover:text-yellow-400 transition-colors p-2" title="Adicionar Efeito">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </button>
+
+                        <!-- Botão Remover -->
+                        <button onclick="removerCombatente('${char.id}')" class="text-slate-600 hover:text-red-500 transition-colors p-2" title="Remover Ficha">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
                     </div>
                 </div>`;
             });
             container.innerHTML = html;
         }
 
-        // --- DADOS ---
+        // --- SUPORTE ---
         async function carregarPersonagens() {
             try {
                 const { data, error } = await supabaseClient.from('Personagens').select('*');
@@ -371,7 +621,7 @@
                     });
                     renderizarLista();
                 }
-            } catch (err) { mostrarErro("Erro sync: " + err.message); }
+            } catch (err) { console.error(err); }
         }
 
         function parseCharacterData(char) {
@@ -381,7 +631,7 @@
                 nome: char.nome,
                 classe: (char.classe || 'N/C').toUpperCase(),
                 nivel: char.nivel || 0,
-                ressonancia: char.ressonancia === true, // Captura a Ressonância
+                ressonancia: char.ressonancia === true,
                 iniciativa: parseInt(dados.iniciativa || 0),
                 hpAtual: parseInt(dados.statusAtuais?.vida || dados.statusCalculados?.vida || 0), 
                 hpMax: parseInt(dados.statusCalculados?.vida || 0),
@@ -393,7 +643,6 @@
             };
         }
 
-        // --- IMPORTAÇÃO E MODAL ---
         async function abrirModalImportacao() {
             document.getElementById('modal-importacao').classList.remove('hidden');
             const lista = document.getElementById('lista-importacao');
@@ -404,7 +653,7 @@
                 candidatosImportacao = data.map(parseCharacterData);
                 selecionadosParaImportar.clear();
                 renderizarListaImportacao();
-            } catch (err) { mostrarErro(err.message); fecharModalImportacao(); }
+            } catch (err) { fecharModalImportacao(); }
         }
         function renderizarListaImportacao() {
             const container = document.getElementById('lista-importacao');
@@ -426,11 +675,8 @@
         function confirmarImportacao() { const novos = candidatosImportacao.filter(c => selecionadosParaImportar.has(c.id)); if (novos.length > 0) { combatentes = [...combatentes, ...novos]; renderizarLista(); } fecharModalImportacao(); }
         function filtrarListaImportacao() { renderizarListaImportacao(); }
         function fecharModalImportacao() { document.getElementById('modal-importacao').classList.add('hidden'); }
-        function mostrarErro(msg) { const box = document.getElementById('error-box'); document.getElementById('error-msg').innerText = msg; box.classList.remove('hidden'); setTimeout(() => box.classList.add('hidden'), 5000); }
         function adicionarMonstro() { const idRandom = Math.random().toString(36).substr(2, 9); combatentes.push({ id: `mob_${idRandom}`, nome: 'Monstro', classe: 'Inimigo', nivel: 1, iniciativa: Math.floor(Math.random() * 20) + 1, hpAtual: 30, hpMax: 30, manaAtual: 0, manaMax: 0, focoAtual: 0, focoMax: 0, tipo: 'monstro', ressonancia: false }); renderizarLista(); }
         function removerCombatente(id) { combatentes = combatentes.filter(c => c.id !== id); if (turnoAtual >= combatentes.length) turnoAtual = 0; renderizarLista(); }
-        function ordenarIniciativa() { combatentes.sort((a, b) => b.iniciativa - a.iniciativa); turnoAtual = 0; renderizarLista(); }
-        function proximoTurno() { if (combatentes.length === 0) return; turnoAtual = (turnoAtual + 1) % combatentes.length; renderizarLista(); }
     </script>
 </body>
 </html>
