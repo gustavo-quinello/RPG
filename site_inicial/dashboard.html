@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Manager - Hub</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Ícones Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Configuração Visual -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 850: '#1e293b', 950: '#020617' }
+                    },
+                    animation: {
+                        'fade-in-down': 'fadeInDown 0.8s ease-out',
+                        'pulse-glow': 'pulseGlow 3s infinite',
+                    },
+                    keyframes: {
+                        fadeInDown: {
+                            '0%': { opacity: '0', transform: 'translateY(-20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 10px rgba(168, 85, 247, 0.1)', borderColor: '#334155' },
+                            '50%': { boxShadow: '0 0 25px rgba(168, 85, 247, 0.4)', borderColor: '#a855f7' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .card-hub {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hub:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: #a855f7;
+            box-shadow: 0 10px 40px -10px rgba(168, 85, 247, 0.3);
+        }
+        .bg-grid-pattern {
+            background-image: linear-gradient(to right, #1e293b 1px, transparent 1px),
+                              linear-gradient(to bottom, #1e293b 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-200 font-sans min-h-screen flex flex-col items-center justify-center relative overflow-hidden p-6">
+
+    <!-- Background Decorativo -->
+    <div class="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div>
+    <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-slate-950 to-transparent pointer-events-none"></div>
+
+    <!-- Toggle de Cargo (Simulação) -->
+    <div class="absolute top-6 right-6 z-50 flex items-center gap-2 bg-slate-950 p-1.5 rounded-lg border border-slate-800 shadow-xl">
+        <span class="text-[10px] text-slate-500 font-bold px-2">VISÃO:</span>
+        <button id="btnRoleMestre" onclick="toggleRole('mestre')" class="px-3 py-1 text-xs font-bold rounded transition-colors bg-purple-600 text-white shadow-lg shadow-purple-900/50">MESTRE</button>
+        <button id="btnRoleJogador" onclick="toggleRole('jogador')" class="px-3 py-1 text-xs font-bold rounded transition-colors text-slate-500 hover:text-slate-300">JOGADOR</button>
+    </div>
+
+    <!-- Cabeçalho -->
+    <header class="text-center mb-12 animate-fade-in-down z-10 relative">
+        <div class="inline-flex items-center justify-center p-3 bg-slate-950 border border-slate-800 rounded-2xl mb-4 shadow-2xl">
+            <i data-lucide="d20" class="w-8 h-8 text-purple-500 mr-3"></i>
+            <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-slate-100 to-purple-400">
+                RPG MANAGER <span class="text-xs align-top text-slate-500 font-mono">v2.0</span>
+            </h1>
+        </div>
+        <p class="text-slate-400 text-sm tracking-widest uppercase mt-2">Selecione um módulo para iniciar</p>
+    </header>
+
+    <!-- Grid de Navegação -->
+    <main class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 z-10 relative">
+
+        <!-- CARD 1: PERSONAGENS (Módulo 1) -->
+        <!-- Link principal aponta para a lista de personagens -->
+        <div onclick="window.location.href='personagens.html'" class="card-hub group cursor-pointer bg-slate-950 border border-slate-800 rounded-xl p-6 relative overflow-hidden flex flex-col h-56 justify-between">
+            <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <i data-lucide="users" class="w-32 h-32"></i>
+            </div>
+            
+            <div>
+                <div class="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center border border-slate-700 mb-4 group-hover:border-purple-500 group-hover:text-purple-400 transition-colors">
+                    <i data-lucide="users" class="w-6 h-6"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-100 group-hover:text-purple-400 transition-colors">Personagens</h2>
+                <p class="text-slate-500 text-xs mt-2 leading-relaxed">Acesse a lista de jogadores, NPCs e gerencie fichas.</p>
+            </div>
+
+            <div class="flex gap-2 mt-4 pt-4 border-t border-slate-800/50">
+                <a href="ficha.html" onclick="event.stopPropagation()" class="text-[10px] font-bold uppercase tracking-wider text-emerald-500 hover:text-emerald-400 flex items-center">
+                    <i data-lucide="plus" class="w-3 h-3 mr-1"></i> Criar Novo
+                </a>
+            </div>
+        </div>
+
+        <!-- CARD 2: COMBATE (Mestre Focus) -->
+        <div id="card-combate" onclick="window.location.href='mestre-painel.html'" class="card-hub group cursor-pointer bg-slate-950 border border-slate-800 rounded-xl p-6 relative overflow-hidden flex flex-col h-56 justify-between">
+            <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <i data-lucide="swords" class="w-32 h-32"></i>
+            </div>
+            
+            <div>
+                <div class="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center border border-slate-700 mb-4 group-hover:border-red-500 group-hover:text-red-500 transition-colors">
+                    <i data-lucide="swords" class="w-6 h-6"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-100 group-hover:text-red-500 transition-colors">Combate</h2>
+                <p class="text-slate-500 text-xs mt-2 leading-relaxed">Painel de iniciativa, controle de turnos e status de batalha.</p>
+            </div>
+
+            <!-- Badge de Sessão Ativa (Exemplo) -->
+            <div class="flex items-center gap-2 mt-4 pt-4 border-t border-slate-800/50">
+                <span class="flex h-2 w-2 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </span>
+                <span class="text-[10px] font-bold text-slate-500 uppercase">Sistema pronto</span>
+            </div>
+        </div>
+
+        <!-- CARD 3: ITENS & LOJA (Módulo 4 - Futuro) -->
+        <div onclick="window.location.href='itens.html'" class="card-hub group cursor-pointer bg-slate-950 border border-slate-800 rounded-xl p-6 relative overflow-hidden flex flex-col h-56 justify-between opacity-70 hover:opacity-100">
+            <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <i data-lucide="backpack" class="w-32 h-32"></i>
+            </div>
+            
+            <div>
+                <div class="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center border border-slate-700 mb-4 group-hover:border-amber-500 group-hover:text-amber-500 transition-colors">
+                    <i data-lucide="backpack" class="w-6 h-6"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-100 group-hover:text-amber-500 transition-colors">Itens</h2>
+                <p class="text-slate-500 text-xs mt-2 leading-relaxed">Buscador de equipamentos e gestão de loot.</p>
+            </div>
+            
+            <div class="mt-4 pt-4 border-t border-slate-800/50 text-[10px] text-slate-600 uppercase font-bold">
+                <i data-lucide="lock" class="w-3 h-3 inline mr-1"></i> Módulo 4
+            </div>
+        </div>
+
+        <!-- CARD 4: REGRAS (Módulo 3 - Futuro) -->
+        <div onclick="window.location.href='regras.html'" class="card-hub group cursor-pointer bg-slate-950 border border-slate-800 rounded-xl p-6 relative overflow-hidden flex flex-col h-56 justify-between opacity-70 hover:opacity-100">
+            <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <i data-lucide="book-open" class="w-32 h-32"></i>
+            </div>
+            
+            <div>
+                <div class="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center border border-slate-700 mb-4 group-hover:border-blue-500 group-hover:text-blue-500 transition-colors">
+                    <i data-lucide="book-open" class="w-6 h-6"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-100 group-hover:text-blue-500 transition-colors">Regras</h2>
+                <p class="text-slate-500 text-xs mt-2 leading-relaxed">Grimório de magias e consulta rápida de regras.</p>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-slate-800/50 text-[10px] text-slate-600 uppercase font-bold">
+                <i data-lucide="lock" class="w-3 h-3 inline mr-1"></i> Módulo 3
+            </div>
+        </div>
+
+        <!-- CARD 5: ANOTAÇÕES (Exclusivo Mestre) -->
+        <div id="card-mestre" class="hidden card-hub group cursor-pointer bg-slate-950 border border-slate-800 rounded-xl p-6 relative overflow-hidden flex-col h-56 justify-between border-dashed">
+            <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <i data-lucide="scroll" class="w-32 h-32"></i>
+            </div>
+            
+            <div>
+                <div class="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center border border-slate-700 mb-4 border-dashed group-hover:border-slate-500 transition-colors">
+                    <i data-lucide="eye-off" class="w-6 h-6 text-slate-500"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-500 group-hover:text-slate-300 transition-colors">Área do Mestre</h2>
+                <p class="text-slate-600 text-xs mt-2 leading-relaxed">Anotações ocultas e ferramentas de narração.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Logout / Footer -->
+    <footer class="mt-12 text-slate-600 text-xs flex gap-6 z-10">
+        <a href="index.html" class="hover:text-red-400 transition-colors flex items-center">
+            <i data-lucide="log-out" class="w-3 h-3 mr-1"></i> Sair do Sistema
+        </a>
+    </footer>
+
+    <script>
+        // Inicializa ícones
+        lucide.createIcons();
+
+        function toggleRole(role) {
+            const btnMestre = document.getElementById('btnRoleMestre');
+            const btnJogador = document.getElementById('btnRoleJogador');
+            const cardCombate = document.getElementById('card-combate');
+            const cardMestre = document.getElementById('card-mestre');
+
+            if (role === 'mestre') {
+                // Estilo Botões
+                btnMestre.className = "px-3 py-1 text-xs font-bold rounded transition-colors bg-purple-600 text-white shadow-lg shadow-purple-900/50";
+                btnJogador.className = "px-3 py-1 text-xs font-bold rounded transition-colors text-slate-500 hover:text-slate-300";
+                
+                // Lógica de Visibilidade: MOSTRA Combate e Área do Mestre
+                cardCombate.classList.remove('hidden');
+                cardCombate.classList.add('flex', 'animate-pulse-glow', 'border-purple-500/50');
+                
+                cardMestre.classList.remove('hidden');
+                cardMestre.classList.add('flex');
+            } else {
+                // Estilo Botões
+                btnJogador.className = "px-3 py-1 text-xs font-bold rounded transition-colors bg-blue-600 text-white shadow-lg shadow-blue-900/50";
+                btnMestre.className = "px-3 py-1 text-xs font-bold rounded transition-colors text-slate-500 hover:text-slate-300";
+
+                // Lógica de Visibilidade: ESCONDE Combate e Área do Mestre
+                cardCombate.classList.add('hidden');
+                cardCombate.classList.remove('flex', 'animate-pulse-glow', 'border-purple-500/50');
+                
+                cardMestre.classList.add('hidden');
+                cardMestre.classList.remove('flex');
+            }
+        }
+    </script>
+</body>
+</html>

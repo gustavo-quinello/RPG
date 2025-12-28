@@ -39,12 +39,6 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
     console.log(profile.tipo)
 
     // ✅ Redireciona de acordo com o tipo
-    setTimeout(() => {
-      if (profile.role === "mestre") {
-        window.location.href = "mestre.html"
-      } else {
-        window.location.href = "jogador.html"
-      }
-    }, 2000)
+    setTimeout(() => { window.location.href = "dashboard.html" }, 2000)
   }
 })

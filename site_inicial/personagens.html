@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Manager - Personagens</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Ícones Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Configuração Visual (Mesma do Dashboard) -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 850: '#1e293b', 950: '#020617' }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'pulse-slow': 'pulse 3s infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Scrollbar customizada para combinar com o tema */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        .card-hover:hover {
+            border-color: #a855f7; /* Roxo */
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
+            transform: translateY(-4px);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-200 font-sans min-h-screen p-4 md:p-8 flex flex-col items-center">
+
+    <!-- Navegação Superior -->
+    <nav class="w-full max-w-6xl flex justify-between items-center mb-8 animate-fade-in">
+        <a href="dashboard.html" class="flex items-center text-slate-400 hover:text-purple-400 transition-colors group">
+            <i data-lucide="arrow-left" class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform"></i>
+            Voltar ao Hub
+        </a>
+        
+        <!-- Seletor de Cargo (Simulação para Testes) -->
+        <div class="flex items-center gap-2 bg-slate-950 p-1 rounded-lg border border-slate-800">
+            <button id="btnRoleMestre" onclick="setRole('mestre')" class="px-3 py-1 text-xs font-bold rounded transition-colors bg-purple-600 text-white">MESTRE</button>
+            <button id="btnRoleJogador" onclick="setRole('jogador')" class="px-3 py-1 text-xs font-bold rounded transition-colors text-slate-500 hover:text-slate-300">JOGADOR</button>
+        </div>
+    </nav>
+
+    <main class="w-full max-w-6xl space-y-6">
+        
+        <!-- Cabeçalho e Busca -->
+        <header class="flex flex-col md:flex-row gap-4 justify-between items-end border-b border-slate-800 pb-6 animate-fade-in">
+            <div class="w-full md:w-auto">
+                <h1 class="text-3xl font-bold text-slate-100 flex items-center gap-2">
+                    <i data-lucide="users" class="text-purple-500"></i>
+                    Personagens
+                </h1>
+                <p class="text-slate-500 text-sm mt-1">Gerencie as fichas da campanha.</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <!-- Input de Busca -->
+                <div class="relative group w-full sm:w-64">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i data-lucide="search" class="h-4 w-4 text-slate-500 group-focus-within:text-purple-500 transition-colors"></i>
+                    </div>
+                    <input type="text" 
+                           id="input-busca"
+                           class="block w-full pl-10 pr-3 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all" 
+                           placeholder="Buscar nome ou classe...">
+                </div>
+
+                <!-- Botão Criar -->
+                <a href="ficha.html" class="flex items-center justify-center px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-lg shadow-emerald-900/20 transition-all transform active:scale-95 font-semibold text-sm whitespace-nowrap">
+                    <i data-lucide="plus-circle" class="w-4 h-4 mr-2"></i> Nova Ficha
+                </a>
+            </div>
+        </header>
+
+        <!-- Grid de Resultados -->
+        <div id="lista-resultados" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+            <!-- Cards injetados via JS -->
+        </div>
+
+    </main>
+
+    <!-- Script Lógico -->
+    <script>
+        // 1. CONFIGURAÇÃO SUPABASE (Suas Chaves)
+        const { createClient } = supabase;
+        const supabaseUrl = "https://uoeixaiwyqjtbcqduzid.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvZWl4YWl3eXFqdGJjcWR1emlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4ODI2OTgsImV4cCI6MjA3MTQ1ODY5OH0.o_FY6xyjNetUjzsLiqaKrES_-d7_nYUE8vL8vFG8MDA";
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+        // Elementos DOM
+        const container = document.getElementById('lista-resultados');
+        const inputBusca = document.getElementById('input-busca');
+        
+        // Estado Local
+        let currentRole = 'mestre'; // Padrão inicial
+
+        // 2. FUNÇÃO DE ALTERNAR CARGO (Simulação)
+        function setRole(role) {
+            currentRole = role;
+            
+            // Atualiza visual dos botões
+            const btnMestre = document.getElementById('btnRoleMestre');
+            const btnJogador = document.getElementById('btnRoleJogador');
+            
+            if (role === 'mestre') {
+                btnMestre.className = "px-3 py-1 text-xs font-bold rounded transition-colors bg-purple-600 text-white";
+                btnJogador.className = "px-3 py-1 text-xs font-bold rounded transition-colors text-slate-500 hover:text-slate-300";
+            } else {
+                btnJogador.className = "px-3 py-1 text-xs font-bold rounded transition-colors bg-blue-600 text-white";
+                btnMestre.className = "px-3 py-1 text-xs font-bold rounded transition-colors text-slate-500 hover:text-slate-300";
+            }
+
+            // Refaz a busca com a nova permissão
+            buscarPersonagens();
+        }
+
+        // 3. FUNÇÃO DE BUSCA (Lógica Principal)
+        async function buscarPersonagens() {
+            const termo = inputBusca.value;
+            
+            // Estado de Loading Visual
+            container.innerHTML = `
+                <div class="col-span-full flex flex-col items-center justify-center py-12 text-slate-500 animate-pulse">
+                    <i data-lucide="loader-2" class="w-8 h-8 mb-2 animate-spin"></i>
+                    <p>Consultando os arquivos...</p>
+                </div>
+            `;
+            lucide.createIcons();
+
+            try {
+                // Monta a query
+                let query = supabaseClient
+                    .from('Personagens')
+                    .select('id, nome, classe, nivel, permissao');
+
+                // APLICAÇÃO DA REGRA DE NEGÓCIO (CARGOS)
+                if (currentRole === 'jogador') {
+                    // Jogador só vê fichas marcadas como 'jogador' (públicas para party)
+                    query = query.eq('permissao', 'jogador');
+                }
+                // Se for mestre, não aplica filtro extra (vê tudo)
+
+                // Aplica filtro de texto se houver digitação
+                if (termo) {
+                    query = query.ilike('nome', `%${termo}%`);
+                }
+
+                // Ordenação padrão
+                const { data, error } = await query.order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                renderizarCards(data);
+
+            } catch (erro) {
+                console.error(erro);
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-red-400 bg-red-900/10 border border-red-900/30 rounded-lg">
+                        <p class="font-bold">Erro na conexão</p>
+                        <p class="text-sm opacity-70">${erro.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 4. FUNÇÃO DE TOGGLE PERMISSÃO (NOVA)
+        async function togglePermission(event, id, currentPermissao) {
+            // Impede que o clique no botão abra a ficha
+            event.stopPropagation();
+            event.preventDefault();
+
+            // Lógica de inversão
+            const novaPermissao = currentPermissao === 'jogador' ? 'mestre' : 'jogador';
+            const botao = event.currentTarget; // Referência visual ao botão clicado
+            
+            // Feedback visual imediato (Otimismo)
+            botao.innerHTML = '<i class="animate-spin w-3 h-3 mr-1 inline"></i> Salvando...';
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('Personagens')
+                    .update({ permissao: novaPermissao })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                // Recarrega a lista para confirmar a mudança e reordenar se necessário
+                // (Poderíamos apenas atualizar o DOM, mas recarregar garante consistência)
+                buscarPersonagens();
+
+            } catch (err) {
+                console.error("Erro ao mudar permissão:", err);
+                alert("Falha ao atualizar permissão.");
+                buscarPersonagens(); // Reverte visualmente
+            }
+        }
+
+        // 5. RENDERIZAÇÃO (Visual Dark Fantasy)
+        function renderizarCards(lista) {
+            container.innerHTML = '';
+
+            if (!lista || lista.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-16 text-slate-600 border border-dashed border-slate-800 rounded-xl">
+                        <i data-lucide="ghost" class="w-12 h-12 mb-3 opacity-50"></i>
+                        <p>Nenhuma ficha encontrada.</p>
+                        ${currentRole === 'jogador' ? '<p class="text-xs mt-1 text-slate-700">(Você está vendo apenas fichas públicas)</p>' : ''}
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            lista.forEach(char => {
+                // Formatações
+                const classeFormatada = char.classe ? char.classe.replace(/_/g, ' ').toUpperCase() : 'DESCONHECIDO';
+                // Cor da borda baseada no cargo
+                const isNpc = char.permissao !== 'jogador'; 
+                
+                // CRIAÇÃO DO ELEMENTO (Agora é DIV, não A)
+                const card = document.createElement('div');
+                // Clique no card leva pra ficha
+                card.onclick = () => window.location.href = `ficha.html?id=${char.id}`;
+                
+                card.className = "group cursor-pointer relative bg-slate-950 border border-slate-800 rounded-xl p-5 card-hover transition-all flex flex-col justify-between h-36 overflow-hidden select-none";
+                
+                // Botão de Permissão (Só renderiza se for Mestre)
+                const btnPermissao = currentRole === 'mestre' ? `
+                    <button 
+                        onclick="togglePermission(event, '${char.id}', '${char.permissao}')"
+                        class="mt-3 z-20 relative flex items-center justify-center w-full text-[10px] py-1.5 rounded border font-bold transition-all hover:brightness-110 active:scale-95 shadow-lg
+                        ${char.permissao === 'jogador' 
+                            ? 'bg-blue-900/30 text-blue-400 border-blue-500/30 hover:bg-blue-900/50' 
+                            : 'bg-red-900/30 text-red-400 border-red-500/30 hover:bg-red-900/50'}"
+                        title="Clique para alternar quem pode ver esta ficha"
+                    >
+                        ${char.permissao === 'jogador' 
+                            ? '<i data-lucide="eye" class="w-3 h-3 mr-1.5"></i> VISÍVEL: TODOS' 
+                            : '<i data-lucide="eye-off" class="w-3 h-3 mr-1.5"></i> VISÍVEL: APENAS MESTRE'}
+                    </button>
+                ` : '';
+
+                card.innerHTML = `
+                    <!-- Background Decorativo -->
+                    <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
+                        <i data-lucide="${isNpc ? 'skull' : 'shield'}" class="w-24 h-24 text-slate-200"></i>
+                    </div>
+
+                    <div class="z-10 w-full">
+                        <div class="flex justify-between items-start mb-1">
+                            <h3 class="text-lg font-bold text-slate-100 group-hover:text-purple-400 transition-colors truncate pr-2">${char.nome}</h3>
+                            <!-- Badge de Nível -->
+                            <span class="bg-slate-900 border border-slate-700 text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded">
+                                LVL ${char.nivel || 1}
+                            </span>
+                        </div>
+                        
+                        <p class="text-xs font-bold text-purple-500/80 tracking-widest uppercase mb-1">${classeFormatada}</p>
+                        
+                        ${btnPermissao}
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+            
+            lucide.createIcons(); // Recarrega ícones nos novos elementos
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            buscarPersonagens(); // Busca inicial
+            
+            // Busca ao digitar (Debounce simples para não flodar o banco)
+            let timeout = null;
+            inputBusca.addEventListener('keyup', () => {
+                clearTimeout(timeout);
+                timeout = setTimeout(buscarPersonagens, 300); // Espera 300ms após parar de digitar
+            });
+        });
+
+    </script>
+</body>
+</html>
