@@ -405,10 +405,26 @@ async function toggleRessonancia() {
 
 
 function atualizarTextoRessonancia(nivel) {
-     const custo = nivel; 
-     const label = document.getElementById('custo-ressonancia'); 
-     if(label) label.textContent = `-${custo} Mana/turno`; 
+    // 1. Filtra o inventário buscando itens Equipados E Mágicos
+    const qtdItensMagicos = inventario.filter(i => i.equipado && i.isMagico).length;
+
+    // 2. Calcula o custo base: Nível + Itens Mágicos
+    let custo = nivel + qtdItensMagicos * 10;
+
+    // 3. Verifica Afinidade Envoltura para aplicar o desconto
+    if (afinidadeEscolhida && afinidadeEscolhida.id === 'afin-env') {
+        const multiplicador = Math.floor(nivel / 4) / 4;
+        custo = custo - (custo * multiplicador);
+    }
+
+    // Formatação para exibir decimais de forma limpa (ex: 2.5 em vez de 2.50000)
+    const custoExibido = Math.floor(custo);
+
+    // 4. Atualiza o texto na tela
+    const label = document.getElementById('custo-ressonancia');
+    if(label) label.textContent = `-${custoExibido} Mana/turno`;
 }
+
 // --- FUNÇÃO DE VISUAL DINÂMICO (AZUL -> VINHO) ---
 function atualizarVisualRessonancia(nivel) {
     if (!ressonanciaAtiva) return;

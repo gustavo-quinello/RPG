@@ -615,31 +615,70 @@
             });
         }
 
+        // --- FUNÇÃO AUXILIAR DE CÁLCULO (NOVA) ---
+        function calcularCustoRessonancia(char) {
+            // 1. Se for monstro ou não tiver dados detalhados, usa regra simples (Nível)
+            if (char.tipo === 'monstro' || !char.dadosRaw) {
+                return char.nivel > 0 ? char.nivel : 1;
+            }
+
+            const nivel = char.nivel || 0;
+            const dados = char.dadosRaw; // O JSON completo que salvamos no Módulo 6
+            const inventario = dados.inventario || [];
+            const afinidadeID = dados.afinidade || ""; // Ex: 'afin-env'
+
+            // 2. Filtra Itens Mágicos Equipados
+            // Nota: O Painel do Mestre precisa confiar que o JSON salvo tem 'equipado: true'
+            const qtdItensMagicos = inventario.filter(i => i.equipado === true && i.isMagico === true).length;
+
+            // 3. Custo Base: Nível + (10 por item mágico)
+            let custo = nivel + (qtdItensMagicos * 10);
+
+            // 4. Desconto de Afinidade (Envoltura)
+            if (afinidadeID === 'afin-env') {
+                const multiplicador = Math.floor(nivel / 4) / 4;
+                custo = Math.floor(custo - (custo * multiplicador));
+            }
+
+            // 5. Retorna valor formatado (mínimo 0)
+            return Math.max(0, parseFloat(custo.toFixed(2)));
+        }
+
         function processarFimDeRodada() {
             let afetadosRessonancia = 0;
             let totalDano = 0;
             let totalCura = 0;
-            let precisaRedesenharTela = false; // Nova flag para controlar atualização visual
+            let precisaRedesenharTela = false;
 
             combatentes.forEach(char => {
                 let mudouAlgo = false;
 
-                // 1. Ressonância
+                // --- 1. LÓGICA DE RESSONÂNCIA (ATUALIZADA) ---
                 if (char.ressonancia === true) {
-                    const custo = char.nivel > 0 ? char.nivel : 1;
+                    // Usa a nova função complexa de cálculo
+                    const custo = calcularCustoRessonancia(char);
+                    
+                    // Drena a mana (garantindo que não fique negativa se não quiser)
                     const novaMana = Math.max(0, char.manaAtual - custo);
+                    
+                    // Só aplica se houve mudança (para evitar salvar sem necessidade)
                     if (novaMana !== char.manaAtual) {
-                        char.manaAtual = novaMana;
+                        // Se o custo for quebrado (ex: 2.5), arredondamos a mana atual ou mantemos decimal?
+                        // Geralmente RPG trabalha com inteiros na barra, mas vamos aceitar decimal:
+                        char.manaAtual = parseFloat(novaMana.toFixed(2)); 
+                        
                         afetadosRessonancia++;
                         mudouAlgo = true;
+                        
+                        // Opcional: Mostrar Toast específico para quem perdeu muita mana
+                        if (custo > 20) mostrarToast(`${char.nome} sobrecarregou! -${custo} MP`, 'magic');
                     }
                 }
 
-                // 2. Efeitos e Duração
+                // 2. Efeitos (Módulo 3 e 4 mantidos iguais)
                 if (char.efeitos && char.efeitos.length > 0) {
                     const qtdInicial = char.efeitos.length;
                     
-                    // Aplica modificadores (Vida/Mana/Foco)
                     char.efeitos.forEach(ef => {
                         if (ef.mods) {
                             if (ef.mods.vida !== 0) {
@@ -664,39 +703,36 @@
                         }
                     });
 
-                    // Decrementa Duração
                     char.efeitos = char.efeitos.filter(ef => {
-                        if (ef.duracao === 0) return true; // 0 = Infinito
+                        if (ef.duracao === 0) return true;
                         ef.duracao -= 1;
-                        return ef.duracao > 0; // Remove se chegar a 0
+                        return ef.duracao > 0;
                     });
                     
-                    // Se a quantidade mudou OU se as durações mudaram (para atualizar o texto visual)
                     if (char.efeitos.length !== qtdInicial || char.efeitos.some(ef => ef.duracao >= 0)) {
                         mudouAlgo = true;
-                        precisaRedesenharTela = true; // Avisa que precisamos atualizar o HTML dos efeitos
+                        precisaRedesenharTela = true;
                     }
                 }
 
+                // Salva e Atualiza
                 if (mudouAlgo) {
-                    atualizarInterfaceUnitary(char.id, char); // Atualiza barras
-                    persistirAlteracoes(char.id); // Salva no banco
+                    atualizarInterfaceUnitary(char.id, char);
+                    persistirAlteracoes(char.id);
                 }
             });
 
-            // CORREÇÃO VISUAL: Se os efeitos mudaram, redesenha a lista para atualizar os números (3)->(2)
             if (precisaRedesenharTela) {
                 renderizarLista();
             }
 
-            // Toasts (Feedback)
+            // Feedback
             let msg = [];
-            if (afetadosRessonancia > 0) msg.push(`${afetadosRessonancia} ressonâncias`);
-            if (totalDano > 0) msg.push(`-${totalDano} HP total`);
-            if (totalCura > 0) msg.push(`+${totalCura} HP total`);
+            if (afetadosRessonancia > 0) msg.push(`${afetadosRessonancia} em ressonância`);
+            if (totalDano > 0) msg.push(`-${totalDano} HP`);
             
             if (msg.length > 0) {
-                mostrarToast(`Fim de Rodada: ${msg.join(', ')}`, 'magic');
+                mostrarToast(`Nova Rodada: ${msg.join(', ')}`, 'magic');
             } else {
                 mostrarToast('Nova Rodada Iniciada', 'info');
             }
