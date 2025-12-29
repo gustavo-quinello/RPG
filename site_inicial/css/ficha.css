@@ -37,13 +37,25 @@ body {
 }
 
 /* --- RESSONÂNCIA DINÂMICA --- */
-body.ressonancia-ativa {
-    /* O segredo está aqui: var(--ressonancia-color) é calculado pelo JS baseado no nível */
+
+/* 2. Jogamos o efeito visual para um pseudo-elemento que fica no fundo */
+body.ressonancia-ativa::before {
+    content: "";
+    position: fixed; /* Isso garante que o fundo acompanhe a tela */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Fica atrás de todo o conteúdo */
+    pointer-events: none; /* Garante que não bloqueie cliques */
+
+    /* As propriedades visuais vêm para cá */
     background: radial-gradient(circle at center bottom, var(--ressonancia-color, #1e1b4b), #050505 80%);
     background-size: 100% 120%;
     animation: backgroundPulse 3s infinite alternate ease-in-out;
 }
 
+/* A animação permanece a mesma */
 @keyframes backgroundPulse {
     0% { background-size: 100% 120%; filter: brightness(1); }
     100% { background-size: 105% 125%; filter: brightness(1.2); }

@@ -18,7 +18,7 @@
         <div class="switch-container">
             <span class="switch-label">Edição</span>
             <label class="switch">
-                <input type="checkbox" id="switch-modo" onclick="toggleModo()">
+                <input type="checkbox" id="switch-modo" onclick="toggleModo()" checked>
                 <span class="slider"></span>
             </label>
             <span class="switch-label" style="color: var(--color-secondary)">Jogo</span>
@@ -245,7 +245,7 @@
     
     <!-- BOTÃO FINAL -->
     <div class="container-submit editavel-apenas">
-        <button class="btn-criar-ficha" onclick="salvarFicha()">CRIAR / ATUALIZAR FICHA</button>
+        <button type="submit" class="btn-criar-ficha" onclick="salvarFicha()">CRIAR / ATUALIZAR FICHA</button>
     </div>
 
     <!-- MODAL -->
@@ -338,7 +338,10 @@
 
                 <input type="number" id="input-criar-peso" value="0.0" step="0.1">
                 <label class="magic-check" style="display:flex; align-items:center; gap:10px; margin-top:10px; cursor:pointer;"><input type="checkbox" id="input-criar-magico" style="width:auto;"><span style="color:#a855f7; font-weight:bold;">É um Item Mágico? ✨</span></label>
-                <div class="modal-actions" style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;"><button class="btn-confirm" style="background:#10b981; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="criarItemNoBanco()">Salvar no Banco & Pegar</button></div>
+
+                <div class="modal-actions" style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+                    <button class="btn-confirm" style="background:#10b981; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="criarItemNoBanco()">Salvar no Banco & Pegar</button>
+                </div>
             </div>
             <div id="aba-buscar" class="tab-content modal-body" style="display:none;">
                 <input type="text" id="input-buscar-termo" placeholder="Digite para pesquisar..." onkeyup="buscarItensNoBanco()">

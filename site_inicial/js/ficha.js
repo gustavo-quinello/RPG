@@ -545,9 +545,10 @@ function encontrarMagiaPorId(id) {
 // 1. CONTROLE VISUAL DO MODAL
 function toggleCamposConsumivel() {
     const tipo = document.getElementById('input-criar-tipo').value;
-    const subtipo = document.getElementById('input-criar-subtipo').value
+    const subtipoEl = document.getElementById('input-criar-subtipo');
+    const subtipo = subtipoEl ? subtipoEl.value : null;
     console.log(subtipo)
-    
+
     // Esconde tudo primeiro
     document.getElementById('campos-consumivel').style.display = 'none';
     document.getElementById('campos-equipamento').style.display = 'none';
@@ -584,7 +585,9 @@ function toggleCamposConsumivel() {
 }
 
 // --- LÓGICA DE INVENTÁRIO (ATUALIZADA V36) ---
-function abrirModalItem() { document.getElementById('modal-item').style.display = 'flex'; mudarAba('criar'); }
+function abrirModalItem() { document.getElementById('modal-item').style.display = 'flex'; mudarAba('criar'); toggleCamposConsumivel(); 
+    console.log(toggleCamposConsumivel())
+}
 function fecharModalItem() { 
     document.getElementById('modal-item').style.display = 'none';
     // Limpa campos
@@ -592,15 +595,22 @@ function fecharModalItem() {
     document.getElementById('input-criar-peso').value = '0.0';
     document.getElementById('input-criar-magico').checked = false;
     document.getElementById('input-criar-tipo').value = 'item';
-    document.getElementById('input-criar-dano').value = ''; // Limpa dano
     document.getElementById('input-criar-descricao').value = ''; // Limpa descrição
     document.getElementById('input-magias-tomo').value = ''; // Limpa magias
+    document.getElementById('input-dano-cajado').value = '';
+    document.getElementById('input-bloqueio-escudo').value = '';
+    document.getElementById('input-dano-arma').value = '';
     document.getElementById('input-criar-bloqueio').value = '0';
 
 
     document.getElementById('campos-consumivel').style.display = 'none';
     document.getElementById('campos-equipamento').style.display = 'none';
     document.getElementById('campos-armadura').style.display = 'none';
+
+    document.getElementById('campos-arma').style.display = 'none';
+    document.getElementById('campos-escudo').style.display = 'none';
+    document.getElementById('campos-cajado').style.display = 'none';
+    document.getElementById('campos-tomo').style.display = 'none';
 
 }
 
@@ -624,6 +634,7 @@ async function criarItemNoBanco() {
     let valor = 0; 
     let empunhadura = null; 
     let subtipo = null;
+    let dano = null
 
     // Lógica para Consumível
     if (tipo === 'consumivel') {
@@ -728,8 +739,7 @@ function adicionarAoInventario(itemDados) {
     atualizarBarras();
     atualizarSlotsVisuais();
     autoSalvarStatus();
-    atualizarTudo()
-    calcularStatus(parseInt(elNivel.value)||1); 
+    calcularStatus(parseInt(elNivel.value)||1);
 
 }
 
@@ -1072,7 +1082,7 @@ function calcularStatus(nivel) {
             mana = parseInt((15 + (intelecto * 16) + nivel * 4) * (1 + mod_afinidade /10))
             movimento = parseInt((2 + destreza + (nivel * 0.2)) * (1 + mod_afinidade /10))
             foco = parseInt((6 + (presenca * 4) + nivel) * (1 + mod_afinidade /10))
-        } else if (afinidadeEscolhida.id === 'afin_lib') {
+        } else if (afinidadeEscolhida.id === 'afin-lib') {
             carga = parseInt((4 + forca * 2) * (1+(mod_afinidade/4)))
         }
     }
@@ -1809,7 +1819,8 @@ async function carregarFicha() {
         atualizarBarras();
 
         console.log("Ficha carregada:", data.nome);
-        setupRealtime(id);  
+        setupRealtime(id);
+        toggleModo(); 
     } catch (erro) {
         console.error("Erro ao carregar:", erro);
         alert("Erro ao carregar ficha");
@@ -1819,17 +1830,26 @@ async function carregarFicha() {
 
 // --- LISTENERS ---
 inputsGerais.forEach(el => {
-    el.addEventListener('change', (e) => {
-        if(e.target.id !== 'nivel') { 
-            pontosHabilidadesGastos=0; 
-            habilidadesSelecionadas.clear();
-            magiasSelecionadas.clear();
-            pontosGastosMagia = 0 
+    const inputsEstruturais = document.querySelectorAll('#aura, #classe, #trilha, #nivel');
+    
+    inputsEstruturais.forEach(el => {
+        el.addEventListener('change', (e) => {
+            // Se mudou Aura, Classe ou Trilha, aí sim resetamos as escolhas
+            if(e.target.id !== 'nivel') { 
+                pontosHabilidadesGastos = 0; 
+                habilidadesSelecionadas.clear(); 
+                magiasSelecionadas.clear(); 
+                pontosGastosMagia = 0;
+            }
+            atualizarBarras();
+            atualizarTudo();
+        });
+        
+        // O nível tem um tratamento especial de 'input' para atualizar em tempo real
+        if(el.id === 'nivel') {
+            el.addEventListener('input', atualizarTudo);
         }
-        atualizarBarras();
-        atualizarTudo();
     });
-    if(el.id==='nivel') el.addEventListener('input', atualizarTudo);
 });
 inputsAtributos.forEach(el => el.addEventListener('input', atualizarTudo));
 inputsPericias.forEach(el => el.addEventListener('input', atualizarTudo));
