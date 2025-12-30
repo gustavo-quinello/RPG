@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Manager - Grimório de Regras</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Ícones Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Fonte Cinzel (Estilo RPG) -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- Configuração Visual -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Cinzel', 'serif'], // Fonte para Títulos
+                    },
+                    colors: {
+                        slate: { 850: '#1e293b', 950: '#020617' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Scrollbar Fina e Escura */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        html { scroll-behavior: smooth; }
+        
+        /* Efeito de destaque ao passar o mouse na regra */
+        .rule-card {
+            transition: all 0.2s ease-in-out;
+        }
+        .rule-card:hover {
+            border-color: #a855f7; /* Roxo */
+            background-color: #0f172a; /* Slate 900 um pouco mais claro */
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-300 font-sans h-screen overflow-hidden flex flex-col md:flex-row">
+
+    <!-- SIDEBAR DE NAVEGAÇÃO (Fixo na esquerda em Desktop) -->
+    <aside class="w-full md:w-72 bg-slate-900 border-r border-slate-800 flex flex-col h-auto md:h-full z-20 shadow-2xl">
+        
+        <!-- Header Sidebar -->
+        <div class="p-6 border-b border-slate-800 bg-slate-900 z-10">
+            <a href="dashboard.html" class="flex items-center text-xs text-slate-500 hover:text-purple-400 mb-4 transition-colors uppercase tracking-widest font-bold">
+                <i data-lucide="arrow-left" class="w-3 h-3 mr-1"></i> Voltar ao Hub
+            </a>
+            <h1 class="font-serif text-2xl text-slate-100 font-bold tracking-wide flex items-center gap-2">
+                <i data-lucide="book-open" class="text-purple-500 w-6 h-6"></i>
+                Grimório
+            </h1>
+        </div>
+
+        <!-- Barra de Busca -->
+        <div class="p-4 bg-slate-900/95 backdrop-blur sticky top-0 z-10">
+            <div class="relative group">
+                <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-slate-500 group-focus-within:text-purple-500 transition-colors"></i>
+                <input type="text" id="searchInput" onkeyup="searchRules()" 
+                    class="w-full bg-slate-950 border border-slate-700 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all placeholder-slate-600"
+                    placeholder="Buscar regra...">
+            </div>
+        </div>
+
+        <!-- Menu de Links (Categorias) -->
+        <nav class="flex-1 overflow-y-auto p-4 space-y-1">
+            <p class="px-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 mt-2">Capítulos</p>
+            
+            <a href="#mundo" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-400 hover:bg-slate-800 hover:text-purple-400 transition-colors">
+                <i data-lucide="earth" class="w-4 h-4 mr-3 opacity-70"></i> Mundo
+            </a>
+            <a href="#personagem" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-400 hover:bg-slate-800 hover:text-purple-400 transition-colors">
+                <i data-lucide="user" class="w-4 h-4 mr-3 opacity-70"></i> Personagem
+            </a>
+            <a href="#basico" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-400 hover:bg-slate-800 hover:text-purple-400 transition-colors">
+                <i data-lucide="dice-6" class="w-4 h-4 mr-3 opacity-70"></i> Testes Básicos
+            </a>
+            <a href="#combate" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-400 hover:bg-slate-800 hover:text-purple-400 transition-colors">
+                <i data-lucide="swords" class="w-4 h-4 mr-3 opacity-70"></i> Combate
+            </a>
+            <a href="#condicoes" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-400 hover:bg-slate-800 hover:text-purple-400 transition-colors">
+                <i data-lucide="skull" class="w-4 h-4 mr-3 opacity-70"></i> Condições
+            </a>
+            <a href="#magia" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-400 hover:bg-slate-800 hover:text-purple-400 transition-colors">
+                <i data-lucide="sparkles" class="w-4 h-4 mr-3 opacity-70"></i> Magia
+            </a>
+        </nav>
+        
+        <!-- Footer Sidebar -->
+        <div class="p-4 border-t border-slate-800 text-[10px] text-slate-600 text-center">
+            RPG Manager V2 • Sistema de Regras
+        </div>
+    </aside>
+
+    <!-- ÁREA DE CONTEÚDO (Scrollável) -->
+    <main class="flex-1 overflow-y-auto bg-slate-950 relative scroll-smooth p-6 md:p-12 pb-32">
+        
+        <div class="max-w-3xl mx-auto space-y-16">
+
+            <!-- SEÇÃO 1: MUNDO -->
+            <section id="mundo" class="space-y-6">
+                <div class="border-b border-purple-500/30 pb-2 mb-6">
+                    <h2 class="font-serif text-3xl text-purple-400 font-bold">Introdução ao Mundo</h2>
+                </div>
+
+                <!-- Regra Card -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl">
+                    <h3 class="font-serif text-xl text-slate-100 mb-2 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                        O Mundo
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed text-sm mb-4">
+                        O continente conhecido abriga reinos de luz frágil e sombras profundas.
+                        A vida não é medida apenas por sangue e fôlego, mas pelo brilho invisível que todos emanam: <strong>Aura</strong>.
+                        Quando a Aura se esvai, a chama da existência se apaga para sempre.
+                    </p>
+                    <p class="text-slate-400 leading-relaxed text-sm mb-4">
+                        A magia permeia tudo, mas não é um milagre gratuito — é uma ciência perigosa, estudada em círculos mágicos, templos e universidades antigas.
+                        O mundo não é gentil com quem busca poder… mas recompensa quem ousa desvendá-lo.
+                    </p>
+                </article>
+
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl">
+                    <h3 class="font-serif text-xl text-slate-100 mb-2 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                        Aventureiros
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed text-sm">
+                        Aventureiros são aqueles que escolheram viver na linha entre glória e ruína.
+                        Eles exploram ruínas, florestas místicas, mares tempestuosos e Dungeons, aceitando missões que moldam seus destinos. <br>
+                        Para operar oficialmente, todo aventureiro se registra em um Centro Aventureiro, onde recebe um Tier que representa sua reputação e poder: D, C, B, A, S.
+                    </p>
+                </article>
+
+                    <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl">
+                        <h3 class="font-serif text-xl text-slate-100 mb-2 flex items-center">
+                            <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                            Dungeons
+                        </h3>
+                        <p class="text-slate-400 leading-relaxed text-sm">
+                            Dungeons são anomalias mágicas: regiões onde a concentração de mana se tornou tão densa que a realidade foi deformada. <br>
+                            O que define uma Dungeon: 
+                            <br>
+                            • Cada Dungeon possui um Núcleo Mágico, que regula sua força e o local onde se encontra a criatura mais forte <br>
+                            • Criaturas se formam espontaneamente dentro delas, muitas agressivas <br>
+                            • Como a região é irrigada por mana os minerais da dungeon adquirem propriedades magicas e de muito valor, fora os itens extraidos dos monstros, por isso é sempre bom levar mineradores e pessoas especialistas em saque para extrair o máximo do lugar <br>
+                        </p>
+                    </article>
+                    <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl">
+                        <h3 class="font-serif text-xl text-slate-100 mb-2 flex items-center">
+                            <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                            Criaturas
+                        </h3>
+                        <p class="text-slate-400 leading-relaxed text-sm">
+                            Criaturas mágicas não nascem — se manifestam.
+                            Elas atravessam o Véu, a membrana que separa o mundo material do espiritual, atraídas por grandes concentrações de mana e Aura. <br>
+                            Classificação de Criaturas: <br>
+                            <span class="text-emerald-400 font-bold">Rank D → C</span> Ameaças comuns formadas naturalmente.<br>
+                            <span class="text-amber-200 font-bold">Rank B → A</span> Grandes Predadores e monstros formados em zonas de alta concentração mágica <br>
+                            <span class="text-orange-400 font-bold">Rank S</span> Catastrofes que normalmente só dão as caras em dungeons <br>
+                            <span class="text-orange-800 font-bold">Rank SS/ Flagelos</span> Ameaças impossíveis e temporarias que se formam em locais completamente inundados pela magia, o proprio mundo se torce tentando dissipar essa existência apocalíptica.<br>
+                        </p>
+                    </article>
+            </section>
+
+            <!-- SEÇÃO 2: CRIACAO DO PERSONAGEM -->
+            <section id="personagem" class="space-y-6">
+                <div class="border-b border-purple-500/30 pb-2 mb-6">
+                    <h2 class="font-serif text-3xl text-purple-400 font-bold">Criando o Herói</h2>
+                </div>
+
+                <!-- INTRODUÇÃO ÀS AURAS -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-4">
+                    <h3 class="font-serif text-xl text-slate-100 mb-2 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                        Conceito de Aura
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed text-sm mb-4">
+                        A Aura é a manifestação da essência vital do personagem. Ela não apenas fortalece seus status, como também define o tipo de habilidades que ele pode despertar e a forma como ele interage com o mundo e o combate.
+                    </p>
+                    <div class="p-3 bg-purple-900/20 border border-purple-500/30 rounded text-xs text-purple-200 italic text-center">
+                        "Aura é poder, mas também é personalidade. Ela diz como seu herói brilha… e como ele queima."
+                    </div>
+                </article>
+
+                <!-- TABELA DE AURAS (Convertida para Cards Grid) -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-4">
+                    <h3 class="font-serif text-xl text-slate-100 mb-4 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                        Tipos de Aura (Resumo)
+                    </h3>
+                    
+                    <div class="text-center grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                        <!-- Reforço -->
+                        <div class="bg-slate-950 p-3 rounded border border-slate-800">
+                            <strong class="text-emerald-400 block uppercase text-xs mb-1">Reforço (Vida)</strong>
+                            <p class="text-slate-500 text-xs">Tanque / Linha de frente. Focado em resistência e bloqueio.</p>
+                        </div>
+                        
+                        <!-- Emissão -->
+                        <div class="bg-slate-950 p-3 rounded border border-slate-800">
+                            <strong class="text-purple-400 block uppercase text-xs mb-1">Emissão (Mana)</strong>
+                            <p class="text-slate-500 text-xs">Mago ofensivo. Focado em dano mágico e explosões.</p>
+                        </div>
+
+                        <!-- Transformação -->
+                        <div class="bg-slate-950 p-3 rounded border border-slate-800">
+                            <strong class="text-blue-400 block uppercase text-xs mb-1">Transformação (Movimento)</strong>
+                            <p class="text-slate-500 text-xs">Alta mobilidade. Focado em velocidade e esquiva.</p>
+                        </div>
+
+                        <!-- Materialização -->
+                        <div class="bg-slate-950 p-3 rounded border border-slate-800">
+                            <strong class="text-amber-400 block uppercase text-xs mb-1">Materialização (Foco)</strong>
+                            <p class="text-slate-500 text-xs">Criador estratégico. Focado em construções e utilitários.</p>
+                        </div>
+
+                        <!-- Manipulação -->
+                        <div class="bg-slate-950 p-3 rounded border border-slate-800 col-span-1 sm:col-span-2">
+                            <strong class="text-slate-200 block uppercase text-xs mb-1">Manipulação (Bônus Geral)</strong>
+                            <p class="text-slate-500 text-xs">Versátil ardiloso. Focado em burlar testes e alterar condições.</p>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- DETALHAMENTO DAS AURAS -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-4">
+                    <h3 class="font-serif text-xl text-slate-100 mb-4 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                        Detalhes por Tipo
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        <!-- Reforço -->
+                        <div class="pl-4 border-l-2 border-emerald-500/30">
+                            <h4 class="text-emerald-400 font-bold text-sm uppercase mb-1">Reforço</h4>
+                            <p class="text-slate-400 text-xs mb-2 italic">A Aura pulsa como uma fortaleza viva ao redor do corpo.</p>
+                            <ul class="text-slate-500 text-xs list-disc pl-4 space-y-1">
+                                <li>Ideal para resistir a ataques e proteger aliados.</li>
+                                <li>Habilidades: Redução de dano, bloqueio aprimorado, sobrevivência.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Emissão -->
+                        <div class="pl-4 border-l-2 border-purple-500/30">
+                            <h4 class="text-purple-400 font-bold text-sm uppercase mb-1">Emissão</h4>
+                            <p class="text-slate-400 text-xs mb-2 italic">Transborda como chamas arcanas que escapam do espírito.</p>
+                            <ul class="text-slate-500 text-xs list-disc pl-4 space-y-1">
+                                <li>Ideal para destruir inimigos com magia.</li>
+                                <li>Habilidades: Dano mágico, magias em área, versatilidade elemental.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Transformação -->
+                        <div class="pl-4 border-l-2 border-blue-500/30">
+                            <h4 class="text-blue-400 font-bold text-sm uppercase mb-1">Transformação</h4>
+                            <p class="text-slate-400 text-xs mb-2 italic">Vibra como um vento inquieto ao redor do usuário.</p>
+                            <ul class="text-slate-500 text-xs list-disc pl-4 space-y-1">
+                                <li>Ideal para quem joga com velocidade e tática.</li>
+                                <li>Habilidades: Aumentar movimento, ações de deslocamento, esquiva garantida.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Materialização -->
+                        <div class="pl-4 border-l-2 border-amber-500/30">
+                            <h4 class="text-amber-400 font-bold text-sm uppercase mb-1">Materialização</h4>
+                            <p class="text-slate-400 text-xs mb-2 italic">Condensa-se em forma, como se pensamento virasse matéria.</p>
+                            <ul class="text-slate-500 text-xs list-disc pl-4 space-y-1">
+                                <li>Ideal para criatividade e estratégia.</li>
+                                <li>Habilidades: Criar itens temporários, estruturas, ferramentas de aura.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Manipulação -->
+                        <div class="pl-4 border-l-2 border-slate-500/30">
+                            <h4 class="text-slate-200 font-bold text-sm uppercase mb-1">Manipulação</h4>
+                            <p class="text-slate-400 text-xs mb-2 italic">Sutil, enganosa e sempre mutável.</p>
+                            <ul class="text-slate-500 text-xs list-disc pl-4 space-y-1">
+                                <li>Ideal para burlar regras e manipular testes.</li>
+                                <li>Habilidades: Alterar rolagens, negar falhas, modificar DT, enganar efeitos.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </article>
+                <!-- INTRODUÇÃO ÀS CLASSES -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-6">
+                    <h3 class="font-serif text-xl text-slate-100 mb-2 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                        Conceito de Classes
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed text-sm">
+                        As Classes representam o treinamento e o papel do personagem. Elas são divididas em 3 grandes grupos, cada um com sua própria identidade e filosofia de jogo.
+                    </p>
+                </article>
+
+                <!-- GRUPO 1: ARCANISTAS -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-4 relative overflow-hidden">
+                    <!-- Efeito Decorativo Fundo -->
+                    <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                        <i data-lucide="zap" class="w-24 h-24"></i>
+                    </div>
+
+                    <h3 class="font-serif text-xl text-purple-400 mb-4 flex items-center border-b border-slate-800 pb-2">
+                        <span class="mr-2 text-2xl">🜂</span> Arcanistas
+                    </h3>
+                    
+                    <p class="text-slate-400 text-sm mb-4 italic">
+                        Mestres da Mana e das artes arcanas, estudiosos do oculto e do caótico.
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-slate-950 p-4 rounded border border-slate-800/50">
+                            <strong class="text-slate-200 text-xs uppercase block mb-2">Características</strong>
+                            <ul class="text-slate-500 text-xs space-y-1 list-disc pl-4">
+                                <li><span class="text-purple-400">Destaque:</span> Dano em área, controle mágico, versatilidade.</li>
+                                <li><span class="text-purple-400">Estilo:</span> Prever o fluxo do combate e dominar o campo.</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-purple-900/10 border border-purple-500/20 p-4 rounded flex items-center justify-center text-center ">
+                            <div>
+                                <i data-lucide="sparkles" class="w-8 h-8 text-purple-300 mx-auto mb-2 opacity-80"></i>
+                                <p class="text-slate-300 text-xs italic font-serif">
+                                    "Magos não destroem inimigos.Com seu grande repertório mágico e respostas a múltiplas situações eles reescrevem a batalha. "
+                                </p>
+                            </div>
+                        </div>
+                        <div class="bg-purple-900/10 border border-purple-500/20 p-4 rounded">
+                            <strong class="text-purple-300 text-sm block mb-1">Mago Elemental</strong>
+                            <p class="text-slate-400 text-xs mb-2">"Alto poder destrutivo e dano em área"</p>
+                            <ul class="text-slate-500 text-xs space-y-1">
+                                <li>• Versatilidade → Extrema</li>
+                                <li>• Dificuldade → Média</li>
+                                <li>• Ofensividade → Alta</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-purple-900/10 border border-purple-500/20 p-4 rounded">
+                            <strong class="text-purple-300 text-sm block mb-1">Místico</strong>
+                            <p class="text-slate-400 text-xs mb-2">"Alto poder mágico e especialista em círculos mágicos"</p>
+                            <ul class="text-slate-500 text-xs space-y-1">
+                                <li>• Versatilidade → Extrema</li>
+                                <li>• Dificuldade → Alta</li>
+                                <li>• Ofensividade → Média</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-purple-900/10 border border-purple-500/20 p-4 rounded">
+                            <strong class="text-purple-300 text-sm block mb-1">Mago de Fronte</strong>
+                            <p class="text-slate-400 text-xs mb-2">"Um mago que se cansou das salas de aula e pariu rumo ao campo de batalha"</p>
+                            <ul class="text-slate-500 text-xs space-y-1">
+                                <li>• Versatilidade → Extrema</li>
+                                <li>• Dificuldade → Extrema</li>
+                                <li>• Ofensividade → Alta</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-purple-900/10 border border-purple-500/20 p-4 rounded">
+                            <strong class="text-purple-300 text-sm block mb-1">Fimbulwinter</strong>
+                            <p class="text-slate-400 text-xs mb-2">"Uma tribo isolada de magos especialistas em técnicas congelantes"</p>
+                            <ul class="text-slate-500 text-xs space-y-1">
+                                <li>• Versatilidade → Alta</li>
+                                <li>• Dificuldade → Alta</li>
+                                <li>• Ofensividade → Alta</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-purple-900/10 border border-purple-500/20 p-4 rounded">
+                            <strong class="text-purple-300 text-sm block mb-1">Feengari</strong>
+                            <p class="text-slate-400 text-xs mb-2">"Magos sombrios focados em técnicas proibidas e conhecimentos ocultos"</p>
+                            <ul class="text-slate-500 text-xs space-y-1">
+                                <li>• Versatilidade → Média</li>
+                                <li>• Dificuldade → Extrema</li>
+                                <li>• Ofensividade → Extrema</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-purple-900/10 border border-purple-500/20 p-4 rounded">
+                            <strong class="text-purple-300 text-sm block mb-1">Ascendentes</strong>
+                            <p class="text-slate-400 text-xs mb-2">"Magos ritualistas que canalizam entidades por meio de máscaras mágicas"</p>
+                            <ul class="text-slate-500 text-xs space-y-1">
+                                <li>• Versatilidade → Baixa</li>
+                                <li>• Dificuldade → Baixa</li>
+                                <li>• Ofensividade → Alta</li>
+                            </ul>
+                        </div>
+                        
+                    </div>
+                </article>
+
+                <!-- GRUPO 2: COMBATENTES -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-4 relative overflow-hidden">
+                    <!-- Efeito Decorativo Fundo -->
+                    <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                        <i data-lucide="swords" class="w-24 h-24"></i>
+                    </div>
+
+                    <h3 class="font-serif text-xl text-red-400 mb-4 flex items-center border-b border-slate-800 pb-2">
+                        <span class="mr-2 text-2xl">🜔</span> Combatentes
+                    </h3>
+                    
+                    <p class="text-slate-400 text-sm mb-4 italic">
+                        Guerreiros disciplinados, treinados em dojos, arenas e coliseus.
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-slate-950 p-4 rounded border border-slate-800/50">
+                            <strong class="text-slate-200 text-xs uppercase block mb-2">Características</strong>
+                            <ul class="text-slate-500 text-xs space-y-1 list-disc pl-4">
+                                <li><span class="text-red-400">Destaque:</span> Alto Ataque, alta Defesa, habilidades sólidas.</li>
+                                <li><span class="text-red-400">Estilo:</span> Confronto direto, precisão marcial e resistência.</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-red-900/10 border border-red-500/20 p-4 rounded flex items-center justify-center text-center">
+                            <div>
+                                <i data-lucide="hand-fist" class="w-8 h-8 text-red-300 mx-auto mb-2 opacity-80"></i>
+                                <p class="text-slate-300 text-xs italic font-serif">
+                                    "Combatentes não dependem de caos ou truques. Eles dependem de disciplina, técnica e força espiritual."
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-red-900/10 border border-red-500/20 p-4 rounded">
+                            <strong class="text-red-300 text-sm block mb-1">Espadachim</strong>
+                            <p class="text-slate-400 text-xs mb-2">"Um lutador elegante e técnico versado com espadas mas capaz com qualquer arma"</p>
+                            <ul class="text-slate-500 text-xs space-y-1">
+                                <li>• Versatilidade → Baixa</li>
+                                <li>• Dificuldade → Baixa</li>
+                                <li>• Ofensividade → Alta</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-red-900/10 border border-red-500/20 p-4 rounded">
+                            <strong class="text-red-300 text-sm block mb-1">Arma de Corda</strong>
+                            <p class="text-slate-400 text-xs mb-2">"Um lutador defensivo e controlador versado com armas de corda ou corrente mas capaz com qualquer arma"</p>
+                            <ul class="text-slate-500 text-xs space-y-1">
+                                <li>• Versatilidade → Média</li>
+                                <li>• Dificuldade → Média</li>
+                                <li>• Ofensividade → Baixa</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-red-900/10 border border-red-500/20 p-4 rounded">
+                            <strong class="text-red-300 text-sm block mb-1">Nórdico</strong>
+                            <p class="text-slate-400 text-xs mb-2">"Um lutador bruto e voraz sedendo por inimigos versado em armas de grande porte como machados e martelos, mas capaz com qualquer arma"</p>
+                            <ul class="text-slate-500 text-xs space-y-1">
+                                <li>• Versatilidade → Baixa</li>
+                                <li>• Dificuldade → Baixa</li>
+                                <li>• Ofensividade → Alta</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-red-900/10 border border-red-500/20 p-4 rounded">
+                            <strong class="text-red-300 text-sm block mb-1">Lanceiro</strong>
+                            <p class="text-slate-400 text-xs mb-2">"Um lutador preciso e equilibrado sempre buscando pontos críticos sem muito desgaste no processo, versado em lancas mas capaz com qualquer arma"</p>
+                            <ul class="text-slate-500 text-xs space-y-1">
+                                <li>• Versatilidade → Baixa</li>
+                                <li>• Dificuldade → Baixa</li>
+                                <li>• Ofensividade → Média</li>
+                            </ul>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- GRUPO 3: ESPECIALISTAS -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-4 relative overflow-hidden">
+                    <!-- Efeito Decorativo Fundo -->
+                    <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                        <i data-lucide="crosshair" class="w-24 h-24"></i>
+                    </div>
+
+                    <h3 class="font-serif text-xl text-cyan-400 mb-4 flex items-center border-b border-slate-800 pb-2">
+                        <span class="mr-2 text-2xl">🜁</span> Especialistas
+                    </h3>
+                    
+                    <p class="text-slate-400 text-sm mb-4 italic">
+                        Classes de treinamento único, focadas em papéis específicos. Recompensam inteligência, punem descuido.
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-slate-950 p-4 rounded border border-slate-800/50">
+                            <strong class="text-slate-200 text-xs uppercase block mb-2">Mecânica de Risco</strong>
+                            <ul class="text-slate-500 text-xs space-y-1 list-disc pl-4">
+                                <li>Defesa baixa vs Acertos altos.</li>
+                                <li>Estilo cirúrgico: suporte, posicionamento e timing.</li>
+                                <li>Exemplos: Furtividade, Tiro longo, Investigação.</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-cyan-900/10 border border-cyan-500/20 p-4 rounded flex items-center justify-center text-center">
+                            <div>
+                                <i data-lucide="target" class="w-8 h-8 text-cyan-500 mx-auto mb-2 opacity-80"></i>
+                                <p class="text-slate-300 text-xs italic font-serif">
+                                    "Especialistas não vencem pela força. Eles vencem pelo acerto certo, na hora certa, do jeito certo."
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-cyan-900/10 border border-cyan-500/20 p-4 rounded">
+                            <strong class="text-cyan-500 text-sm block mb-1">Atirador de Elite</strong>
+                            <p class="text-slate-400 text-xs mb-2">"Especialista em longas distancias, recompensado pelo bom posicionamento"</p>
+                            <ul class="text-slate-500 text-xs space-y-1">
+                                <li>• Versatilidade → Baixa</li>
+                                <li>• Dificuldade → Alta</li>
+                                <li>• Ofensividade → Extrema</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-cyan-900/10 border border-cyan-500/20 p-4 rounded">
+                            <strong class="text-cyan-500 text-sm block mb-1">Assassino</strong>
+                            <p class="text-slate-400 text-xs mb-2">"Treinado no combate furtivo com armas leves preparado para se infiltrar de forma rapida e letal na linhas de tras"</p>
+                            <ul class="text-slate-500 text-xs space-y-1">
+                                <li>• Versatilidade → Baixa</li>
+                                <li>• Dificuldade → Extrema</li>
+                                <li>• Ofensividade → Alta</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-cyan-900/10 border border-cyan-500/20 p-4 rounded">
+                            <strong class="text-cyan-500 text-sm block mb-1">Gladiador</strong>
+                            <p class="text-slate-400 text-xs mb-2">"Crescido na selvageria das arenas e coliseus o gladiador tornou-se um lutador feroz, empunhando uma arma em cada mão e pronto para devastar qualquer inimigo"</p>
+                            <ul class="text-slate-500 text-xs space-y-1">
+                                <li>• Versatilidade → Baixa</li>
+                                <li>• Dificuldade → Alta</li>
+                                <li>• Ofensividade → Extrema</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-cyan-900/10 border border-cyan-500/20 p-4 rounded">
+                            <strong class="text-cyan-500 text-sm block mb-1">Charlatão</strong>
+                            <p class="text-slate-400 text-xs mb-2">"Especialista em lidar com situações e liderar pessoas, o charlatão oferece controle sem igual no combate e sempre encontra uma negociação vantajosa fora dele"</p>
+                            <ul class="text-slate-500 text-xs space-y-1">
+                                <li>• Versatilidade → Extrema</li>
+                                <li>• Dificuldade → Extrema</li>
+                                <li>• Ofensividade → Baixa</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-cyan-900/10 border border-cyan-500/20 p-4 rounded">
+                            <strong class="text-cyan-500 text-sm block mb-1">Alquimista</strong>
+                            <p class="text-slate-400 text-xs mb-2">"Estudantes apaixonados na natureza e nos seres presentes nela, os alquimistas oferecem técnicas médicas de alto padrão, salvando até o guerreiro mais ferido"</p>
+                            <ul class="text-slate-500 text-xs space-y-1">
+                                <li>• Versatilidade → Média</li>
+                                <li>• Dificuldade → Alta</li>
+                                <li>• Ofensividade → Baixa</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-cyan-900/10 border border-cyan-500/20 p-4 rounded">
+                            <strong class="text-cyan-500 text-sm block mb-1">Artifice</strong>
+                            <p class="text-slate-400 text-xs mb-2">"Um grande conhecedor e inventor de tecnologias, pronto para influenciar dentro e fora do campo de batalha atraves de suas invenções e conhecimentos"</p>
+                            <ul class="text-slate-500 text-xs space-y-1">
+                                <li>• Versatilidade → Alta</li>
+                                <li>• Dificuldade → Alta</li>
+                                <li>• Ofensividade → Alta</li>
+                            </ul>
+                        </div>
+                        
+                    </div>
+                </article>
+                <!-- INTRODUÇÃO AOS CAMINHOS -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-4">
+                    <h3 class="font-serif text-xl text-slate-100 mb-2 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                        Conceito de Caminhos
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed text-sm">
+                        Os Caminhos são trilhas de evolução, refletindo como o herói cresce ao longo da jornada. Cada Caminho favorece estilos distintos e se conecta com certos tipos de builds e filosofias.
+                    </p>
+                </article>
+
+                <!-- TABELA DE CAMINHOS (Resumo Visual) -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-4">
+                    <h3 class="font-serif text-xl text-slate-100 mb-4 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                        Trilhas de Evolução
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                        <!-- Resiliente -->
+                        <div class="bg-slate-950 p-3 rounded border border-emerald-500/20">
+                            <strong class="text-emerald-400 block uppercase text-xs mb-1">Resiliente</strong>
+                            <p class="text-slate-300 text-xs font-bold mb-1">Sustentação & Eficiência</p>
+                            <p class="text-slate-500 text-[10px]">Redução de gasto de Mana, sinergia com itens mágicos.</p>
+                        </div>
+                        
+                        <!-- Duelista -->
+                        <div class="bg-slate-950 p-3 rounded border border-blue-500/20">
+                            <strong class="text-blue-400 block uppercase text-xs mb-1">Duelista</strong>
+                            <p class="text-slate-300 text-xs font-bold mb-1">Versatilidade Segura</p>
+                            <p class="text-slate-500 text-[10px]">Resistência, adaptabilidade e segurança em duelos.</p>
+                        </div>
+
+                        <!-- Conjurador -->
+                        <div class="bg-slate-950 p-3 rounded border border-amber-500/20">
+                            <strong class="text-amber-400 block uppercase text-xs mb-1">Conjurador</strong>
+                            <p class="text-slate-300 text-xs font-bold mb-1">Poder Explosivo</p>
+                            <p class="text-slate-500 text-[10px]">Aumento de dano, reações melhoradas, mais consumíveis.</p>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- DETALHAMENTO DOS CAMINHOS -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-6">
+                    <div class="space-y-8">
+                        
+                        <!-- Resiliente -->
+                        <div class="relative pl-6 border-l-2 border-emerald-500/30">
+                            <h4 class="text-emerald-400 font-serif text-lg mb-1">O Caminho Resiliente</h4>
+                            <p class="text-slate-500 text-xs uppercase tracking-widest mb-3">A trilha dos que sobrevivem ao impossível.</p>
+                            <ul class="text-slate-400 text-sm space-y-2 list-disc pl-4">
+                                <li>Favorece combates longos e builds dependentes de itens mágicos.</li>
+                                <li>Crescem em poder ao economizar recursos e prolongar a presença no combate.</li>
+                                <li><strong class="text-emerald-500/80">Ideal para:</strong> Artefatos, itens passivos/ativos e combinações complexas.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Duelista -->
+                        <div class="relative pl-6 border-l-2 border-blue-500/30">
+                            <h4 class="text-blue-400 font-serif text-lg mb-1">O Caminho Duelista</h4>
+                            <p class="text-slate-500 text-xs uppercase tracking-widest mb-3">A trilha dos que lutam com confiança.</p>
+                            <ul class="text-slate-400 text-sm space-y-2 list-disc pl-4">
+                                <li>Habilidades versáteis e confiáveis para confronto direto.</li>
+                                <li>Não dominam o caos, mas sim o duelo individual e calculado.</li>
+                                <li><strong class="text-blue-500/80">Ideal para:</strong> Resistência e segurança.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Conjurador -->
+                        <div class="relative pl-6 border-l-2 border-amber-500/30">
+                            <h4 class="text-amber-400 font-serif text-lg mb-1">O Caminho Conjurador</h4>
+                            <p class="text-slate-500 text-xs uppercase tracking-widest mb-3">A trilha dos que preparam a vitória.</p>
+                            <ul class="text-slate-400 text-sm space-y-2 list-disc pl-4">
+                                <li>Aumentam dano mágico/híbrido e reações rápidas.</li>
+                                <li>Foco em picos de poder e arsenal extenso.</li>
+                                <li><strong class="text-amber-500/80">Ideal para:</strong> Poções, pergaminhos, cristais de aura e consumíveis.</li>
+                            </ul>
+                        </div>
+
+                    </div>
+                </article>
+
+                <!-- FRASE DE EFEITO (CONCLUSÃO) -->
+                <article class="bg-slate-950 border border-slate-800 p-8 rounded-xl text-center relative overflow-hidden">
+                    <!-- Decoração Sutil -->
+                    <div class="absolute inset-0 opacity-10 bg-gradient-to-r from-transparent via-purple-900 to-transparent"></div>
+                    
+                    <div class="relative z-10 space-y-4 font-serif">
+                        <p class="text-slate-400 text-sm">"Classe como voeê luta"</p>
+                        <p class="text-slate-300 text-base font-bold">"Caminho diz como você progride"</p>
+                        <div class="w-16 h-px bg-purple-500/50 mx-auto"></div>
+                        <p class="text-purple-400 text-lg italic">"Aura diz o que você amplifica."</p>
+                    </div>
+                </article>
+
+                <!-- INTRODUÇÃO AOS ATRIBUTOS -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-4">
+                    <h3 class="font-serif text-xl text-slate-100 mb-2 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                        Atributos
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed text-sm mb-4">
+                        A essência de um personagem é definida por cinco atributos fundamentais: Força, Destreza, Vigor, Intelecto e Presença. Eles representam capacidades naturais, treinamento e força de vontade.
+                    </p>
+                    
+                    <div class="bg-slate-950 p-3 rounded border border-purple-500/30 flex items-center justify-center">
+                        <span class="text-purple-400 font-bold font-mono text-sm">
+                            1 Ponto de Atributo = +1d10 nas rolagens vinculadas
+                        </span>
+                    </div>
+                </article>
+
+                <!-- REGRAS DE CRIAÇÃO E LIMITES -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-4">
+                    <h3 class="font-serif text-xl text-slate-100 mb-4 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-slate-500 rounded-full mr-3"></span>
+                        Distribuição e Limites
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Coluna da Esquerda: Criação -->
+                        <div class="space-y-4">
+                            <h4 class="text-sm font-bold text-slate-200 uppercase border-b border-slate-800 pb-1">Criação (Nível 1)</h4>
+                            <ul class="text-slate-400 text-xs space-y-2 list-disc pl-4">
+                                <li>Todos começam com <strong>1 ponto</strong> em cada atributo.</li>
+                                <li>Você recebe <strong>+2 pontos</strong> livres para distribuir.</li>
+                                <li class="text-amber-400">
+                                    <strong>Regra de Sacrifício:</strong> É permitido deixar 1 atributo em 0 para ganhar +1 ponto extra.
+                                </li>
+                            </ul>
+                            <p class="text-[10px] text-slate-500 italic mt-2">
+                                *Máximo de 6 pontos totais na criação (se usar o sacrifício).
+                            </p>
+                        </div>
+
+                        <!-- Coluna da Direita: Evolução e Limites -->
+                        <div class="space-y-4">
+                            <h4 class="text-sm font-bold text-slate-200 uppercase border-b border-slate-800 pb-1">Evolução</h4>
+                            <p class="text-slate-400 text-xs mb-2">
+                                Você recebe <strong>+1 ponto</strong> a cada 2 níveis.
+                            </p>
+                            
+                            <!-- Tabela Miniatura de Limites -->
+                            <div class="bg-slate-950 rounded border border-slate-800 overflow-hidden">
+                                <div class="grid grid-cols-2 bg-slate-900 text-[10px] font-bold text-slate-300 p-2 text-center">
+                                    <div>NÍVEL DO PERSONAGEM</div>
+                                    <div>MÁXIMO POR ATRIBUTO</div>
+                                </div>
+                                <div class="grid grid-cols-2 text-xs text-slate-400 p-2 text-center border-t border-slate-800">
+                                    <div>Nível 1 → 4</div>
+                                    <div class="font-bold text-emerald-500">Máximo 3</div>
+                                </div>
+                                <div class="grid grid-cols-2 text-xs text-slate-400 p-2 text-center border-t border-slate-800">
+                                    <div>Nível 5 → 11</div>
+                                    <div class="font-bold text-emerald-500">Máximo 5</div>
+                                </div>
+                                <div class="grid grid-cols-2 text-xs text-slate-400 p-2 text-center border-t border-slate-800">
+                                    <div>Nível 12 → 16</div>
+                                    <div class="font-bold text-emerald-500">Máximo 8</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- OS 5 ATRIBUTOS (DETALHADO) -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-6">
+                    <h3 class="font-serif text-xl text-slate-100 mb-6 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-slate-500 rounded-full mr-3"></span>
+                        Os 5 Pilares
+                    </h3>
+
+                    <div class="space-y-6">
+                        
+                        <!-- FORÇA -->
+                        <div class="flex gap-4">
+                            <div class="w-12 h-12 bg-red-900/20 rounded-lg flex items-center justify-center border border-red-500/30 shrink-0">
+                                <i data-lucide="dumbbell" class="w-6 h-6 text-red-500"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-red-400 font-bold text-base uppercase mb-1">Força (Poder Físico)</h4>
+                                <p class="text-slate-400 text-xs mb-2 leading-relaxed">
+                                    Carrega impacto, rompe defesas e empurra limites físicos.
+                                </p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-[10px] text-slate-300">Dano Corpo a Corpo</span>
+                                    <span class="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-[10px] text-slate-300">Bloqueio</span>
+                                    <span class="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-[10px] text-slate-300">Redução de Dano</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DESTREZA -->
+                        <div class="flex gap-4">
+                            <div class="w-12 h-12 bg-cyan-900/20 rounded-lg flex items-center justify-center border border-cyan-500/30 shrink-0">
+                                <i data-lucide="wind" class="w-6 h-6 text-cyan-400"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-cyan-400 font-bold text-base uppercase mb-1">Destreza (Agilidade)</h4>
+                                <p class="text-slate-400 text-xs mb-2 leading-relaxed">
+                                    Esquiva, reposiciona e controla o ritmo agindo mais vezes.
+                                </p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-[10px] text-slate-300">Movimento</span>
+                                    <span class="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-[10px] text-slate-300">Ações Extras</span>
+                                    <span class="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-[10px] text-slate-300">Reações</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- VIGOR -->
+                        <div class="flex gap-4">
+                            <div class="w-12 h-12 bg-emerald-900/20 rounded-lg flex items-center justify-center border border-emerald-500/30 shrink-0">
+                                <i data-lucide="shield-plus" class="w-6 h-6 text-emerald-500"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-emerald-500 font-bold text-base uppercase mb-1">Vigor (Resistência)</h4>
+                                <p class="text-slate-400 text-xs mb-2 leading-relaxed">
+                                    Atributo de quem se recusa a morrer. Sustenta a vida mesmo inconsciente.
+                                </p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-[10px] text-slate-300">Vida Máxima</span>
+                                    <span class="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-[10px] text-slate-300">Resist. Veneno</span>
+                                    <span class="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-[10px] text-slate-300">Sobrevivência</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- INTELECTO -->
+                        <div class="flex gap-4">
+                            <div class="w-12 h-12 bg-purple-900/20 rounded-lg flex items-center justify-center border border-purple-500/30 shrink-0">
+                                <i data-lucide="brain" class="w-6 h-6 text-purple-400"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-purple-400 font-bold text-base uppercase mb-1">Intelecto (Arcano)</h4>
+                                <p class="text-slate-400 text-xs mb-2 leading-relaxed">
+                                    Decifra, conjura e explode em potencial mágico e conhecimento.
+                                </p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-[10px] text-slate-300">Mana Máxima</span>
+                                    <span class="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-[10px] text-slate-300">Dano Crítico</span>
+                                    <span class="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-[10px] text-slate-300">Perícias</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PRESENÇA -->
+                        <div class="flex gap-4">
+                            <div class="w-12 h-12 bg-amber-900/20 rounded-lg flex items-center justify-center border border-amber-500/30 shrink-0">
+                                <i data-lucide="crown" class="w-6 h-6 text-amber-500"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-amber-500 font-bold text-base uppercase mb-1">Presença (Influência)</h4>
+                                <p class="text-slate-400 text-xs mb-2 leading-relaxed">
+                                    Impõe respeito, resiste ao colapso mental e manipula interações sociais.
+                                </p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-[10px] text-slate-300">Foco</span>
+                                    <span class="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-[10px] text-slate-300">Poder Social</span>
+                                    <span class="px-2 py-0.5 bg-slate-950 border border-slate-800 rounded text-[10px] text-slate-300">Resist. Mental</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </article>
+
+                <!-- FRASE DE EFEITO (CONCLUSÃO) -->
+                <article class="bg-slate-950 border border-slate-800 p-6 rounded-xl text-center relative overflow-hidden">
+                    <div class="relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 font-serif text-[10px] uppercase tracking-widest text-slate-500">
+                        <div class="hover:text-red-500 transition-colors">Força carrega impacto</div>
+                        <div class="hover:text-cyan-400 transition-colors">Destreza controla ritmo</div>
+                        <div class="hover:text-emerald-500 transition-colors">Vigor sustenta vida</div>
+                        <div class="hover:text-purple-400 transition-colors">Intelecto molda magia</div>
+                        <div class="hover:text-amber-500 transition-colors">Presença molda pessoas</div>
+                    </div>
+                </article>
+
+                <!-- INTRODUÇÃO À AFINIDADE -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-6">
+                    <h3 class="font-serif text-xl text-slate-100 mb-2 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                        O Despertar (Nível 4)
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed text-sm mb-4">
+                        No Nível 4, todo herói alcança um ponto de ruptura. É nesse momento que ele escolhe sua Afinidade — uma conexão permanente com um dos pilares que sustentam seu poder: <strong>Aura</strong>, <strong>Classe</strong> ou <strong>Caminho</strong>.
+                    </p>
+                    <div class="bg-slate-950 p-4 rounded border border-purple-500/20 text-center">
+                        <p class="text-purple-300 font-serif italic text-sm">
+                            “Escolher uma afinidade é declarar ao mundo: É assim que eu brilho. E assim que serei lembrado.”
+                        </p>
+                        <p class="text-slate-500 text-[10px] uppercase tracking-widest mt-2 font-bold">Escolha Permanente • Não pode ser alterada</p>
+                    </div>
+                </article>
+
+                <!-- 1. AFINIDADES DE AURA -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-6">
+                    <h3 class="font-serif text-xl text-slate-100 mb-4 flex items-center">
+                        <i data-lucide="sparkles" class="w-5 h-5 mr-2 text-purple-500"></i>
+                        Afinidade de Aura
+                    </h3>
+                    <p class="text-slate-400 text-sm mb-4">
+                        Fortalece o status principal ligado a ela. A Aura continua dando suas habilidades normais, mas a afinidade multiplica o atributo base.
+                    </p>
+
+                    <div class="space-y-3">
+                        <!-- Reforço -->
+                        <div class="flex items-center justify-between bg-slate-950 p-3 rounded border border-slate-800">
+                            <span class="text-emerald-400 font-bold text-xs uppercase">Reforço</span>
+                            <span class="text-slate-300 text-xs text-right">Multiplica <strong>Vida Total</strong> <br><span class="text-slate-500 text-[10px]">(1.25x no Nv.4 → até 2x no Nv.16)</span></span>
+                        </div>
+                        <!-- Emissão -->
+                        <div class="flex items-center justify-between bg-slate-950 p-3 rounded border border-slate-800">
+                            <span class="text-purple-400 font-bold text-xs uppercase">Emissão</span>
+                            <span class="text-slate-300 text-xs text-right">Multiplica <strong>Mana Total</strong></span>
+                        </div>
+                        <!-- Transformação -->
+                        <div class="flex items-center justify-between bg-slate-950 p-3 rounded border border-slate-800">
+                            <span class="text-blue-400 font-bold text-xs uppercase">Transformação</span>
+                            <span class="text-slate-300 text-xs text-right">Multiplica <strong>Movimento</strong></span>
+                        </div>
+                        <!-- Materialização -->
+                        <div class="flex items-center justify-between bg-slate-950 p-3 rounded border border-slate-800">
+                            <span class="text-amber-400 font-bold text-xs uppercase">Materialização</span>
+                            <span class="text-slate-300 text-xs text-right">Multiplica <strong>Foco</strong></span>
+                        </div>
+                        <!-- Manipulação -->
+                        <div class="flex items-center justify-between bg-slate-950 p-3 rounded border border-slate-800">
+                            <span class="text-slate-200 font-bold text-xs uppercase">Manipulação</span>
+                            <span class="text-slate-300 text-xs text-right">Multiplica <strong>Tudo</strong> (Vida, Mana, Mov, Foco) <br><span class="text-slate-500 text-[10px]">(Mais fraco: 1.1x → 1.4x)</span></span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- 2. AFINIDADES DE CAMINHO -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-6">
+                    <h3 class="font-serif text-xl text-slate-100 mb-4 flex items-center">
+                        <i data-lucide="route" class="w-5 h-5 mr-2 text-blue-500"></i>
+                        Afinidade de Caminho
+                    </h3>
+                    <p class="text-slate-400 text-sm mb-4">
+                        Fortalece a forma como o herói evolui e sobrevive ao gasto de recursos.
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Expansão (Resiliente) -->
+                        <div class="bg-slate-950 p-4 rounded border-t-2 border-emerald-500">
+                            <strong class="text-emerald-400 text-sm block mb-2">Expansão</strong>
+                            <p class="text-slate-400 text-xs leading-relaxed">
+                                Reduz o gasto de Mana ao ativar Ressonância e ao usar Itens Mágicos.
+                            </p>
+                        </div>
+                        <!-- Duelista -->
+                        <div class="bg-slate-950 p-4 rounded border-t-2 border-blue-500">
+                            <strong class="text-blue-400 text-sm block mb-2">Duelista</strong>
+                            <p class="text-slate-400 text-xs leading-relaxed">
+                                Concede <strong>Armadura Adicional</strong>. Torna o personagem mais resistente em confrontos diretos.
+                            </p>
+                        </div>
+                        <!-- Conjurador -->
+                        <div class="bg-slate-950 p-4 rounded border-t-2 border-amber-500">
+                            <strong class="text-amber-400 text-sm block mb-2">Conjurador</strong>
+                            <p class="text-slate-400 text-xs leading-relaxed">
+                                Concede <strong>Espaço Extra</strong> no inventário. Favorece quem usa muitos consumíveis e artefatos.
+                            </p>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- 3. AFINIDADES DE CLASSE -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-6">
+                    <h3 class="font-serif text-xl text-slate-100 mb-6 flex items-center">
+                        <i data-lucide="sword" class="w-5 h-5 mr-2 text-red-500"></i>
+                        Afinidade de Classe
+                    </h3>
+
+                    <div class="space-y-8">
+                        
+                        <!-- ARCANISTA -->
+                        <div class="pl-4 border-l-2 border-purple-500">
+                            <h4 class="text-purple-400 font-bold text-sm uppercase mb-2 flex items-center">
+                                🜂 Arcanista <span class="ml-2 text-[10px] text-slate-500 normal-case font-normal">- A magia é seu idioma.</span>
+                            </h4>
+                            <ul class="text-slate-400 text-xs space-y-2 list-disc pl-4">
+                                <li>Aprende <strong>Magias Extras</strong> baseadas no Intelecto.</li>
+                                <li>
+                                    A <strong>primeira magia</strong> do combate tem tempo de canalização reduzido para <strong>1 ação</strong>.
+                                    <span class="block text-[10px] text-purple-400 mt-1 italic">"O primeiro feitiço não é preparado. Ele é declarado."</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- COMBATENTE -->
+                        <div class="pl-4 border-l-2 border-red-500">
+                            <h4 class="text-red-400 font-bold text-sm uppercase mb-2 flex items-center">
+                                🜔 Combatente <span class="ml-2 text-[10px] text-slate-500 normal-case font-normal">- Um muro impossível de derrubar.</span>
+                            </h4>
+                            <p class="text-slate-400 text-xs mb-3">
+                                A Defesa reduz menos quando você é atacado (Mitigação de degradação de defesa).
+                            </p>
+                            
+                            <!-- Tabela Progressão Combatente -->
+                            <div class="bg-slate-950 rounded border border-slate-800 overflow-hidden w-full max-w-sm">
+                                <div class="grid grid-cols-4 bg-slate-900 text-[10px] text-center py-1 font-bold text-slate-400">
+                                    <div>NV 4</div>
+                                    <div>NV 8</div>
+                                    <div>NV 12</div>
+                                    <div>NV 16</div>
+                                </div>
+                                <div class="grid grid-cols-4 text-xs text-center py-2 text-red-400 font-bold">
+                                    <div>40%</div>
+                                    <div>25%</div>
+                                    <div>10%</div>
+                                    <div>100%*</div>
+                                </div>
+                                <div class="text-[10px] text-center text-slate-600 pb-1 italic">*Nenhuma redução por ataques.</div>
+                            </div>
+                        </div>
+
+                        <!-- ESPECIALISTA -->
+                        <div class="pl-4 border-l-2 border-cyan-500">
+                            <h4 class="text-cyan-400 font-bold text-sm uppercase mb-2 flex items-center">
+                                🜁 Especialista <span class="ml-2 text-[10px] text-slate-500 normal-case font-normal">- A precisão é sua sobrevivência.</span>
+                            </h4>
+                            <p class="text-slate-400 text-xs mb-3">
+                                Recebe <strong>dados extras de vantagem</strong> em todos os testes de atributo e perícias.
+                            </p>
+                            
+                            <!-- Tabela Progressão Especialista -->
+                            <div class="bg-slate-950 rounded border border-slate-800 overflow-hidden w-full max-w-sm">
+                                <div class="grid grid-cols-4 bg-slate-900 text-[10px] text-center py-1 font-bold text-slate-400">
+                                    <div>NV 4</div>
+                                    <div>NV 8</div>
+                                    <div>NV 12</div>
+                                    <div>NV 16</div>
+                                </div>
+                                <div class="grid grid-cols-4 text-xs text-center py-2 text-cyan-400 font-bold">
+                                    <div>+1 Dado</div>
+                                    <div>+2 Dados</div>
+                                    <div>+3 Dados</div>
+                                    <div>+4 Dados</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </article>
+
+                <!-- RESUMO FINAL -->
+                <article class="bg-slate-950 border border-slate-800 p-6 rounded-xl text-center relative overflow-hidden">
+                    <div class="relative z-10 space-y-2 font-serif text-sm">
+                        <p class="text-slate-500"><span class="text-purple-500">Aura</span> diz o que você amplifica.</p>
+                        <p class="text-slate-500"><span class="text-red-500">Classe</span> diz como você luta.</p>
+                        <p class="text-slate-500"><span class="text-blue-500">Caminho</span> diz como você progride.</p>
+                        <div class="pt-2 border-t border-slate-800 w-1/2 mx-auto mt-2">
+                            <p class="text-slate-200 font-bold italic">"Afinidade diz como você se torna único."</p>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- CONCEITO E PROGRESSÃO -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-4">
+                    <h3 class="font-serif text-xl text-slate-100 mb-4 flex items-center">
+                        <i data-lucide="zap" class="w-5 h-5 mr-2 text-yellow-500"></i>
+                        Conceito e Pontos
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed text-sm mb-4">
+                        As habilidades representam técnicas, reações e poderes que o personagem desperta. Elas são vinculadas aos três pilares: <strong>Classe</strong>, <strong>Aura</strong> ou <strong>Caminho</strong>.
+                    </p>
+
+                    <!-- Níveis de Ganho -->
+                    <div class="bg-slate-950 p-4 rounded border border-slate-800 mb-2">
+                        <p class="text-xs text-slate-500 uppercase font-bold mb-3 text-center">Níveis de Aprendizado (+1 Ponto)</p>
+                        <div class="flex flex-wrap justify-center gap-2">
+                            <span class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-900 border border-purple-500/50 text-purple-400 font-bold text-sm">2</span>
+                            <span class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-900 border border-purple-500/50 text-purple-400 font-bold text-sm">5</span>
+                            <span class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-900 border border-purple-500/50 text-purple-400 font-bold text-sm">7</span>
+                            <span class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-900 border border-purple-500/50 text-purple-400 font-bold text-sm">9</span>
+                            <span class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-900 border border-purple-500/50 text-purple-400 font-bold text-sm">10</span>
+                            <span class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-900 border border-purple-500/50 text-purple-400 font-bold text-sm">13</span>
+                            <span class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-900 border border-purple-500/50 text-purple-400 font-bold text-sm">14</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- TIPOS DE HABILIDADE -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-4">
+                    <h3 class="font-serif text-xl text-slate-100 mb-4 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                        Tipos de Habilidade
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Passiva -->
+                        <div class="bg-slate-950 p-4 rounded border-l-2 border-emerald-500">
+                            <strong class="text-emerald-400 text-sm block mb-1 uppercase">Passiva</strong>
+                            <p class="text-slate-400 text-xs">
+                                Sempre ativa enquanto houver <strong>Ressonância</strong>. Não requer ação para ligar.
+                            </p>
+                        </div>
+
+                        <!-- Ativa -->
+                        <div class="bg-slate-950 p-4 rounded border-l-2 border-red-500">
+                            <strong class="text-red-400 text-sm block mb-1 uppercase">Ativa</strong>
+                            <p class="text-slate-400 text-xs">
+                                Precisa ser acionada conscientemente e gasta <strong>Foco</strong> para ser utilizada.
+                            </p>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- A RESSONÂNCIA (MECHANIC CORE) -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-6 relative overflow-hidden">
+                    <!-- Efeito visual de pulso -->
+                    <div class="absolute -right-6 -top-6 w-24 h-24 bg-purple-500/10 rounded-full blur-xl animate-pulse"></div>
+
+                    <h3 class="font-serif text-xl text-purple-400 mb-4 flex items-center">
+                        <i data-lucide="waves" class="w-5 h-5 mr-2"></i>
+                        Ressonância da Aura
+                    </h3>
+
+                    <div class="space-y-4">
+                        <p class="text-slate-300 text-sm leading-relaxed font-bold">
+                            Para usar qualquer habilidade, o personagem precisa ativar sua Ressonância.
+                        </p>
+                        
+                        <ul class="text-slate-400 text-xs space-y-2 list-disc pl-4">
+                            <li>É um modo especial onde a Aura é expandida.</li>
+                            <li>O personagem fica visivelmente mais poderoso.</li>
+                            <li class="text-red-400">Consome <strong>Mana continuamente</strong> enquanto ativa.</li>
+                            <li>Sem Ressonância = Habilidades desligadas.</li>
+                        </ul>
+
+                        <div class="pt-4 border-t border-slate-800 mt-2 text-center">
+                            <p class="font-serif text-slate-200 italic text-sm">
+                                "Ressonância é poder em troca de essência. <br>
+                                <span class="text-purple-400">Brilhar mais forte significa queimar mais rápido.</span>"
+                            </p>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- INTRODUÇÃO E OBTENÇÃO -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-6">
+                    <h3 class="font-serif text-xl text-slate-100 mb-4 flex items-center">
+                        <i data-lucide="sparkles" class="w-5 h-5 mr-2 text-purple-500"></i>
+                        Arcanismo e Obtenção
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed text-sm mb-4">
+                        Magias são manifestações arcanas de Mana e <strong class="text-purple-400">só podem ser usadas por personagens do grupo Arcanista</strong>.
+                    </p>
+
+                    <div class="bg-slate-950 p-4 rounded border border-purple-500/20 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div class="text-center sm:text-left">
+                            <span class="text-xs text-slate-500 uppercase font-bold block mb-1">Ritmo de Aprendizado</span>
+                            <span class="text-slate-200 text-sm">Você recebe <strong>1 magia</strong> a cada <strong>3 níveis</strong>.</span>
+                        </div>
+                        <div class="flex gap-1">
+                            <span class="px-2 py-1 bg-slate-900 border border-slate-700 rounded text-xs font-mono text-purple-400">Nv 3</span>
+                            <span class="px-2 py-1 bg-slate-900 border border-slate-700 rounded text-xs font-mono text-purple-400">Nv 6</span>
+                            <span class="px-2 py-1 bg-slate-900 border border-slate-700 rounded text-xs font-mono text-purple-400">Nv 9...</span>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-2 italic text-center sm:text-left">
+                        *Afinidade com Classe Arcanista concede magias adicionais.
+                    </p>
+                </article>
+
+                <!-- AS 4 ESCOLAS DE MAGIA -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-6">
+                    <h3 class="font-serif text-xl text-slate-100 mb-6 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                        As 4 Grandes Escolas
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        
+                        <!-- Valan -->
+                        <div class="bg-slate-950 p-4 rounded border-l-2 border-red-500 group hover:bg-slate-900 transition-colors">
+                            <div class="flex items-center mb-2">
+                                <i data-lucide="flame" class="w-4 h-4 text-red-500 mr-2"></i>
+                                <strong class="text-red-400 text-sm uppercase">Valan</strong>
+                            </div>
+                            <p class="text-slate-400 text-xs mb-1 font-bold">Elemental Tradicional</p>
+                            <p class="text-slate-500 text-[10px]">Mago Elemental, Mago Místico, Mago de Fronteira.</p>
+                        </div>
+
+                        <!-- Fimbulwinter -->
+                        <div class="bg-slate-950 p-4 rounded border-l-2 border-cyan-400 group hover:bg-slate-900 transition-colors">
+                            <div class="flex items-center mb-2">
+                                <i data-lucide="snowflake" class="w-4 h-4 text-cyan-400 mr-2"></i>
+                                <strong class="text-cyan-400 text-sm uppercase">Fimbulwinter</strong>
+                            </div>
+                            <p class="text-slate-400 text-xs mb-1 font-bold">Gelo e Inverno</p>
+                            <p class="text-slate-500 text-[10px]">Conjuradores glaciais e magos do norte.</p>
+                        </div>
+
+                        <!-- Feengari -->
+                        <div class="bg-slate-950 p-4 rounded border-l-2 border-purple-600 group hover:bg-slate-900 transition-colors">
+                            <div class="flex items-center mb-2">
+                                <i data-lucide="moon" class="w-4 h-4 text-purple-600 mr-2"></i>
+                                <strong class="text-purple-500 text-sm uppercase">Feengari</strong>
+                            </div>
+                            <p class="text-slate-400 text-xs mb-1 font-bold">Sombria e Corruptiva</p>
+                            <p class="text-slate-500 text-[10px]">Bruxos, magos da sombra, arcanistas proibidos.</p>
+                        </div>
+
+                        <!-- Ascendente -->
+                        <div class="bg-slate-950 p-4 rounded border-l-2 border-amber-400 group hover:bg-slate-900 transition-colors">
+                            <div class="flex items-center mb-2">
+                                <i data-lucide="sun" class="w-4 h-4 text-amber-400 mr-2"></i>
+                                <strong class="text-amber-400 text-sm uppercase">Ascendente</strong>
+                            </div>
+                            <p class="text-slate-400 text-xs mb-1 font-bold">Espiritual e Etérea</p>
+                            <p class="text-slate-500 text-[10px]">Magos espirituais, sacerdotes arcanos.</p>
+                        </div>
+
+                    </div>
+                </article>
+
+                <!-- COMPLEXIDADE E CANALIZAÇÃO -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-6">
+                    <h3 class="font-serif text-xl text-slate-100 mb-4 flex items-center">
+                        <i data-lucide="hourglass" class="w-5 h-5 mr-2 text-slate-400"></i>
+                        Canalização
+                    </h3>
+                    <p class="text-slate-400 text-sm mb-4">
+                        O Nível de Complexidade (I a V) determina o tempo necessário para preparar a magia antes que ela ative.
+                    </p>
+
+                    <!-- Tabela de Tempo -->
+                    <div class="overflow-hidden rounded-lg border border-slate-800 mb-4">
+                        <table class="w-full text-sm text-left text-slate-400">
+                            <thead class="text-xs text-slate-200 uppercase bg-slate-900 border-b border-slate-800">
+                                <tr>
+                                    <th scope="col" class="px-4 py-2">Complexidade</th>
+                                    <th scope="col" class="px-4 py-2 text-right">Tempo de Canalização</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800 bg-slate-950">
+                                <tr>
+                                    <td class="px-4 py-2 font-mono text-emerald-400">Nível I</td>
+                                    <td class="px-4 py-2 text-right">1 Ação</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 font-mono text-cyan-400">Nível II</td>
+                                    <td class="px-4 py-2 text-right">1 Turno</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 font-mono text-blue-400">Nível III</td>
+                                    <td class="px-4 py-2 text-right">1 Turno + 1 Ação</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 font-mono text-purple-400">Nível IV</td>
+                                    <td class="px-4 py-2 text-right">2 Turnos</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 font-mono text-red-500">Nível V</td>
+                                    <td class="px-4 py-2 text-right">3 Turnos</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="text-center p-3 bg-slate-950 rounded border border-slate-800">
+                        <p class="font-serif text-slate-400 italic text-xs">
+                            "Magias poderosas exigem preparação. <br>
+                            <span class="text-slate-200 font-bold">Magias lendárias exigem paciência e sobrevivência.</span>"
+                        </p>
+                    </div>
+                </article>
+
+                <!-- MP e PERÍCIA ARCANA -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        
+                        <!-- Coluna 1: MP (Cálculo) -->
+                        <div>
+                            <h3 class="font-serif text-lg text-slate-200 mb-3 border-b border-slate-800 pb-2">
+                                MP (Mana Power)
+                            </h3>
+                            <p class="text-slate-400 text-xs mb-3">Define a força do efeito, dano e potência da magia.</p>
+                            
+                            <div class="bg-slate-950 p-4 rounded border border-purple-500/30 flex flex-col items-center justify-center space-y-2">
+                                <span class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Fórmula de Poder</span>
+                                <div class="text-xl font-mono font-bold text-purple-400">
+                                    MP = Nível + Intelecto
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-2 italic text-center">
+                                "O limite atual do que seu espírito consegue impor ao mundo."
+                            </p>
+                        </div>
+
+                        <!-- Coluna 2: Perícia Arcana (Requisito) -->
+                        <div>
+                            <h3 class="font-serif text-lg text-slate-200 mb-3 border-b border-slate-800 pb-2">
+                                Perícia Arcana
+                            </h3>
+                            <p class="text-slate-400 text-xs mb-2">
+                                Requisito obrigatório para desbloquear magias de complexidade alta.
+                            </p>
+                            <ul class="text-slate-500 text-xs space-y-2 list-disc pl-4">
+                                <li>Escala com <span class="text-purple-400">Intelecto</span> e Tier.</li>
+                                <li>Sem perícia suficiente = Magia bloqueada.</li>
+                                <li>Garante que apenas magos experientes acessem o proibido.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- INTRODUÇÃO ÀS PERÍCIAS -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-6">
+                    <h3 class="font-serif text-xl text-slate-100 mb-4 flex items-center">
+                        <i data-lucide="book" class="w-5 h-5 mr-2 text-cyan-500"></i>
+                        Conhecimento Técnico
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed text-sm mb-4">
+                        Perícias representam conhecimentos e talentos técnicos acumulados. Elas não medem força bruta, mas competência aprendida. São usadas em testes, interações e como pré-requisitos.
+                    </p>
+
+                    <!-- LISTA DE PERÍCIAS -->
+                    <div class="space-y-2">
+                        <div class="flex items-center bg-slate-950 p-2 rounded border border-slate-800">
+                            <i data-lucide="activity" class="w-4 h-4 text-emerald-500 mr-3"></i>
+                            <div>
+                                <strong class="text-emerald-400 text-xs uppercase block">Medicina</strong>
+                                <span class="text-slate-500 text-[10px]">Curar feridas, tratar venenos, diagnósticos.</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center bg-slate-950 p-2 rounded border border-slate-800">
+                            <i data-lucide="sparkles" class="w-4 h-4 text-purple-500 mr-3"></i>
+                            <div>
+                                <strong class="text-purple-400 text-xs uppercase block">Arcano</strong>
+                                <span class="text-slate-500 text-[10px]">Estudo da Mana, círculos mágicos, fenômenos.</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center bg-slate-950 p-2 rounded border border-slate-800">
+                            <i data-lucide="message-circle" class="w-4 h-4 text-amber-500 mr-3"></i>
+                            <div>
+                                <strong class="text-amber-400 text-xs uppercase block">Diplomacia</strong>
+                                <span class="text-slate-500 text-[10px]">Influência social, acordos, negociação.</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center bg-slate-950 p-2 rounded border border-slate-800">
+                            <i data-lucide="paw-print" class="w-4 h-4 text-orange-500 mr-3"></i>
+                            <div>
+                                <strong class="text-orange-400 text-xs uppercase block">Adestrar</strong>
+                                <span class="text-slate-500 text-[10px]">Lidar com animais e criaturas mágicas.</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center bg-slate-950 p-2 rounded border border-slate-800">
+                            <i data-lucide="wrench" class="w-4 h-4 text-blue-500 mr-3"></i>
+                            <div>
+                                <strong class="text-blue-400 text-xs uppercase block">Tecnologia</strong>
+                                <span class="text-slate-500 text-[10px]">Engenharia, alquimia, artifícios, ciência.</span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- REGRA DE DISTRIBUIÇÃO (IMPORTANTE) -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-6 border-l-4 border-l-cyan-500">
+                    <h3 class="font-serif text-xl text-slate-100 mb-4 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-cyan-500 rounded-full mr-3"></span>
+                        Pontos e Distribuição
+                    </h3>
+
+                    <div class="bg-slate-950 p-4 rounded border border-slate-800 mb-4">
+                        <p class="text-slate-300 text-sm font-bold mb-2 text-center">
+                            Para cada 1 ponto em <span class="text-purple-400">Intelecto</span> = Receba <span class="text-cyan-400">+5 Pontos</span> de perícia
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase border-b border-slate-800 pb-1">Regra dos Múltiplos de 5</h4>
+                        <p class="text-slate-400 text-xs">
+                            Os pontos devem ser distribuídos <strong>somente em múltiplos de 5</strong>. Valores quebrados não são permitidos.
+                        </p>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-2 bg-emerald-900/10 border border-emerald-500/20 rounded text-center">
+                                <span class="text-emerald-400 text-xs font-bold block mb-1">VÁLIDO <i data-lucide="check" class="w-3 h-3 inline"></i></span>
+                                <span class="text-slate-400 text-xs font-mono">5, 10, 15, 20...</span>
+                            </div>
+                            <div class="p-2 bg-red-900/10 border border-red-500/20 rounded text-center">
+                                <span class="text-red-400 text-xs font-bold block mb-1">INVÁLIDO <i data-lucide="x" class="w-3 h-3 inline"></i></span>
+                                <span class="text-slate-400 text-xs font-mono">2, 3, 7, 12, 18...</span>
+                            </div>
+                        </div>
+                        
+                        <p class="text-[10px] text-slate-500 italic mt-2 text-center">
+                            "Perícias são precisas. Ou você domina um campo, ou ainda não domina o suficiente."
+                        </p>
+                    </div>
+                </article>
+
+                <!-- USO E IMPACTO NAS CLASSES -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-6">
+                    <h3 class="font-serif text-xl text-slate-100 mb-4 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-slate-500 rounded-full mr-3"></span>
+                        Uso e Impacto
+                    </h3>
+                    
+                    <p class="text-slate-400 text-sm mb-4">
+                        A perícia não substitui o atributo, ela o <strong>potencializa</strong>. Elas somam ao resultado final da rolagem.
+                    </p>
+
+                    <!-- Tabela de Impacto -->
+                    <div class="overflow-hidden rounded-lg border border-slate-800 mb-6">
+                        <table class="w-full text-sm text-left text-slate-400">
+                            <thead class="text-xs text-slate-200 uppercase bg-slate-900 border-b border-slate-800">
+                                <tr>
+                                    <th scope="col" class="px-3 py-2">Classe</th>
+                                    <th scope="col" class="px-3 py-2">Perícia Chave</th>
+                                    <th scope="col" class="px-3 py-2 hidden sm:table-cell">Benefício</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800 bg-slate-950 text-xs">
+                                <tr>
+                                    <td class="px-3 py-2 text-slate-200 font-bold">Alquimista</td>
+                                    <td class="px-3 py-2 text-blue-400">Tecnologia/Medicina</td>
+                                    <td class="px-3 py-2 hidden sm:table-cell">Criar poções, antídotos e toxinas.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-3 py-2 text-slate-200 font-bold">Charlatão</td>
+                                    <td class="px-3 py-2 text-amber-400">Diplomacia</td>
+                                    <td class="px-3 py-2 hidden sm:table-cell">Manipular diálogos e multidões.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-3 py-2 text-slate-200 font-bold">Artífice</td>
+                                    <td class="px-3 py-2 text-blue-400">Tecnologia/Arcano</td>
+                                    <td class="px-3 py-2 hidden sm:table-cell">Engenhocas e itens de aura.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-3 py-2 text-slate-200 font-bold">Arcanistas</td>
+                                    <td class="px-3 py-2 text-purple-400">Arcano</td>
+                                    <td class="px-3 py-2 hidden sm:table-cell">Requisito para magias complexas (Tier IV+).</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Exemplo Prático -->
+                    <div class="bg-slate-950 p-4 rounded border border-purple-500/30">
+                        <strong class="text-slate-200 text-xs uppercase block mb-2">Exemplo de Rolagem: Liora (Artífice)</strong>
+                        <div class="flex flex-col gap-2 text-xs text-slate-400">
+                            <p>• Intelecto 4 → Recebeu <strong>20 pontos</strong>.</p>
+                            <p>• Distribuiu: <strong>Arcano 10</strong>, <strong>Tecnologia 10</strong>.</p>
+                            <div class="mt-2 p-2 bg-slate-900 rounded border border-slate-800 flex items-center justify-between">
+                                <span>Teste: Reconstruir artefato</span>
+                                <span class="font-mono font-bold text-cyan-400">4d10 (Int) + 10 (Arcano)</span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </section>            
+
+            <!-- SEÇÃO 1: TESTES BÁSICOS -->
+            <section id="basico" class="space-y-6">
+                <div class="border-b border-purple-500/30 pb-2 mb-6">
+                    <h2 class="font-serif text-3xl text-purple-400 font-bold">Mecânicas Básicas</h2>
+                </div>
+
+                <!-- Regra Card -->
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl">
+                    <h3 class="font-serif text-xl text-slate-100 mb-2 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                        Testes de Atributo (1d20)
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed text-sm mb-4">
+                        Para realizar qualquer ação cujo resultado seja incerto, o jogador deve rolar um d20 e somar o modificador do atributo relevante. Se o total for igual ou maior que a Classe de Dificuldade (CD), o teste é um sucesso.
+                    </p>
+                    <div class="bg-slate-950 p-3 rounded border border-slate-800 font-mono text-xs text-emerald-400">
+                        Resultado = 1d20 + Modificador + Proficiência (se aplicável)
+                    </div>
+                </article>
+
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl">
+                    <h3 class="font-serif text-xl text-slate-100 mb-2 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                        Vantagem e Desvantagem
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed text-sm">
+                        Quando uma circunstância ajuda ou atrapalha muito, você rola <strong>dois d20s</strong>.
+                        <br><br>
+                        <span class="text-emerald-400 font-bold">• Vantagem:</span> Use o resultado mais alto.<br>
+                        <span class="text-red-400 font-bold">• Desvantagem:</span> Use o resultado mais baixo.
+                    </p>
+                </article>
+            </section>
+
+            <!-- SEÇÃO 2: COMBATE -->
+            <section id="combate" class="space-y-6">
+                <div class="border-b border-purple-500/30 pb-2 mb-6 pt-8">
+                    <h2 class="font-serif text-3xl text-purple-400 font-bold">Regras de Combate</h2>
+                </div>
+
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl">
+                    <h3 class="font-serif text-xl text-slate-100 mb-2 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                        Ações no Turno
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed text-sm mb-4">
+                        Em seu turno, você pode se mover uma distância até seu deslocamento e realizar uma ação.
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-slate-950 p-3 rounded border border-slate-800">
+                            <strong class="text-slate-200 block mb-1 text-xs uppercase">Ação Padrão</strong>
+                            <span class="text-xs text-slate-500">Atacar, Conjurar Magia, Disparada, Ajudar.</span>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded border border-slate-800">
+                            <strong class="text-slate-200 block mb-1 text-xs uppercase">Ação Bônus</strong>
+                            <span class="text-xs text-slate-500">Apenas habilidades específicas que dizem "Ação Bônus".</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl">
+                    <h3 class="font-serif text-xl text-slate-100 mb-2 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                        Ataque de Oportunidade
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed text-sm">
+                        Você pode usar sua <strong>Reação</strong> para fazer um ataque corpo a corpo quando uma criatura hostil que você pode ver sair do seu alcance.
+                    </p>
+                </article>
+            </section>
+
+            <!-- SEÇÃO 3: CONDIÇÕES -->
+            <section id="condicoes" class="space-y-6">
+                <div class="border-b border-purple-500/30 pb-2 mb-6 pt-8">
+                    <h2 class="font-serif text-3xl text-purple-400 font-bold">Condições</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <article class="rule-card bg-slate-900/50 border border-slate-800 p-4 rounded-xl">
+                        <h3 class="font-serif text-lg text-red-400 mb-2">Atordoado</h3>
+                        <p class="text-slate-500 text-xs leading-relaxed">
+                            A criatura está incapacitada, não pode se mover e fala apenas de forma vacilante. Falha automaticamente em testes de Força e Destreza. Ataques contra ela têm Vantagem.
+                        </p>
+                    </article>
+
+                    <article class="rule-card bg-slate-900/50 border border-slate-800 p-4 rounded-xl">
+                        <h3 class="font-serif text-lg text-emerald-400 mb-2">Envenenado</h3>
+                        <p class="text-slate-500 text-xs leading-relaxed">
+                            A criatura tem Desvantagem em jogadas de ataque e testes de habilidade.
+                        </p>
+                    </article>
+
+                    <article class="rule-card bg-slate-900/50 border border-slate-800 p-4 rounded-xl">
+                        <h3 class="font-serif text-lg text-slate-300 mb-2">Invisível</h3>
+                        <p class="text-slate-500 text-xs leading-relaxed">
+                            Impossível de ser vista sem magia ou sentidos especiais. Ataques contra ela têm Desvantagem, e ataques dela têm Vantagem.
+                        </p>
+                    </article>
+                </div>
+            </section>
+            
+            <!-- SEÇÃO 4: MAGIA -->
+            <section id="magia" class="space-y-6">
+                <div class="border-b border-purple-500/30 pb-2 mb-6 pt-8">
+                    <h2 class="font-serif text-3xl text-purple-400 font-bold">Sistema de Magia</h2>
+                </div>
+
+                <article class="rule-card bg-slate-900/50 border border-slate-800 p-6 rounded-xl">
+                    <h3 class="font-serif text-xl text-slate-100 mb-2 flex items-center">
+                        <span class="w-1.5 h-1.5 bg-purple-500 rounded-full mr-3"></span>
+                        Concentração
+                    </h3>
+                    <p class="text-slate-400 leading-relaxed text-sm mb-4">
+                        Algumas magias exigem concentração. Se você sofrer dano enquanto se concentra, deve fazer um teste de Constituição (CD 10 ou metade do dano sofrido, o que for maior). Se falhar, a magia acaba.
+                    </p>
+                </article>
+            </section>
+
+            <!-- Espaço final para scroll confortável -->
+            <div class="h-24"></div>
+
+        </div>
+    </main>
+
+    <!-- Script de Busca e Ícones -->
+    <script>
+        // Inicializa ícones
+        lucide.createIcons();
+
+        // SISTEMA DE BUSCA DE REGRAS
+        function searchRules() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toUpperCase();
+            const articles = document.querySelectorAll('article'); // Pega todos os cards de regra
+            const sectionTitles = document.querySelectorAll('section > div > h2'); // Títulos de seção
+
+            // Se o campo estiver vazio, mostra tudo
+            if (filter === "") {
+                articles.forEach(article => article.style.display = "");
+                sectionTitles.forEach(title => title.parentElement.parentElement.style.display = "");
+                return;
+            }
+
+            // Lógica de Filtro
+            articles.forEach(article => {
+                const title = article.querySelector('h3');
+                if (title) {
+                    const txtValue = title.textContent || title.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        article.style.display = ""; // Mostra se der match
+                    } else {
+                        article.style.display = "none"; // Esconde
+                    }
+                }
+            });
+
+            // Opcional: Esconder seções inteiras se todos os filhos estiverem ocultos
+            // (Para simplicidade da V1, deixamos os títulos de seção visíveis para contexto)
+        }
+    </script>
+</body>
+</html>

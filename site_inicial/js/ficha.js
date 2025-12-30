@@ -1412,6 +1412,7 @@ function atualizarTudo() {
 
     let pontosTotaisMagia = Math.round(nivel / 3);
 
+    //CALCULO DE PONTOS DE MAGIA
     if (afinidadeEscolhida && afinidadeEscolhida.id === 'afin-arc') {
         pontosTotaisMagia = Math.round(nivel / 3) + intelecto;
     }
