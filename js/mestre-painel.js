@@ -44,48 +44,41 @@ function mostrarToast(msg, tipo = 'info') {
 // --- REALTIME LISTENER ---
 function iniciarRealtime() {
     if (realtimeChannel) supabaseClient.removeChannel(realtimeChannel);
+    
     realtimeChannel = supabaseClient
         .channel('painel-mestre-global')
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'Personagens' }, payload => {
             const novoDado = payload.new;
             const idMudou = String(novoDado.id);
             const index = combatentes.findIndex(c => c.id === idMudou);
-            const dadosAntigos = combatentes[index].dadosRaw || {}; // Pega o JSON completo que salvamos antes
-            compararEGerarLog(combatentes[index].nome, dadosAntigos, novoDado.dados);
 
             if (index !== -1) {
-                // Ignora se eu mesmo estou editando
-                if (saveTimers[idMudou]) return;
-
-                // --- MÓDULO 6: GERA O LOG ANTES DE ATUALIZAR ---
-                // Pegamos o objeto de dados antigo (que está na memória do combatentes[index])
-                // Precisamos reconstruir a estrutura original "dados" para comparar com o novo "dados"
-                // Como 'combatentes' é uma versão processada, vamos comparar o que temos de mais importante
+                // --- PASSO 1: LOG (ANTES DE TUDO) ---
+                // Pega a referência que tínhamos guardada na memória
+                const dadosAntigos = combatentes[index].dadosRaw || {}; 
                 
-                // Estratégia: Recriar um objeto parcial 'antigo' baseado no que temos na memória
-                const charAntigoSimulado = {
-                    statusAtuais: {
-                        vida: combatentes[index].hpAtual,
-                        mana: combatentes[index].manaAtual,
-                        foco: combatentes[index].focoAtual
-                    },
-                    // Para inventário, não temos na memória do combat tracker (só no objeto original se tivéssemos salvo)
-                    // Se você quiser log de inventário preciso, precisaria guardar o 'rawDados' no objeto combatente.
-                    // Mas para Vida/Mana funciona perfeitamente assim.
-                };
+                // Gera o log comparando o que tínhamos com o que chegou
+                compararEGerarLog(combatentes[index].nome, dadosAntigos, novoDado.dados);
 
-                // O Payload novo traz o JSON completo em 'novoDado.dados'
-                compararEGerarLog(combatentes[index].nome, charAntigoSimulado, novoDado.dados);
-                
-                // ------------------------------------------------
+                // --- PASSO 2: ATUALIZAR REFERÊNCIA (A CORREÇÃO DO BUG) ---
+                // Atualizamos o 'dadosRaw' IMEDIATAMENTE. 
+                // Assim, na próxima execução, 'dadosAntigos' já será esta versão.
+                combatentes[index].dadosRaw = novoDado.dados;
 
+                // --- PASSO 3: SEGURANÇA DE UI ---
+                // Se eu estiver digitando neste card, paro por aqui para não pular o cursor.
+                // Mas note que o passo 2 (memória do log) já foi feito!
+                if (saveTimers && saveTimers[idMudou]) return;
+
+                // --- PASSO 4: ATUALIZAR VISUAL ---
+                // Se não estou digitando, atualizo as barras e números visuais
                 const dadosAtualizados = parseCharacterData(novoDado);
                 
-                // Atualiza a memória
-                combatentes[index] = { ...combatentes[index], ...dadosAtualizados };
-                
-                // Se quiser log de inventário completo, seria ideal guardar o 'novoDado.dados' dentro de combatentes[index].dadosRaw
-                // combatentes[index].dadosRaw = novoDado.dados; 
+                // Mescla os dados novos (mantendo o dadosRaw atualizado)
+                combatentes[index] = { 
+                    ...combatentes[index], 
+                    ...dadosAtualizados 
+                };
                 
                 atualizarInterfaceUnitary(idMudou, combatentes[index]);
             }
