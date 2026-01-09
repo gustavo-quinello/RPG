@@ -1104,12 +1104,14 @@ function calcularStatus(nivel) {
     }
 
     let bonusBloqueioItens = 0;
+    let bloqArmor = 0
     
     inventario.forEach(item => {
         if (item.equipado) {
             // Se for Armadura, pega o valor do bloqueio
             if (item.tipo === 'armadura') {
                 bonusBloqueioItens += (parseInt(item.valor) || 0);
+                bloqArmor = (parseInt(item.valor) || 0)
             }
             // Se for Escudo (que é um subtipo de equipamento), pode ter lógica futura aqui
              if (item.subtipo === 'escudo') {
@@ -1123,6 +1125,7 @@ function calcularStatus(nivel) {
 
     // --- LÓGICA DE DANO DA ARMA ---
     let danoDisplay = "d4"; // Padrão
+    let multiplicador = forca/2
     
     const mainWeapon = inventario.find(i => i.equipado && i.slotId === 'mainhand' && i.tipo === 'equipamento');
     const offWeapon = inventario.find(i => i.equipado && i.slotId === 'offhand' && i.tipo === 'equipamento');
@@ -1139,20 +1142,17 @@ function calcularStatus(nivel) {
             danoDisplay = offWeapon.dano;
     }
 
-    // Atualiza na tela
-    document.getElementById('stat-bloqueio').textContent = bloqueio;
-
     // Atualiza HTML
     document.getElementById('stat-vida').textContent = vida;
     document.getElementById('stat-mana').textContent = mana;
     document.getElementById('stat-foco').textContent = foco;
     document.getElementById('stat-carga').textContent = carga;
     document.getElementById('stat-movimento').textContent = movimento + 'm';
-    document.getElementById('stat-bloqueio').textContent = bloqueio;
+    document.getElementById('stat-bloqueio').textContent = bloqueio + ' 👕' + bloqArmor;
     document.getElementById('stat-esquiva').textContent = esquiva;
     document.getElementById('stat-ataque').textContent = '+' + ataqueBonus;
 
-    document.getElementById('stat-dano').textContent = danoDisplay;
+    document.getElementById('stat-dano').textContent = danoDisplay + ' × ' + multiplicador;
 
     atualizarBarras();
 }
