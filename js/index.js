@@ -195,18 +195,10 @@ formRegister.addEventListener('submit', async (e) => {
                     }
                 ]);
 
-            if (profileError) {
-                // Se falhar o profile, tenta limpar (rollback manual seria ideal no backend, mas aqui avisamos)
-                console.error("Erro ao criar perfil:", profileError);
-                // Não lançamos erro fatal aqui, pois a conta auth foi criada. 
-                // Idealmente, trataria isso, mas para MVP seguimos.
-                showMessage("Conta criada, mas houve um erro ao configurar o perfil. Contate o mestre.", "error");
-            } else {
                 showMessage("Registro concluído! Entrando...", "success");
                 setTimeout(() => {
                         window.location.href = "dashboard.html";
                 }, 1500);
-            }
         }
 
     } catch (err) {
