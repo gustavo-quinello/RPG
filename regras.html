@@ -55,9 +55,18 @@
     </style>
 </head>
 <body class="bg-slate-950 text-slate-300 font-sans h-screen overflow-hidden flex flex-col md:flex-row">
+    <div class="md:hidden w-full bg-slate-900 p-4 border-b border-slate-800 flex justify-between items-center sticky top-0 z-50 shadow-md">
+        <div class="flex items-center gap-2 font-serif text-slate-100 font-bold tracking-wide">
+            <i data-lucide="book-open" class="text-purple-500 w-5 h-5"></i>
+            Grimório
+        </div>
+        <button onclick="toggleMobileMenu()" class="text-slate-400 hover:text-purple-400 focus:outline-none p-1 border border-slate-700 rounded bg-slate-800">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+    </div>
 
     <!-- SIDEBAR DE NAVEGAÇÃO (Fixo na esquerda em Desktop) -->
-    <aside class="w-full md:w-72 bg-slate-900 border-r border-slate-800 flex flex-col h-auto md:h-full z-20 shadow-2xl">
+    <aside id="mainSidebar" class="hidden md:flex w-full md:w-72 bg-slate-900 border-r border-slate-800 flex-col h-[calc(100vh-60px)] md:h-full z-40 shadow-2xl fixed md:relative top-[60px] md:top-0 left-0 overflow-y-auto">
         
         <!-- Header Sidebar -->
         <div class="p-6 border-b border-slate-800 bg-slate-900 z-10">

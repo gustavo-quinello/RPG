@@ -64,3 +64,27 @@ function searchRules() {
         }
     });
 }
+
+// FUNÇÃO: Alternar Menu Mobile
+function toggleMobileMenu() {
+    const sidebar = document.getElementById('mainSidebar');
+    
+    // Se tiver a classe hidden, remove (mostra). Se não, adiciona (esconde).
+    if (sidebar.classList.contains('hidden')) {
+        sidebar.classList.remove('hidden');
+        sidebar.classList.add('flex'); // Garante que volta a ser flexbox
+    } else {
+        sidebar.classList.add('hidden');
+        sidebar.classList.remove('flex');
+    }
+}
+
+// AUTO-FECHAR: Fecha o menu ao clicar em qualquer link (Melhora UX no mobile)
+document.querySelectorAll('.nav-item, #submenu-criacao a').forEach(link => {
+    link.addEventListener('click', () => {
+        // Só fecha se estivermos no modo mobile (tela pequena)
+        if (window.innerWidth < 768) { 
+            toggleMobileMenu();
+        }
+    });
+});
